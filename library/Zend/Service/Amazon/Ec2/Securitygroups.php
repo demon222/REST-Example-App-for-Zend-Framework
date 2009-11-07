@@ -17,7 +17,7 @@
  * @subpackage Ec2
  * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id$
+ * @version    $Id: Securitygroups.php 18096 2009-09-13 17:39:19Z sidhighwind $
  */
 
 require_once 'Zend/Service/Amazon/Ec2/Abstract.php';
@@ -28,7 +28,7 @@ require_once 'Zend/Service/Amazon/Ec2/Abstract.php';
  * @category   Zend
  * @package    Zend_Service_Amazon
  * @subpackage Ec2
- * @copyright  Copyright (c) 22005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Amazon_Ec2_Securitygroups extends Zend_Service_Amazon_Ec2_Abstract
@@ -106,7 +106,17 @@ class Zend_Service_Amazon_Ec2_Securitygroups extends Zend_Service_Amazon_Ec2_Abs
                 $sItem['ipProtocol'] = $xpath->evaluate('string(ec2:ipProtocol/text())', $ip_node);
                 $sItem['fromPort'] = $xpath->evaluate('string(ec2:fromPort/text())', $ip_node);
                 $sItem['toPort'] = $xpath->evaluate('string(ec2:toPort/text())', $ip_node);
-                $sItem['ipRanges'] = $xpath->evaluate('string(ec2:ipRanges/ec2:item/ec2:cidrIp/text())', $ip_node);
+
+                $ips = $xpath->query('ec2:ipRanges/ec2:item', $ip_node);
+
+                $sItem['ipRanges'] = array();
+                foreach($ips as $ip) {
+                    $sItem['ipRanges'][] = $xpath->evaluate('string(ec2:cidrIp/text())', $ip);
+                }
+
+                if(count($sItem['ipRanges']) == 1) {
+                    $sItem['ipRanges'] = $sItem['ipRanges'][0];
+                }
 
                 $item['ipPermissions'][] = $sItem;
                 unset($ip_node, $sItem);

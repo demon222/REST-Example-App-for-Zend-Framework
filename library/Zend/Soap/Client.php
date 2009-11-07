@@ -15,8 +15,9 @@
  * @category   Zend
  * @package    Zend_Soap
  * @subpackage Client
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Client.php 18570 2009-10-16 12:41:35Z sgehrig $
  */
 
 /** Zend_Soap_Server */
@@ -34,7 +35,7 @@ require_once 'Zend/Soap/Client/Common.php';
  * @category   Zend
  * @package    Zend_Soap
  * @subpackage Client
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Soap_Client
@@ -81,6 +82,7 @@ class Zend_Soap_Client
     protected $_stream_context      = null;
     protected $_features            = null;
     protected $_cache_wsdl          = null;
+    protected $_user_agent          = null;
 
     /**
      * WSDL used to access server
@@ -255,6 +257,11 @@ class Zend_Soap_Client
                 case 'cache_wsdl':
                     $this->setWsdlCache($value);
                     break;
+                case 'useragent':
+                case 'userAgent':
+                case 'user_agent':
+                    $this->setUserAgent($value);
+                    break;
 
                 // Not used now
                 // case 'connection_timeout':
@@ -301,6 +308,7 @@ class Zend_Soap_Client
         $options['stream_context'] = $this->getStreamContext();
         $options['cache_wsdl']     = $this->getWsdlCache();
         $options['features']       = $this->getSoapFeatures();
+        $options['user_agent']     = $this->getUserAgent();
 
         foreach ($options as $key => $value) {
             if ($value == null) {
@@ -814,6 +822,8 @@ class Zend_Soap_Client
     public function setSoapFeatures($feature)
     {
         $this->_features = $feature;
+
+        $this->_soapClient = null;
         return $this;
     }
 
@@ -845,6 +855,26 @@ class Zend_Soap_Client
     public function getWsdlCache()
     {
         return $this->_cache_wsdl;
+    }
+
+    /**
+     * Set the string to use in User-Agent header
+     *
+     * @param  string $userAgent
+     * @return Zend_Soap_Client
+     */
+    public function setUserAgent($userAgent)
+    {
+        $this->_user_agent = (string)$userAgent;
+        return $this;
+    }
+
+    /**
+     * Get current string to use in User-Agent header
+     */
+    public function getUserAgent()
+    {
+        return $this->_user_agent;
     }
 
     /**
@@ -1048,14 +1078,12 @@ class Zend_Soap_Client
      */
     public function __call($name, $arguments)
     {
-        if ($this->_soapClient == null) {
-            $this->_initSoapClientObject();
-        }
+        $soapClient = $this->getSoapClient();
 
         $this->_lastMethod = $name;
 
         $soapHeaders = array_merge($this->_permanentSoapInputHeaders, $this->_soapInputHeaders);
-        $result = $this->_soapClient->__soapCall($name,
+        $result = $soapClient->__soapCall($name,
                                                  $this->_preProcessArguments($arguments),
                                                  null, /* Options are already set to the SOAP client object */
                                                  (count($soapHeaders) > 0)? $soapHeaders : null,
@@ -1081,11 +1109,8 @@ class Zend_Soap_Client
             throw new Zend_Soap_Client_Exception('\'getFunctions\' method is available only in WSDL mode.');
         }
 
-        if ($this->_soapClient == null) {
-            $this->_initSoapClientObject();
-        }
-
-        return $this->_soapClient->__getFunctions();
+        $soapClient = $this->getSoapClient();
+        return $soapClient->__getFunctions();
     }
 
 
@@ -1108,10 +1133,41 @@ class Zend_Soap_Client
             throw new Zend_Soap_Client_Exception('\'getTypes\' method is available only in WSDL mode.');
         }
 
+        $soapClient = $this->getSoapClient();
+
+        return $soapClient->__getTypes();
+    }
+
+    /**
+     * @param SoapClient $soapClient
+     * @return Zend_Soap_Client
+     */
+    public function setSoapClient(SoapClient $soapClient)
+    {
+        $this->_soapClient = $soapClient;
+        return $this;
+    }
+
+    /**
+     * @return SoapClient
+     */
+    public function getSoapClient()
+    {
         if ($this->_soapClient == null) {
             $this->_initSoapClientObject();
         }
+        return $this->_soapClient;
+    }
 
-        return $this->_soapClient->__getTypes();
+    /**
+     * @param string $name
+     * @param string $value
+     * @return Zend_Soap_Client
+     */
+    public function setCookie($cookieName, $cookieValue=null)
+    {
+        $soapClient = $this->getSoapClient();
+        $soapClient->__setCookie($cookieName, $cookieValue);
+        return $this;
     }
 }

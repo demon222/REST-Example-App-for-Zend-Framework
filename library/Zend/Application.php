@@ -14,15 +14,15 @@
  *
  * @category   Zend
  * @package    Zend_Application
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id$
+ * @version    $Id: Application.php 18339 2009-09-21 15:05:25Z matthew $
  */
 
 /**
  * @category   Zend
  * @package    Zend_Application
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Application
@@ -47,6 +47,13 @@ class Zend_Application
      * @var string
      */
     protected $_environment;
+
+    /**
+     * Flattened (lowercase) option keys
+     * 
+     * @var array
+     */
+    protected $_optionKeys = array();
 
     /**
      * Options for Zend_Application
@@ -116,14 +123,16 @@ class Zend_Application
      */
     public function setOptions(array $options)
     {
-        $options = array_change_key_case($options, CASE_LOWER);
-
         if (!empty($options['config'])) {
-            $options += $this->_loadConfig($options['config']);
+            $options = $this->mergeOptions($options, $this->_loadConfig($options['config']));
         }
         
         $this->_options = $options;
-        
+
+        $options = array_change_key_case($options, CASE_LOWER);
+
+        $this->_optionKeys = array_keys($options);
+
         if (!empty($options['phpsettings'])) {
             $this->setPhpSettings($options['phpsettings']);
         }
@@ -135,7 +144,18 @@ class Zend_Application
         if (!empty($options['autoloadernamespaces'])) {
             $this->setAutoloaderNamespaces($options['autoloadernamespaces']);
         }
-        
+
+        if (!empty($options['autoloaderzfpath'])) {
+            $autoloader = $this->getAutoloader();
+            if (method_exists($autoloader, 'setZfPath')) {
+                $zfPath    = $options['autoloaderzfpath'];
+                $zfVersion = !empty($options['autoloaderzfversion']) 
+                           ? $options['autoloaderzfversion'] 
+                           : 'latest';
+                $autoloader->setZfPath($zfPath, $zfVersion);
+            }
+        }
+
         if (!empty($options['bootstrap'])) {
             $bootstrap = $options['bootstrap'];
             
@@ -180,7 +200,7 @@ class Zend_Application
      */
     public function hasOption($key)
     {
-        return array_key_exists($key, $this->_options);
+        return in_array(strtolower($key), $this->_optionKeys);
     }
 
     /**
@@ -192,9 +212,34 @@ class Zend_Application
     public function getOption($key)
     {
         if ($this->hasOption($key)) {
-            return $this->_options[$key];
+            $options = $this->getOptions();
+            $options = array_change_key_case($options, CASE_LOWER);
+            return $options[strtolower($key)];
         }
         return null;
+    }
+
+    /**
+     * Merge options recursively
+     * 
+     * @param  array $array1 
+     * @param  mixed $array2 
+     * @return array
+     */
+    public function mergeOptions(array $array1, $array2 = null)
+    {
+        if (is_array($array2)) {
+            foreach ($array2 as $key => $val) {
+                if (is_array($array2[$key])) {
+                    $array1[$key] = (array_key_exists($key, $array1) && is_array($array1[$key]))
+                                  ? $this->mergeOptions($array1[$key], $array2[$key]) 
+                                  : $array2[$key];
+                } else {
+                    $array1[$key] = $val;
+                }
+            }
+        }
+        return $array1;
     }
 
     /**
@@ -263,8 +308,17 @@ class Zend_Application
             $class = 'Bootstrap';
         }
 
-        require_once $path;
+        if (!class_exists($class, false)) {
+            require_once $path;
+            if (!class_exists($class, false)) {
+                throw new Zend_Application_Exception('Bootstrap class not found');
+            }
+        }
         $this->_bootstrap = new $class($this);
+
+        if (!$this->_bootstrap instanceof Zend_Application_Bootstrap_Bootstrapper) {
+            throw new Zend_Application_Exception('Bootstrap class does not implement Zend_Application_Bootstrap_Bootstrapper');
+        }
         
         return $this;
     }
@@ -284,12 +338,13 @@ class Zend_Application
 
     /**
      * Bootstrap application
-     * 
+     *
+     * @param  null|string|array $resource
      * @return Zend_Application
      */
-    public function bootstrap()
+    public function bootstrap($resource = null)
     {
-        $this->getBootstrap()->bootstrap();
+        $this->getBootstrap()->bootstrap($resource);
         return $this;
     }
 

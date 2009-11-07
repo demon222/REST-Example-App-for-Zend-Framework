@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Dojo
  * @subpackage View
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id$
+ * @version    $Id: CustomDijit.php 18669 2009-10-22 18:30:17Z matthew $
  */
 
 /** Zend_Dojo_View_Helper_DijitContainer */
@@ -29,7 +29,7 @@ require_once 'Zend/Dojo/View/Helper/DijitContainer.php';
  * @uses       Zend_Dojo_View_Helper_DijitContainer
  * @package    Zend_Dojo
  * @subpackage View
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
   */
 class Zend_Dojo_View_Helper_CustomDijit extends Zend_Dojo_View_Helper_DijitContainer
@@ -70,6 +70,11 @@ class Zend_Dojo_View_Helper_CustomDijit extends Zend_Dojo_View_Helper_DijitConta
         } else {
             $this->_dijit  = $this->_defaultDojoType;
             $this->_module = $this->_defaultDojoType;
+        }
+
+        if (array_key_exists('rootNode', $params)) {
+            $this->setRootNode($params['rootNode']);
+            unset($params['rootNode']);
         }
 
         return $this->_createLayoutContainer($id, $value, $params, $attribs);

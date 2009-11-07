@@ -15,8 +15,9 @@
  * @category   Zend
  * @package    Zend_Cache
  * @subpackage Zend_Cache_Backend
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: File.php 17868 2009-08-28 09:46:30Z yoshida@zend.co.jp $
  */
 
 /**
@@ -33,7 +34,7 @@ require_once 'Zend/Cache/Backend.php';
 /**
  * @package    Zend_Cache
  * @subpackage Zend_Cache_Backend
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Cache_Backend_File extends Zend_Cache_Backend implements Zend_Cache_Backend_ExtendedInterface
@@ -258,7 +259,9 @@ class Zend_Cache_Backend_File extends Zend_Cache_Backend implements Zend_Cache_B
     public function remove($id)
     {
         $file = $this->_file($id);
-        return ($this->_delMetadatas($id) && $this->_remove($file));
+        $boolRemove   = $this->_remove($file);
+        $boolMetadata = $this->_delMetadatas($id);
+        return $boolMetadata && $boolRemove;
     }
 
     /**
@@ -671,7 +674,7 @@ class Zend_Cache_Backend_File extends Zend_Cache_Backend implements Zend_Cache_B
                         break;
                     case Zend_Cache::CLEANING_MODE_OLD:
                         if (time() > $metadatas['expire']) {
-                            $result = ($result) && ($this->remove($id));
+                            $result = $this->remove($id) && $result;
                         }
                         break;
                     case Zend_Cache::CLEANING_MODE_MATCHING_TAG:
@@ -683,7 +686,7 @@ class Zend_Cache_Backend_File extends Zend_Cache_Backend implements Zend_Cache_B
                             }
                         }
                         if ($matching) {
-                            $result = ($result) && ($this->remove($id));
+                            $result = $this->remove($id) && $result;
                         }
                         break;
                     case Zend_Cache::CLEANING_MODE_NOT_MATCHING_TAG:
@@ -695,7 +698,7 @@ class Zend_Cache_Backend_File extends Zend_Cache_Backend implements Zend_Cache_B
                             }
                         }
                         if (!$matching) {
-                            $result = ($result) && $this->remove($id);
+                            $result = $this->remove($id) && $result;
                         }
                         break;
                     case Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG:
@@ -707,7 +710,7 @@ class Zend_Cache_Backend_File extends Zend_Cache_Backend implements Zend_Cache_B
                             }
                         }
                         if ($matching) {
-                            $result = ($result) && ($this->remove($id));
+                            $result = $this->remove($id) && $result;
                         }
                         break;
                     default:
@@ -717,7 +720,7 @@ class Zend_Cache_Backend_File extends Zend_Cache_Backend implements Zend_Cache_B
             }
             if ((is_dir($file)) and ($this->_options['hashed_directory_level']>0)) {
                 // Recursive call
-                $result = ($result) && ($this->_clean($file . DIRECTORY_SEPARATOR, $mode, $tags));
+                $result = $this->_clean($file . DIRECTORY_SEPARATOR, $mode, $tags) && $result;
                 if ($mode=='all') {
                     // if mode=='all', we try to drop the structure too
                     @rmdir($file);
@@ -946,19 +949,12 @@ class Zend_Cache_Backend_File extends Zend_Cache_Backend implements Zend_Cache_B
         if (!is_file($file)) {
             return false;
         }
-        if (function_exists('get_magic_quotes_runtime')) {
-            $mqr = @get_magic_quotes_runtime();
-            @set_magic_quotes_runtime(0);
-        }
         $f = @fopen($file, 'rb');
         if ($f) {
             if ($this->_options['file_locking']) @flock($f, LOCK_SH);
             $result = stream_get_contents($f);
             if ($this->_options['file_locking']) @flock($f, LOCK_UN);
             @fclose($f);
-        }
-        if (function_exists('set_magic_quotes_runtime')) {
-            @set_magic_quotes_runtime($mqr);
         }
         return $result;
     }

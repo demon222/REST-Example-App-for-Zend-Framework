@@ -14,7 +14,7 @@
  *
  * @category   Zend
  * @package    Zend_Form
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -30,9 +30,9 @@ require_once 'Zend/Validate/Interface.php';
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id$
+ * @version    $Id: Element.php 18555 2009-10-15 20:10:50Z matthew $
  */
 class Zend_Form_Element implements Zend_Validate_Interface
 {
@@ -98,6 +98,13 @@ class Zend_Form_Element implements Zend_Validate_Interface
     protected $_errors = array();
 
     /**
+     * Separator to use when concatenating aggregate error messages (for 
+     * elements having array values)
+     * @var string
+     */
+    protected $_errorMessageSeparator = '; ';
+
+    /**
      * Element filters
      * @var array
      */
@@ -120,6 +127,12 @@ class Zend_Form_Element implements Zend_Validate_Interface
      * @var bool
      */
     protected $_isError = false;
+
+    /**
+     * Has the element been manually marked as invalid?
+     * @var bool
+     */
+    protected $_isErrorForced = false;
 
     /**
      * Element label
@@ -990,7 +1003,9 @@ class Zend_Form_Element implements Zend_Validate_Interface
      *
      * Otherwise, the path prefix is set on the appropriate plugin loader.
      *
+     * @param  string $prefix
      * @param  string $path
+     * @param  string $type
      * @return Zend_Form_Element
      * @throws Zend_Form_Exception for invalid type
      */
@@ -1337,6 +1352,11 @@ class Zend_Form_Element implements Zend_Validate_Interface
             }
         }
 
+        // If element manually flagged as invalid, return false
+        if ($this->_isErrorForced) {
+            return false;
+        }
+
         return $result;
     }
 
@@ -1400,6 +1420,28 @@ class Zend_Form_Element implements Zend_Validate_Interface
     }
 
     /**
+     * Get errorMessageSeparator
+     *
+     * @return string
+     */
+    public function getErrorMessageSeparator()
+    {
+        return $this->_errorMessageSeparator;
+    }
+
+    /**
+     * Set errorMessageSeparator
+     *
+     * @param  string $separator
+     * @return Zend_Form_Element
+     */
+    public function setErrorMessageSeparator($separator)
+    {
+        $this->_errorMessageSeparator = $separator;
+        return $this;
+    }
+
+    /**
      * Mark the element as being in a failed validation state
      *
      * @return Zend_Form_Element
@@ -1414,6 +1456,7 @@ class Zend_Form_Element implements Zend_Validate_Interface
         } else {
             $this->_messages = $messages;
         }
+        $this->_isErrorForced = true;
         return $this;
     }
 
@@ -1860,7 +1903,7 @@ class Zend_Form_Element implements Zend_Validate_Interface
      * Remove a single decorator
      *
      * @param  string $name
-     * @return bool
+     * @return Zend_Form_Element
      */
     public function removeDecorator($name)
     {
@@ -2097,12 +2140,14 @@ class Zend_Form_Element implements Zend_Validate_Interface
             if (null !== $translator) {
                 $message = $translator->translate($message);
             }
-            if ($this->isArray() || is_array($value)) {
+            if (($this->isArray() || is_array($value))
+                && !empty($value)
+            ) {
                 $aggregateMessages = array();
                 foreach ($value as $val) {
                     $aggregateMessages[] = str_replace('%value%', $val, $message);
                 }
-                $messages[$key] = $aggregateMessages;
+                $messages[$key] = implode($this->getErrorMessageSeparator(), $aggregateMessages);
             } else {
                 $messages[$key] = str_replace('%value%', $value, $message);
             }

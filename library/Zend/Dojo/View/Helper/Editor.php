@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Dojo
  * @subpackage View
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: $
+ * @version    $Id: Editor.php 18596 2009-10-16 17:53:38Z matthew $
  */
 
 /** Zend_Dojo_View_Helper_Textarea */
@@ -32,7 +32,7 @@ require_once 'Zend/Json.php';
  * @uses       Zend_Dojo_View_Helper_Textarea
  * @package    Zend_Dojo
  * @subpackage View
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Dojo_View_Helper_Editor extends Zend_Dojo_View_Helper_Textarea
@@ -46,6 +46,19 @@ class Zend_Dojo_View_Helper_Editor extends Zend_Dojo_View_Helper_Textarea
      * @var string Dijit module to load
      */
     protected $_module = 'dijit.Editor';
+
+    /**
+     * @var array Maps non-core plugin to module basename
+     */
+    protected $_pluginsModules = array(
+        'createLink' => 'LinkDialog',
+        'insertImage' => 'LinkDialog',
+        'fontName' => 'FontChoice',
+        'fontSize' => 'FontChoice',
+        'formatBlock' => 'FontChoice',
+        'foreColor' => 'TextColor',
+        'hiliteColor' => 'TextColor'
+    );
 
     /**
      * JSON-encoded parameters
@@ -64,6 +77,12 @@ class Zend_Dojo_View_Helper_Editor extends Zend_Dojo_View_Helper_Textarea
      */
     public function editor($id, $value = null, $params = array(), $attribs = array())
     {
+        if (isset($params['plugins'])) {
+            foreach ($this->_getRequiredModules($params['plugins']) as $module) {
+                $this->dojo->requireModule($module);
+            }
+        }
+
         $hiddenName = $id;
         if (array_key_exists('id', $attribs)) {
             $hiddenId = $attribs['id'];
@@ -90,6 +109,25 @@ class Zend_Dojo_View_Helper_Editor extends Zend_Dojo_View_Helper_Textarea
               . $this->textarea($textareaName, $value, $params, $attribs);
 
         return $html;
+    }
+
+    /**
+     * Generates the list of required modules to include, if any is needed. 
+     *
+     * @param array $plugins plugins to include
+     * @return array
+     */
+    protected function _getRequiredModules(array $plugins)
+    {
+        $modules = array();
+        foreach ($plugins as $commandName) {
+            if (isset($this->_pluginsModules[$commandName])) {
+                $pluginName = $this->_pluginsModules[$commandName];
+                $modules[] = 'dijit._editor.plugins.' . $pluginName;
+            }
+        }
+
+        return array_unique($modules);
     }
 
     /**

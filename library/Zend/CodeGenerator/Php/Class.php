@@ -17,7 +17,7 @@
  * @subpackage PHP
  * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id$
+ * @version    $Id: Class.php 18398 2009-09-24 20:50:09Z beberlei $
  */
 
 /**
@@ -111,13 +111,18 @@ class Zend_CodeGenerator_Php_Class extends Zend_CodeGenerator_Php_Abstract
         
         if ($parentClass = $reflectionClass->getParentClass()) {
             $class->setExtendedClass($parentClass->getName());
-            $interfaces = array_diff($parentClass->getInterfaces(), $reflectionClass->getInterfaces());
+            $interfaces = array_diff($reflectionClass->getInterfaces(), $parentClass->getInterfaces());
         } else {
             $interfaces = $reflectionClass->getInterfaces();
         }
         
-        $class->setImplementedInterfaces($interfaces);
+        $interfaceNames = array();
+        foreach($interfaces AS $interface) {
+            $interfaceNames[] = $interface->getName();
+        }
         
+        $class->setImplementedInterfaces($interfaceNames);
+
         $properties = array();
         foreach ($reflectionClass->getProperties() as $reflectionProperty) {
             if ($reflectionProperty->getDeclaringClass()->getName() == $class->getName()) {
@@ -296,7 +301,7 @@ class Zend_CodeGenerator_Php_Class extends Zend_CodeGenerator_Php_Abstract
             throw new Zend_CodeGenerator_Php_Exception('A property by name ' . $propertyName . ' already exists in this class.');
         }
         
-        $this->_properties->append($property);
+        $this->_properties[$propertyName] = $property;
         return $this;
     }
     
@@ -324,6 +329,17 @@ class Zend_CodeGenerator_Php_Class extends Zend_CodeGenerator_Php_Abstract
             }
         }
         return false;
+    }
+    
+    /**
+     * hasProperty()
+     *
+     * @param string $propertyName
+     * @return bool
+     */
+    public function hasProperty($propertyName)
+    {
+        return isset($this->_properties[$propertyName]);
     }
     
     /**
@@ -363,7 +379,7 @@ class Zend_CodeGenerator_Php_Class extends Zend_CodeGenerator_Php_Abstract
             throw new Zend_CodeGenerator_Php_Exception('A method by name ' . $methodName . ' already exists in this class.');
         }
         
-        $this->_methods->append($method);
+        $this->_methods[$methodName] = $method;
         return $this;
     }
     
@@ -463,23 +479,23 @@ class Zend_CodeGenerator_Php_Class extends Zend_CodeGenerator_Php_Abstract
             $output .= ' implements ' . implode(', ', $implemented);
         }
         
-        $output .= PHP_EOL . '{' . PHP_EOL . PHP_EOL;
+        $output .= self::LINE_FEED . '{' . self::LINE_FEED . self::LINE_FEED;
         
         $properties = $this->getProperties();
         if (!empty($properties)) {
             foreach ($properties as $property) {
-                $output .= $property->generate() . PHP_EOL . PHP_EOL;
+                $output .= $property->generate() . self::LINE_FEED . self::LINE_FEED;
             }
         }
         
         $methods = $this->getMethods();
         if (!empty($methods)) {
             foreach ($methods as $method) {
-                $output .= $method->generate() . PHP_EOL;
+                $output .= $method->generate() . self::LINE_FEED;
             }
         }
         
-        $output .= PHP_EOL . '}' . PHP_EOL;
+        $output .= self::LINE_FEED . '}' . self::LINE_FEED;
         
         return $output;
     }

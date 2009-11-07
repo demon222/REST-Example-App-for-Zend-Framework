@@ -14,8 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Controller
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: HttpTestCase.php 18667 2009-10-22 15:42:17Z matthew $
  */
 
 /**
@@ -28,7 +29,7 @@ require_once 'Zend/Controller/Response/Http.php';
  *
  * @uses Zend_Controller_Response_Http
  * @package Zend_Controller
- * @subpackage Request
+ * @subpackage Response
  */
 class Zend_Controller_Response_HttpTestCase extends Zend_Controller_Response_Http
 {
