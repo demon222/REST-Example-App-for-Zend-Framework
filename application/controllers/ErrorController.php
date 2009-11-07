@@ -41,5 +41,10 @@ class ErrorController extends Zend_Controller_Action
         
         $this->view->exception = $errors->exception;
         $this->view->request   = $errors->request;
+        
+        $options = $this->getInvokeArg('bootstrap')->getApplication()->getOptions();
+        if ((boolean) $options['phpSettings']['display_errors']) {
+            $this->render('debug');
+        }
     }
 }

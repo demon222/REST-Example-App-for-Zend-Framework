@@ -1,3 +1,12 @@
+This is a modified version of the Zend Framework Quickstart application.
+
+It has been modified to be RESTful.
+
+Along the way a couple other things have been modified for improvement.
+
+Below is a somewhat improved content of the original README.
+
+
 This is the Quick Start application for Zend Framework. 
 
 Full instructions and explanations may be found at:
@@ -31,7 +40,8 @@ application. Using apache, you could add a vhost as follows:
     <VirtualHost *:80>
         ServerAdmin matthew@zend.com
         DocumentRoot <PATH_TO_QUICKSTART>/public
-        ServerName quickstart
+        
+        SetEnv development
 
         <Directory <PATH_TO_QUICKSTART>/public>
             DirectoryIndex index.php
@@ -42,9 +52,7 @@ application. Using apache, you could add a vhost as follows:
     </VirtualHost>
 
 You _must_ substitute the correct path to this directory for
-<PATH_TO_QUICKSTART>. Feel free to substitute any value for the
-ServerName directive; make sure that name and the associated IP address
-are in your hosts file or in your DNS.
+<PATH_TO_QUICKSTART>.
 
-Finally, point your browser to http://quickstart/ to see the
+Finally, point your browser to http://localhost/ to see the
 application in action.
