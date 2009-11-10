@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Guestbook model
+ * GuestbookEntry model
  *
  * Utilizes the Data Mapper pattern to persist data. Represents a single 
  * guestbook entry.
@@ -10,7 +10,7 @@
  * @package    QuickStart
  * @subpackage Model
  */
-class Default_Model_Guestbook
+class Default_Model_GuestbookEntry
 {
     /**
      * @var string
@@ -33,7 +33,7 @@ class Default_Model_Guestbook
     protected $_id;
 
     /**
-     * @var Default_Model_GuestbookMapper
+     * @var Default_Model_GuestbookEntryMapper
      */
     protected $_mapper;
 
@@ -191,7 +191,7 @@ class Default_Model_Guestbook
      * Set data mapper
      * 
      * @param  mixed $mapper 
-     * @return Default_Model_Guestbook
+     * @return Default_Model_GuestbookEntry
      */
     public function setMapper($mapper)
     {
@@ -202,14 +202,14 @@ class Default_Model_Guestbook
     /**
      * Get data mapper
      *
-     * Lazy loads Default_Model_GuestbookMapper instance if no mapper registered.
+     * Lazy loads Default_Model_GuestbookEntryMapper instance if no mapper registered.
      * 
-     * @return Default_Model_GuestbookMapper
+     * @return Default_Model_GuestbookEntryMapper
      */
     public function getMapper()
     {
         if (null === $this->_mapper) {
-            $this->setMapper(new Default_Model_GuestbookMapper());
+            $this->setMapper(new Default_Model_GuestbookEntryMapper());
         }
         return $this->_mapper;
     }
@@ -230,7 +230,7 @@ class Default_Model_Guestbook
      * Resets entry state if matching id found.
      * 
      * @param  int $id 
-     * @return Default_Model_Guestbook
+     * @return Default_Model_GuestbookEntry
      */
     public function find($id)
     {
