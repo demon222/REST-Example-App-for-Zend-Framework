@@ -33,4 +33,40 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         $view = $this->getResource('view');
         $view->doctype('XHTML1_STRICT');
     }
+    
+    /**
+     * Bootstrap the REST Routes
+     *
+     * @return void
+     */
+    protected function _initRestRoute()
+    {
+        $this->bootstrap('Request');
+        
+        // set the whole app as using REST routing
+        $front = $this->getResource('FrontController');
+        $restRoute = new Zend_Rest_Route($front, array(), array('default' => array('entry-api')));
+        
+        $front->getRouter()->addRoute('rest', $restRoute);
+    }
+    
+    /**
+     * Bootstrap the Request
+     *
+     * @return Zend_Controller_Request_Abstract
+     */
+    protected function _initRequest()
+    {
+        $this->bootstrap('FrontController');
+        
+        $front = $this->getResource('FrontController');
+        $request = $front->getRequest();
+        
+        if ($request === null) {
+            $request = new Zend_Controller_Request_Http();
+            $front->setRequest($request);
+        }
+        
+        return $request;
+    }
 }

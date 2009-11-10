@@ -4,6 +4,13 @@ It has been modified to be RESTful.
 
 Along the way a couple other things have been modified for improvement.
 
+
+Credits:
+- jara of github for his rest routing example at 
+git://github.com/jara/zf-restful-app-demo.git and walk-through at 
+http://avnetlabs.com/zend-framework/restful-controllers-with-zend-framework
+- Rob Taylor (roboncode.com) for his ZendCon 2009 Rest Presentation and slides
+
 Below is a somewhat improved content of the original README.
 
 

@@ -1,13 +1,15 @@
 <?php echo $this->doctype() ?> <!-- This Line will output the doctype we set inside the bootstrap file -->
 <html xmlns="http://www.w3.org/1999/xhtml"> 
 <head>  
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
-  <title>Zend Framework Quickstart Application</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+    <title>Zend Framework Quickstart Application</title>
   <!--
       The line below demonstrates usage of the headLink() view helper
       @see http://framework.zend.com/manual/en/zend.view.helpers.html
       -->
-  <?php echo $this->headLink()->appendStylesheet('/css/global.css') ?>
+    <?php echo $this->headLink()->appendStylesheet('/css/global.css') ?>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js"></script>
 </head> 
 <body>
 
@@ -28,7 +30,7 @@
              view helper
              http://framework.zend.com/manual/en/zend.view.helpers.html#zend.view.helpers.initial
              -->
-        <a href="<?php echo $this->url(array('controller'=>'guestbook'), 'default', true) ?>">Guestbook</a>
+        <a href="<?php echo $this->url(array('controller'=>'entry')) ?>">Guestbook</a>
     </div>
 </div>
 
