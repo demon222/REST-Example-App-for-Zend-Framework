@@ -90,9 +90,9 @@ class Default_Model_GuestbookEntryMapper
         }
         $row = $result->current();
         $entry->setId($row->id)
-                  ->setEmail($row->email)
-                  ->setComment($row->comment)
-                  ->setCreated($row->created);
+            ->setEmail($row->email)
+            ->setComment($row->comment)
+            ->setCreated($row->created);
     }
 
     /**
@@ -107,10 +107,10 @@ class Default_Model_GuestbookEntryMapper
         foreach ($resultSet as $row) {
             $entry = new Default_Model_GuestbookEntry();
             $entry->setId($row->id)
-                  ->setEmail($row->email)
-                  ->setComment($row->comment)
-                  ->setCreated($row->created)
-                  ->setMapper($this);
+                ->setEmail($row->email)
+                ->setComment($row->comment)
+                ->setCreated($row->created)
+                ->setMapper($this);
             $entries[] = $entry;
         }
         return $entries;
