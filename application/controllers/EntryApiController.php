@@ -118,6 +118,17 @@ class EntryApiController extends Zend_Controller_Action
     {
         $this->_helper->layout()->disableLayout();
         $this->_helper->viewRenderer->setRender('json');
+        
+        // JSON is the proper content type but browsers, currently, make it
+        // make it difficult to debug it because they attempt to download the
+        // code instead of rendering it as they do with Javascript.
+        // JSON is a subset of Javascript, so using javascript instead is
+        // acceptable, but not optimal.
+        if (strpos('application/json', $this->getRequest()->getHeader('Content-Type')) === false) {
+            $this->getResponse()->setHeader('Content-Type','application/javascript');
+        } else {
+            $this->getResponse()->setHeader('Content-Type','application/json');
+        }
     }
     
 }
