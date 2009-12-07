@@ -36,8 +36,9 @@ class Default_Form_GuestbookEntry extends Zend_Form
             'filters'    => array('StringTrim'),
             'validators' => array(
                 'EmailAddress',
+                )
             )
-        ));
+        );
 
         // Add the comment element
         $this->addElement('textarea', 'comment', array(
@@ -46,6 +47,7 @@ class Default_Form_GuestbookEntry extends Zend_Form
             'validators' => array(
                 array('validator' => 'StringLength', 'options' => array(0, 20))
                 )
-        ));
+            )
+        );
     }
 }

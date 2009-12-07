@@ -1,9 +1,11 @@
 <h1>Sign the Guestbook</h1>
-<div id="guestbook_entry_holder" class="holder_type-post"></div>
+<div id="guestbook_entry_holder"></div>
 
 <script src="/scripts/entry/form.js"></script>
 <script>
+
 $(function() {
-    $('#guestbook_entry_holder').append(application['guestbook.entry.form']);
+    $('#guestbook_entry_holder').append(application['guestbook.entry.form'](null, 'blah@blah.com', 'blah "blah" \'blah\' <test>'));
 });
+
 </script>

@@ -31,7 +31,7 @@ class EntryController extends Zend_Controller_Action
         $data = array();
         foreach ($modelSet as $model) {
             $data[] = array(
-                'id' => $model->getId(),
+                '_id' => $model->getId(),
                 'email' => $model->getEmail(),
                 'created' => $model->getCreated(),
                 'comment' => $model->getComment(),
@@ -48,5 +48,5 @@ class EntryController extends Zend_Controller_Action
      */
     public function signAction()
     {
-    }    
+    }
 }

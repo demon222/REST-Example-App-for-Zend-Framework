@@ -1,11 +1,89 @@
 <p><a href="<?php echo $this->url(array('action' => 'sign')) ?>">Sign Our Guestbook</a></p>
 
 Guestbook Entries: <br />
-<dl>
-    <!-- Loop through the entries that were provided to us by the controller -->
-    <?php foreach ($this->data as $entry): ?>
-    <dt><?php echo $this->escape($entry['id']) ?></dt>
-    <dt><?php echo $this->escape($entry['email']) ?></dt>
-    <dd><?php echo $this->escape($entry['comment']) ?></dd>
-    <?php endforeach ?>
-</dl>
+<ul class="guestbook">
+<!-- Loop through the entries that were provided to us by the controller -->
+<?php foreach ($this->data as $entry): ?>
+    <li class="entry">
+        <div class="id"><?php echo $this->escape($entry['_id']) ?></div>
+        <div class="email"><?php echo $this->escape($entry['email']) ?></div>
+        <div class="comment"><?php echo $this->escape($entry['comment']) ?></div>
+    </li>
+<?php endforeach ?>
+</ul>
+
+<script src="/scripts/entry/form.js"></script>
+<script>
+
+$('ul.guestbook li.entry').each(function() {
+    this.refresh = function() {
+        var entry = this;
+        
+        $('<div class="loading">loading...</div>').appendTo(entry);
+        
+        var id = $('div.id', entry).text();
+        
+        $.getJSON('/entry-api/' + escape(id), function(data) {
+            entry.refreshFromData(data);
+            $('div.loading', entry).remove();
+        });
+    };
+    
+    this.refreshFromData = function(data) {
+        var entry = this;
+        
+        $('div.email', entry).text(data.email);
+        $('div.comment', entry).text(data.comment);
+    };
+    
+});
+
+$('<div class="control">edit</div>').click(function() {
+    var entry = $(this).parent();
+
+    $('<div class="form"/>').append(
+        application['guestbook.entry.form'](
+            $('div.email', entry).text(),
+            $('div.comment', entry).text(),
+            'PUT'
+        )
+    ).appendTo(entry).slideDown();
+
+    $('.form .cancel', entry).click(function() {
+        $('.form', entry).slideUp(function() {
+            $(this).remove()
+        });
+    });
+
+    $('.form .submit', entry).click(function() {
+        var id = $('div.id', entry).text();
+        var data = {
+            'email': $('.form .email', entry).val(),
+            'comment': $('.form .comment', entry).val()
+        };
+
+        var submitButton = $(this);
+
+        $.ajax({
+            url: '/entry-api/' + id,
+            type: 'PUT',
+            data: data,
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            beforeSend: function() {
+                submitButton.val('Editing...')
+            },
+            success: function(result) {
+                submitButton.val('Edited');
+                $('.form', entry).slideUp(function() {
+                    $(this).remove()
+                });
+                entry.refresh();
+            }
+        });
+    });
+}).appendTo('ul.guestbook li.entry');
+
+$('<div class="control control_delete">delete</div>').appendTo('ul.guestbook li.entry');
+
+</script>
