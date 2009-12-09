@@ -16,26 +16,30 @@ Guestbook Entries: <br />
 <script>
 
 $('ul.guestbook li.entry').each(function() {
-    this.refresh = function() {
+    this.refreshFromData = function(data) {
         var entry = this;
-        
+
+        $('div.email', entry).text(data.email);
+        $('div.comment', entry).text(data.comment);
+    };
+    
+    this.refresh = function(data) {
+        var entry = this;
+
+        if (null != data) {
+            this.refreshFromData(data);
+            return;
+        }
+
         $('<div class="loading">loading...</div>').appendTo(entry);
-        
+
         var id = $('div.id', entry).text();
-        
+
         $.getJSON('/entry-api/' + escape(id), function(data) {
             entry.refreshFromData(data);
             $('div.loading', entry).remove();
         });
     };
-    
-    this.refreshFromData = function(data) {
-        var entry = this;
-        
-        $('div.email', entry).text(data.email);
-        $('div.comment', entry).text(data.comment);
-    };
-    
 });
 
 $('<div class="control">edit</div>').click(function() {
@@ -78,7 +82,7 @@ $('<div class="control">edit</div>').click(function() {
                 $('.form', entry).slideUp(function() {
                     $(this).remove()
                 });
-                entry.refresh();
+                entry.get(0).refresh(result);
             }
         });
     });

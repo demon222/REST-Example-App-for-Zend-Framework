@@ -1,7 +1,6 @@
 <?php
 
 require_once('Rest/Controller/Action/Abstract.php');
-require_once('../application/validates/Entry.php');
 
 /**
  * Guestbook controller

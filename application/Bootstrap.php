@@ -19,6 +19,13 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
             'namespace' => 'Default',
             'basePath'  => dirname(__FILE__),
         ));
+
+        // set up applicatio/validates as a place where the autoloader will
+        // look. Forms has similar support baked in and would traditionally
+        // have been the mechanism through which validates are used in MVC.
+        // However with REST design forms aren't useful but validates are.
+        $autoloader->addResourceType('validate', 'validates', 'Validate');
+        
         return $autoloader;
     }
 
