@@ -1,11 +1,41 @@
 <h1>Sign the Guestbook</h1>
-<div id="guestbook_entry_holder"></div>
+<div class="form"></div>
 
 <script src="/scripts/entry/form.js"></script>
 <script>
 
 $(function() {
-    $('#guestbook_entry_holder').append(application['guestbook.entry.form']('', '', 'POST'));
+    var form = $('.form').append(
+        application['guestbook.entry.form']('', '', 'POST')
+    );
+
+    $('.cancel', form).click(function() {
+        window.location = '/entry';
+    });
+
+    $('.submit', form).click(function() {
+        var data = {
+            'email': $('.email', form).val(),
+            'comment': $('.comment', form).val()
+        };
+
+        var submitButton = $(this);
+
+        $.ajax({
+            url: '/entry-api',
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            beforeSend: function() {
+                submitButton.val('Signing...');
+            },
+            success: function(result) {
+                submitButton.val('Signed');
+                window.location = '/entry';
+            }
+        });
+    });
 });
 
 </script>

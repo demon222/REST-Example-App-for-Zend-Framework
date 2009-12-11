@@ -76,6 +76,25 @@ class Default_Model_GuestbookEntryMapper
     }
 
     /**
+     * Delete a guestbook entry
+     *
+     * @param Default_Model_GuestbookEntry $entry
+     * @return void
+     */
+    public function delete(Default_Model_GuestbookEntry $entry)
+    {
+        if (null === ($id = $entry->getId())) {
+            throw new Exception('Entry does not have an id');
+        }
+
+        $table = $this->getDbTable();
+
+        $where = $table->getAdapter()->quoteInto('id = ?', $id);
+
+        $table->delete($where);
+    }
+
+    /**
      * Find a guestbook entry by id
      * 
      * @param  int $id 

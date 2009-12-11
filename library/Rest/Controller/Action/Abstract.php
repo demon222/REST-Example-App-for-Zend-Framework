@@ -89,14 +89,18 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
     public function postAction()
     {
-        $validator = $this->_validateObjectFactory();
+        parse_str(file_get_contents('php://input'), $values);
 
-        if (!$validate->isValid($this->getRequest()->getPost())) {
-            $this->view->data = array('ok' => false);
+        $validate = $this->_validateObjectFactory();
+
+        if (!$validate->isValid($values)) {
+            $this->getResponse()->setHttpResponseCode(409);
+            $this->view->data = array('ok' => false, 'status' => 409);
             $this->render();
+            return;
         }
-
-        $model = $this->_modelObjectFactory($validate->getValues());
+        
+        $model = $this->_modelObjectFactory($values);
         $model->save();
 
         $this->getResponse()
@@ -104,6 +108,21 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             ->setHeader('Location', $this->view->url(array('action' => 'get', 'id' => $model->getId())));
 
         $this->view->data = $this->_mapModelToArray($model);
+    }
+
+    public function deleteAction()
+    {
+        $model = $this->_modelObjectFactory();
+        $model->find((integer) $this->getRequest()->getParam('id'));
+
+        if (null === $model->getId()) {
+            $this->getResponse()->setHttpResponseCode(404);
+            $this->view->data = array('ok' => false, 'status' => 404);
+            $this->render();
+            return;
+        }
+
+        $model->delete();
     }
 
 
