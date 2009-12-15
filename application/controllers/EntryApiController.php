@@ -1,6 +1,7 @@
 <?php
 
 require_once('Rest/Controller/Action/Abstract.php');
+require_once('Rest/Serializer.php');
 
 /**
  * Guestbook controller

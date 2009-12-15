@@ -76,7 +76,7 @@ $('.guestbook .entry .control_put').live('click', function() {
         $.ajax({
             url: '/entry-api/' + id,
             type: 'PUT',
-            data: data,
+            data: JSON.stringify(data),
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             beforeSend: function() {
@@ -141,7 +141,7 @@ $('.guestbook .control_post').click(function() {
         $.ajax({
             url: '/entry-api',
             type: 'POST',
-            data: data,
+            data: JSON.stringify(data),
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             beforeSend: function() {
