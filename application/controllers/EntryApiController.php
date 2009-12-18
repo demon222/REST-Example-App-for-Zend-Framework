@@ -16,17 +16,6 @@ require_once('Rest/Serializer.php');
 class EntryApiController extends Rest_Controller_Action_Abstract
 {
 
-    protected static function _mapModelToArray($entry)
-    {
-        return array(
-            '_id' => $entry->getId(),
-            'email' => $entry->getEmail(),
-            'created' => $entry->getCreated(),
-            'comment' => $entry->getComment(),
-        );
-    }
-
-
     protected static function _modelObjectFactory($options = null)
     {
         return new Default_Model_GuestbookEntry($options);

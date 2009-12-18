@@ -50,6 +50,16 @@ class Default_Model_GuestbookEntry
         }
     }
 
+    public function toArray()
+    {
+        return array(
+            '_id' => $this->getId(),
+            'email' => $this->getEmail(),
+            'created' => $this->getCreated(),
+            'comment' => $this->getComment(),
+        );
+    }
+
     /**
      * Overloading: allow property access
      * 

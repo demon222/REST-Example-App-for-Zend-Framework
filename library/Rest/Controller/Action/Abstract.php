@@ -13,7 +13,6 @@
 abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 {
 
-    abstract protected static function _mapModelToArray($guestbookEntry);
     abstract protected static function _validateObjectFactory();
     abstract protected static function _modelObjectFactory($options = null);
 
@@ -30,7 +29,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
         $data = array();
         foreach ($modelSet as $model) {
-            $data[] = $this->_mapModelToArray($model);
+            $data[] = $model->toArray();
         }
 
         $this->view->data = $data;
@@ -49,7 +48,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             return;
         }
 
-        $this->view->data = $this->_mapModelToArray($model);
+        $this->view->data = $model->toArray();
     }
 
 
@@ -96,7 +95,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
         $model->setOptions($values);
         $model->save();
 
-        $this->view->data = $this->_mapModelToArray($model);
+        $this->view->data = $model->toArray();
     }
 
 
@@ -132,7 +131,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             ->setHttpResponseCode(201)
             ->setHeader('Location', $this->view->url(array('action' => 'get', 'id' => $model->getId())));
 
-        $this->view->data = $this->_mapModelToArray($model);
+        $this->view->data = $model->toArray();
     }
 
     public function deleteAction()
