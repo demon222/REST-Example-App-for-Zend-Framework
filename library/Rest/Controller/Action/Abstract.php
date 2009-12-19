@@ -1,5 +1,7 @@
 <?php
 
+require_once('Rest/Serializer.php');
+
 /**
  * Guestbook controller
  *
@@ -18,9 +20,8 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
     /*
      * For backwards compatibility (prior to PHP 5.3) '$this->' is being used
-     * for references to the above 3 methods but 'static::' would be proper.
+     * for references to the above methods but 'static::' would be proper.
      */
-
 
     public function indexAction()
     {
@@ -43,8 +44,6 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
         if (null === $model->getId()) {
             $this->getResponse()->setHttpResponseCode(404);
-            $this->view->data = array('ok' => false, 'status' => 404);
-            $this->render();
             return;
         }
 
@@ -57,12 +56,10 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
         $request = $this->getRequest();
 
         $model = $this->_modelObjectFactory();
-        $model->find((integer) $request->getParam('id'));
+        $model->find($request->getParam('id'));
 
         if (null === $model->getId()) {
             $this->getResponse()->setHttpResponseCode(404);
-            $this->view->data = array('ok' => false, 'status' => 404);
-            $this->render();
             return;
         }
 
@@ -78,21 +75,20 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             $contentType = Rest_Serializer::URL_ENCODE;
         }
 
-        $values = Rest_Serializer::getInstance()
+        $input = Rest_Serializer::getInstance()
             ->setEncodedString($rawData)
             ->setType($contentType)
             ->getDecodedArray();
         
-        $validator = $this->_validateObjectFactory();
+        $validate = $this->_validateObjectFactory();
 
-        if (!$validator->isValid($values)) {
-            $this->getResponse()->setHttpResponseCode(409);
-            $this->view->data = array('ok' => false, 'status' => 409);
-            $this->render();
+        if (!$validate->isValid($input)) {
+            $this->getResponse()->setHttpResponseCode(400);
+            $this->view->data = array('_errors' => $validate->getMessages());
             return;
         }
 
-        $model->setOptions($values);
+        $model->setOptions($input);
         $model->save();
 
         $this->view->data = $model->toArray();
@@ -110,21 +106,20 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             $contentType = Rest_Serializer::URL_ENCODE;
         }
 
-        $values = Rest_Serializer::getInstance()
+        $input = Rest_Serializer::getInstance()
             ->setEncodedString($rawData)
             ->setType($contentType)
             ->getDecodedArray();
 
         $validate = $this->_validateObjectFactory();
 
-        if (!$validate->isValid($values)) {
-            $this->getResponse()->setHttpResponseCode(409);
-            $this->view->data = array('ok' => false, 'status' => 409);
-            $this->render();
+        if (!$validate->isValid($input)) {
+            $this->getResponse()->setHttpResponseCode(400);
+            $this->view->data = array('_errors' => $validate->getMessages());
             return;
         }
-        
-        $model = $this->_modelObjectFactory($values);
+
+        $model = $this->_modelObjectFactory($input);
         $model->save();
 
         $this->getResponse()
@@ -141,16 +136,73 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
         if (null === $model->getId()) {
             $this->getResponse()->setHttpResponseCode(404);
-            $this->view->data = array('ok' => false, 'status' => 404);
-            $this->render();
             return;
         }
 
         $model->delete();
     }
 
+    public function preDispatch()
+    {
+        // Get a reference to the singleton instance of Zend_Auth
+        $auth = Zend_Auth::getInstance();
 
-    public function postDispatch() {
+$config = array(
+    'accept_schemes' => 'basic',
+//    'accept_schemes' => 'basic digest',
+    'realm'          => 'Guestbook API',
+    'digest_domains' => '/',
+    'nonce_timeout'  => 3600,
+);
+
+$authAdapter = new Zend_Auth_Adapter_Http($config);
+
+$basicResolver = new Zend_Auth_Adapter_Http_Resolver_File();
+$basicResolver->setFile(APPLICATION_PATH . '/configs/basicAuth.txt');
+
+//$digestResolver = new Zend_Auth_Adapter_Http_Resolver_File();
+//$digestResolver->setFile('files/digestAuth.txt');
+
+$authAdapter->setBasicResolver($basicResolver);
+//$authAdapter->setDigestResolver($digestResolver);
+
+$authAdapter->setRequest($this->getRequest());
+$authAdapter->setResponse($this->getResponse());
+
+$result = $authAdapter->authenticate();
+
+        if (!$result->isValid()) {
+            // Bad userame/password, or canceled password prompt
+            
+            // Authentication failed; print the reasons why
+            $this->getResponse()->setHttpResponseCode(401);
+
+            // cancel the action but post dispatch will be executed
+            $this->setCancelAction(true);
+
+            $this->view->data = array('_errors' => $result->getMessages());
+        }
+
+    }
+
+
+    // controls action execution, see dispatch method for more details
+    protected $_cancelAction = false;
+
+    /**
+     * Controls execution of the intended dispatched action
+     *
+     * @param boolean $value
+     * @return Rest_Controller_Action_Abstract
+     */
+    public function setCancelAction($value)
+    {
+        $this->_cancelAction = $value;
+        return $this;
+    }
+
+    public function postDispatch()
+    {
         $data = isset($this->view->data) ? $this->view->data : null;
 
         // disable aspects that interfer with just outputing JSON or XML
@@ -161,23 +213,72 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             ::getStaticHelper('viewRenderer')->setNoRender();
 
         $contentType = $this->getRequest()->getHeader('Accept');
-        
-        if (!Rest_Serializer::identifyType($contentType)) {
+
+        $serializer = Rest_Serializer::getInstance()->setType($contentType);
+
+        if (!$serializer->getType()) {
+            // Don't know how to render in the identified type(s)
+            // respond in Javascript with the http code set accordingly
+            $this->getResponse()->setHttpResponseCode(406);
+        }
+        if (!$serializer->getType() || $serializer->getType() == Rest_Serializer::ANYTHING) {
             // JSON is the proper content type but browsers (2009/12) make it
             // difficult to debug it because they attempt to download the
             // code instead of rendering it as they do with Javascript.
             // JSON is a subset of Javascript, so using javascript instead is
             // often acceptable, if not optimal.
-            $contentType = Rest_Serializer::JAVASCRIPT;
+            $serializer->setType(Rest_Serializer::JAVASCRIPT);
         }
-        
-        $this->getResponse()->setHeader('Content-Type', $contentType);
 
-        $this->getResponse()->setBody(Rest_Serializer::getInstance()
-            ->setDecodedArray($data)
-            ->setType($contentType)
-            ->getEncodedString()
-        );
+        $this->getResponse()->setHeader('Content-Type', $serializer->getType());
+
+        // mirror the response code in the actual data for convience
+        $data['_status-code'] = $this->getResponse()->getHttpResponseCode();
+
+        $serializer->setDecodedArray($data);
+
+        $this->getResponse()->setBody($serializer->getEncodedString());
     }
 
+    /**
+     * Overwritten dispatch inorder to introduce cancel action functionality.
+     * 
+     * Dispatch the requested action
+     *
+     * @param string $action Method name of action
+     * @return void
+     */
+    public function dispatch($action)
+    {
+        // Notify helpers of action preDispatch state
+        $this->_helper->notifyPreDispatch();
+
+        $this->preDispatch();
+        if ($this->getRequest()->isDispatched()) {
+            if (null === $this->_classMethods) {
+                $this->_classMethods = get_class_methods($this);
+            }
+
+            // THE FOLLOWING IF CONDITION HAS BEEN INTRODUCED FOR CLEAN USAGE
+            // OF REST IN PRE AND POST DISPATCH, OTHERWISE DISPATCH IS SAME TO
+            // Zend_Controller_ 'Action.php 16541 2009-07-07 06:59:03Z bkarwin'
+            if (!$this->_cancelAction) {
+                // preDispatch() didn't change the action, so we can continue
+                if ($this->getInvokeArg('useCaseSensitiveActions') || in_array($action, $this->_classMethods)) {
+                    if ($this->getInvokeArg('useCaseSensitiveActions')) {
+                        trigger_error('Using case sensitive actions without word separators is deprecated; please do not rely on this "feature"');
+                    }
+                    $this->$action();
+                } else {
+                    $this->__call($action, array());
+                }
+            }
+            $this->postDispatch();
+        }
+
+        // whats actually important here is that this action controller is
+        // shutting down, regardless of dispatching; notify the helpers of this
+        // state
+        $this->_helper->notifyPostDispatch();
+    }
 }

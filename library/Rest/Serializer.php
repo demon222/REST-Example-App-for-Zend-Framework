@@ -5,28 +5,34 @@
  */
 class Rest_Serializer
 {
+    const ANYTHING = '*';
     const JSON = 'application/json';
     const JAVASCRIPT = 'application/javascript';
     const XML = 'text/xml';
     const URL_ENCODE = 'application/x-www-form-urlencoded';
 
     /**
-     * convience data structure for iteration across supported types
+     * Is checked against to determine type, see identifyType method.
+     * Precendence indicated preference if a multiple content types
+     * are specified in string to identifyType
+     * 
      * @var array
      * @static
      */
     protected static $_types = array(
         'JSON' => self::JSON,
-        'JAVASCRIPT' => self::JAVASCRIPT,
         'XML' => self::XML,
+        'JAVASCRIPT' => self::JAVASCRIPT,
         'URL_ENCODE' => self::URL_ENCODE,
+        'ANYTHING' => self::ANYTHING,
     );
 
     /**
      * usually from http Content-Type or Http-Accept
      * @var string
      */
-    protected $_type = self::JSON;
+    protected $_type = null;
+    protected $_rawType = self::JSON;
 
     /**
      * decoded data structure
@@ -56,7 +62,8 @@ class Rest_Serializer
      */
     public function setType($type)
     {
-        $this->_type = $type;
+        $this->_rawType = $type;
+        $this->_type = null;
         return $this;
     }
 
@@ -66,7 +73,10 @@ class Rest_Serializer
      */
     public function getType()
     {
-        return self::identifyType($this->_type);
+        if ($this->_type === null) {
+            $this->_type = self::identifyType($this->_rawType);
+        }
+        return $this->_type;
     }
 
     /**
@@ -93,7 +103,7 @@ class Rest_Serializer
         }
         $this->_encodedString = self::encode(
             $this->_decodedArray,
-            self::identifyType($this->_type)
+            $this->getType()
         );
         return $this->_encodedString;
     }
@@ -122,7 +132,7 @@ class Rest_Serializer
         }
         $this->_decodedArray = self::decode(
             $this->_encodedString,
-            self::identifyType($this->_type)
+            $this->getType()
         );
         return $this->_decodedArray;
     }
@@ -157,7 +167,7 @@ class Rest_Serializer
      */
     public static function encode($array, $type)
     {
-        if ($type == self::JSON || $type == self::JAVASCRIPT) {
+        if ($type == self::JSON || $type == self::JAVASCRIPT || $type == self::ANYTHING) {
             return Zend_Json::encode($array);
         }
 

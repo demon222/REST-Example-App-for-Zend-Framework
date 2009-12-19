@@ -1,11 +1,13 @@
 <?php
 
+require_once('ZendPatch/Validate/Abstract.php');
+
 /**
  * @uses       Zend_Validate
  * @package    QuickStart
  * @subpackage Validate
  */
-class Default_Validate_Entry extends Zend_Validate_Abstract
+class Default_Validate_Entry extends ZendPatch_Validate_Abstract
 {
     const NOT_DATA = 'notData';
     const NOT_ENOUGH_DATA = 'notEnoughData';
@@ -49,9 +51,9 @@ class Default_Validate_Entry extends Zend_Validate_Abstract
             $filter = new Zend_Filter_StringTrim();
             $value['email'] = $filter->filter($value['email']);
             
-            $validator = new Zend_Validate_EmailAddress();
-            if (!$validator->isValid($value['email'])) {
-                $this->setMessages($validator->getMessages());
+            $validate = new Zend_Validate_EmailAddress();
+            if (!$validate->isValid($value['email'])) {
+                $this->_absorbValidateMessagesAndErrors($validate);
             }
         }
 
@@ -59,9 +61,9 @@ class Default_Validate_Entry extends Zend_Validate_Abstract
         if (isset($value['comment'])) {
             $partialOk = true;
 
-            $validator = new Zend_Validate_StringLength(array(0, 20));
-            if (!$validator->isValid($value['comment'])) {
-                $this->setMessages($validator->getMessages());
+            $validate = new Zend_Validate_StringLength(array(0, 20));
+            if (!$validate->isValid($value['comment'])) {
+                $this->_absorbValidateMessagesAndErrors($validate);
             }
         }
 
@@ -71,7 +73,7 @@ class Default_Validate_Entry extends Zend_Validate_Abstract
         }
 
         // report failure if there are any messages
-        if ($this->getMessageLength() > 0) {
+        if (count($this->_messages)) {
             return false;
         }
 
