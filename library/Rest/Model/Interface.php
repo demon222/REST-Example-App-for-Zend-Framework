@@ -54,11 +54,20 @@ interface Rest_Model_Interface
     public function find($id);
 
     /**
-     * Fetch all entries from the persistance layer
+     * Fetch all entries from the persistance layer. Returns an array of model
+     * objects.
      *
      * @return array
      */
     public function fetchAll();
+
+    /**
+     * Fetch all entries from the persistance layer and return as array of
+     * associative arrays (key-value pairs).
+     *
+     * @return array
+     */
+    public function fetchAllAsArrays();
 
     /**
      * Overloading: allow property access

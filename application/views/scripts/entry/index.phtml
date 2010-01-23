@@ -6,7 +6,7 @@ Guestbook Entries: <br />
 <!-- Loop through the entries that were provided to us by the controller -->
 <?php foreach ($this->data as $entry): ?>
         <li class="entry">
-            <div class="id"><?php echo $this->escape($entry['_id']) ?></div>
+            <div class="id"><?php echo $this->escape($entry['id']) ?></div>
             <div class="email"><?php echo $this->escape($entry['email']) ?></div>
             <div class="comment"><?php echo $this->escape($entry['comment']) ?></div>
         </li>
@@ -41,7 +41,7 @@ function refreshEntry(entry, data) {
     var id = $('div.id', entry).text();
 
     $.getJSON('/entry-api/' + escape(id), function(data) {
-        refreshEntryFromData(data);
+        refreshEntryFromData(data.content);
         $('div.loading', entry).remove();
     });
 }
@@ -87,7 +87,7 @@ $('.guestbook .entry .control_put').live('click', function() {
                 form.slideUp(function() {
                     $(this).remove();
                 });
-                refreshEntry(entry, result);
+                refreshEntry(entry, result.content);
             }
         });
     });
@@ -154,7 +154,7 @@ $('.guestbook .control_post').click(function() {
                 });
                 guestbookButton.show();
                 entry = $('<li class="entry"><div class="id"/><div class="email"/><div class="comment"/><input type="button" class="control control_put" value="Edit"/><input type="button" class="control control_delete" value="Delete"/></li>');
-                refreshEntry(entry, result);
+                refreshEntry(entry, result.content);
                 entry.hide().appendTo('div.guestbook ul').slideDown();
             }
         });

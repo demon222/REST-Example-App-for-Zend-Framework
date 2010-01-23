@@ -1,5 +1,7 @@
 <?php
 
+require_once('Rest/Requestor.php');
+
 /**
  * Guestbook controller
  *
@@ -26,18 +28,11 @@ class EntryController extends Zend_Controller_Action
     public function indexAction()
     {
         $modelObj = new Default_Model_GuestbookEntry();
-        $modelSet = $modelObj->fetchAll();
-        
-        $data = array();
-        foreach ($modelSet as $model) {
-            $data[] = array(
-                '_id' => $model->getId(),
-                'email' => $model->getEmail(),
-                'created' => $model->getCreated(),
-                'comment' => $model->getComment(),
-            );
-        }
-        
+        $data = $modelObj->fetchAllAsArrays();
+
+//        $result = Rest_Requestor::apiRequest('GET', '/entry-api/');
+//        $data = $result['content'];
+
         $this->view->data = $data;
     }
     

@@ -36,7 +36,6 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
         $this->view->data = $data;
     }
 
-
     public function getAction()
     {
         $model = $this->_modelObjectFactory();
@@ -49,7 +48,6 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
         $this->view->data = $model->toArray();
     }
-
 
     public function putAction()
     {
@@ -93,7 +91,6 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
         $this->view->data = $model->toArray();
     }
-
 
     public function postAction()
     {
@@ -148,8 +145,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
         $auth = Zend_Auth::getInstance();
 
 $config = array(
-    'accept_schemes' => 'basic',
-//    'accept_schemes' => 'basic digest',
+    'accept_schemes' => 'basic digest',
     'realm'          => 'Guestbook API',
     'digest_domains' => '/',
     'nonce_timeout'  => 3600,
@@ -160,11 +156,11 @@ $authAdapter = new Zend_Auth_Adapter_Http($config);
 $basicResolver = new Zend_Auth_Adapter_Http_Resolver_File();
 $basicResolver->setFile(APPLICATION_PATH . '/configs/basicAuth.txt');
 
-//$digestResolver = new Zend_Auth_Adapter_Http_Resolver_File();
-//$digestResolver->setFile('files/digestAuth.txt');
+$digestResolver = new Zend_Auth_Adapter_Http_Resolver_File();
+$digestResolver->setFile(APPLICATION_PATH . '/configs/digestAuth.txt');
 
 $authAdapter->setBasicResolver($basicResolver);
-//$authAdapter->setDigestResolver($digestResolver);
+$authAdapter->setDigestResolver($digestResolver);
 
 $authAdapter->setRequest($this->getRequest());
 $authAdapter->setResponse($this->getResponse());
@@ -232,13 +228,18 @@ $result = $authAdapter->authenticate();
 
         $this->getResponse()->setHeader('Content-Type', $serializer->getType());
 
-        // mirror the response code in the actual data for convience
-        $data['_status-code'] = $this->getResponse()->getHttpResponseCode();
-
-        $serializer->setDecodedArray($data);
+        $serializer->setDecodedArray(array(
+            'content' => $data,
+            'meta' => array(
+                // mirror some values in the actual data to ease debugging
+                '_status-code' => $this->getResponse()->getHttpResponseCode(),
+                '_request-uri' => $this->getRequest()->getRequestUri(),
+            ),
+        ));
 
         $this->getResponse()->setBody($serializer->getEncodedString());
     }
+
 
     /**
      * Overwritten dispatch inorder to introduce cancel action functionality.
@@ -281,4 +282,5 @@ $result = $authAdapter->authenticate();
         // state
         $this->_helper->notifyPostDispatch();
     }
+
 }

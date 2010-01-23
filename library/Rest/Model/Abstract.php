@@ -38,6 +38,24 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface
     }
 
     /**
+     * Fetch all entries from the persistance layer and return as array of
+     * associative arrays (key & value).
+     *
+     * @return array
+     */
+    public function fetchAllAsArrays()
+    {
+            $modelSet = $this->fetchAll();
+
+            $data = array();
+            foreach ($modelSet as $model) {
+                $data[] = $model->toArray();
+            }
+
+            return $data;
+    }
+
+    /**
      * Overloading: allow property access
      *
      * @param  string $name

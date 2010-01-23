@@ -39,10 +39,13 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     protected $_mapper;
 
+    /**
+     * @return array
+     */
     public function toArray()
     {
         return array(
-            '_id' => $this->getId(),
+            'id' => $this->getId(),
             'email' => $this->getEmail(),
             'created' => $this->getCreated(),
             'comment' => $this->getComment(),
@@ -207,7 +210,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
     {
         return $this->getMapper()->fetchAll();
     }
-    
+
     /**
      * Overloading: allow property access
      *
@@ -217,7 +220,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function __set($name, $value)
     {
-        if ($name == 'mapper') {
+        if (in_array($name, array('mapper'))) {
             throw Exception('Invalid property "' . $name . '" specified');
         }
         parent::__set($name, $value);
@@ -231,7 +234,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function __get($name)
     {
-        if ($name == 'mapper') {
+        if (in_array($name, array('mapper'))) {
             throw Exception('Invalid property "' . $name . '" specified');
         }
         return parent::__get($name);
