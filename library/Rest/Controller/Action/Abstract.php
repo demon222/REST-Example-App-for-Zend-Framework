@@ -87,7 +87,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
         }
 
         $model->setOptions($input);
-        $model->save();
+        $model->put();
 
         $this->view->data = $model->toArray();
     }
@@ -117,7 +117,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
         }
 
         $model = $this->_modelObjectFactory($input);
-        $model->save();
+        $model->post();
 
         $this->getResponse()
             ->setHttpResponseCode(201)

@@ -4,6 +4,20 @@ require_once('Rest/Model/Interface.php');
 
 abstract class Rest_Model_Abstract implements Rest_Model_Interface
 {
+    /**
+     * @var Zend_Acl
+     */
+    protected $_acl;
+
+    /**
+     * @var Zend_Acl_Role
+     */
+    protected $_aclRole;
+
+    /**
+     * @var string
+     */
+    protected $_aclObjectName;
 
     /**
      * Constructor
@@ -23,7 +37,7 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface
      * corresponding to the array's keys.
      *
      * @param array $options
-     * @return Rest_Model_Interface
+     * @return Rest_Model_Abstract
      */
     public function setOptions(array $options)
     {
@@ -65,7 +79,13 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface
     public function __set($name, $value)
     {
         $method = 'set' . $name;
-        if (!method_exists($this, $method)) {
+        if (!method_exists($this, $method) || in_array($name, array(
+                'mapper',
+                'acl',
+                'aclRole',
+                'aclObjectName',
+            ))
+        ) {
             throw Exception('Invalid property "' . $name . '" specified');
         }
         $this->$method($value);
@@ -80,9 +100,133 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface
     public function __get($name)
     {
         $method = 'get' . $name;
-        if (!method_exists($this, $method)) {
+        if (!method_exists($this, $method) || in_array($name, array(
+                'mapper',
+                'acl',
+                'aclRole',
+                'aclObjectName',
+                'resourcesTree',
+            ))
+        ) {
             throw Exception('Invalid property "' . $name . '" specified');
         }
         return $this->$method();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAclObjectName()
+    {
+        if ($this->_aclObjectName) {
+            $this->setAclObjectName(get_class($this));
+        }
+        return $this->_aclObjectName;
+    }
+
+    /**
+     * @param string $name
+     * @return Default_Model_Guestbook
+     */
+    public function setAclObjectName($name)
+    {
+        $this->_aclObjectName = $name;
+        return $this;
+    }
+
+    /**
+     * @return Zend_Acl
+     */
+    public function getAcl()
+    {
+        return $this->_acl;
+    }
+
+    /**
+     * @param Zend_Acl $acl
+     * @return Default_Model_Guestbook
+     */
+    public function setAcl($acl)
+    {
+        $this->_acl = $acl;
+        return $this;
+    }
+
+    /**
+     * @return Zend_Acl_Role
+     */
+    public function getAclRole()
+    {
+        return $this->_aclRole;
+    }
+
+    /**
+     * @param string|Zend_Acl_Role $role
+     * @return Default_Model_Guestbook
+     */
+    public function setAclRole($role)
+    {
+        // find the Zend_Acl_Role if not already provided
+        if (!($role instanceof Zend_Acl_Role)) {
+            $role = $this->getAcl()->getRole($role);
+        }
+
+        $this->_aclRole = $role;
+        return $this;
+    }
+
+    /**
+     * @param Zend_Acl $acl
+     * @return Rest_Model_Abstract
+     */
+    public function addResourcesToAcl($acl, $parent = null)
+    {
+        $this->_recursiveAddToAcl($acl, $this->getResourcesTree());
+        return $this;
+    }
+
+    /**
+     * @param Zend_Acl $acl
+     * @param arrat $tree
+     */
+    protected static function _recursiveAddToAcl($acl, $tree, $parent = null)
+    {
+        foreach ($tree as $nodeKey => $nodeValue) {
+            $name = ($parent ? $parent . '-' : '') . ($nodeKey ? $nodeKey : $nodeValue);
+
+            $acl->addResource(new Zend_Acl_Resource($name), $parent);
+
+            if ($nodeKey && is_array($nodeValue)) {
+                self::_recursiveAddToAcl($acl, $nodeValue, $name);
+            }
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function getResourcesTree()
+    {
+        /**
+         * This is a placeholder implementation for getResourcesTree
+         * It should be overridden in classes that extend this class.
+         *
+         * This function must return an array with values as strings for
+         * resources that this class represents and checks on for its ACL code.
+         * A Typical example would be:
+         *
+         *   return array(
+         *       'guestbookEntry' => array(
+         *           'comment',
+         *           'created',
+         *           'email',
+         *       ),
+         *   );
+         *
+         * Nesting of arrays is encouraged where it makes sense
+         *
+         * When the method addResourcesToAcl method is called from the parent
+         */
+        return array($this->getAclObjectName());
     }
 }

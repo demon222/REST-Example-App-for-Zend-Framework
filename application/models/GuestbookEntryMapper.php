@@ -51,28 +51,50 @@ class Default_Model_GuestbookEntryMapper
     }
 
     /**
-     * Save a guestbook entry
+     * Put/Update a guestbook entry. Can change the id of a object
+     * by passing 2nd param of object which will be used for id information
      * 
-     * @param  Default_Model_GuestbookEntry $entry 
+     * @param  Default_Model_GuestbookEntry $entry
+     * @param  Default_Model_GuestbookEntry $orig
      * @return void
      */
-    public function save(Default_Model_GuestbookEntry $entry)
+    public function put(Default_Model_GuestbookEntry $entry, Default_Model_GuestbookEntry $orig = null)
     {
         $entry->setCreated(date('Y-m-d H:i:s'));
         
+        $data = array(
+            'id'      => $entry->getId(),
+            'email'   => $entry->getEmail(),
+            'comment' => $entry->getComment(),
+            'created' => $entry->getCreated(),
+        );
+
+        if ($orig instanceof Default_Model_GuestbookEntry) {
+            $idPairs = array('id = ?' => $orig->id);
+        } else {
+            $idPairs = array('id = ?' => $entry->id);
+        }
+
+        $this->getDbTable()->update($data, $idPairs);
+    }
+
+    /**
+     * Post/Create a guestbook entry
+     * 
+     * @param Default_Model_GuestbookEntry $entry
+     */
+    public function post(Default_Model_GuestbookEntry $entry)
+    {
+        $entry->setCreated(date('Y-m-d H:i:s'));
+
         $data = array(
             'email'   => $entry->getEmail(),
             'comment' => $entry->getComment(),
             'created' => $entry->getCreated(),
         );
-        
-        if (null === ($id = $entry->getId())) {
-            unset($data['id']);
-            $id = $this->getDbTable()->insert($data);
-            $entry->setId($id);
-        } else {
-            $this->getDbTable()->update($data, array('id = ?' => $id));
-        }
+
+        $id = $this->getDbTable()->insert($data);
+        $entry->setId($id);
     }
 
     /**
@@ -97,19 +119,17 @@ class Default_Model_GuestbookEntryMapper
     /**
      * Find a guestbook entry by id
      * 
-     * @param  int $id 
-     * @param  Default_Model_GuestbookEntry $entry 
+     * @param  Default_Model_GuestbookEntry $entry
      * @return void
      */
-    public function find($id, Default_Model_GuestbookEntry $entry)
+    public function get(Default_Model_GuestbookEntry $entry)
     {
-        $result = $this->getDbTable()->find($id);
+        $result = $this->getDbTable()->find($entry->getId());
         if (0 == count($result)) {
             return;
         }
         $row = $result->current();
-        $entry->setId($row->id)
-            ->setEmail($row->email)
+        $entry->setEmail($row->email)
             ->setComment($row->comment)
             ->setCreated($row->created);
     }
@@ -128,8 +148,8 @@ class Default_Model_GuestbookEntryMapper
             $entry->setId($row->id)
                 ->setEmail($row->email)
                 ->setComment($row->comment)
-                ->setCreated($row->created)
-                ->setMapper($this);
+                ->setCreated($row->created);
+            $entry->setMapper($this);
             $entries[] = $entry;
         }
         return $entries;

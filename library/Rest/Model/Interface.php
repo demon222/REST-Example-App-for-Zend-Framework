@@ -35,11 +35,15 @@ interface Rest_Model_Interface
      */
     public function setOptions(array $options);
 
+    /**
+     * Calls the persistance layer to update the properities of this model
+     */
+    public function put();
 
     /**
-     * Calls the persistance layer for the properities set in this model
+     * Calls the persistance layer to create a new
      */
-    public function save();
+    public function post();
 
     /**
      * Calls the persistance layer to remove this object
@@ -51,7 +55,7 @@ interface Rest_Model_Interface
      *
      * @param mixed $id
      */
-    public function find($id);
+    public function get();
 
     /**
      * Fetch all entries from the persistance layer. Returns an array of model

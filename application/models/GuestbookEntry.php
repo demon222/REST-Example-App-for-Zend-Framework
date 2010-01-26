@@ -5,9 +5,9 @@ require_once('Rest/Model/Abstract.php');
 /**
  * GuestbookEntry model
  *
- * Utilizes the Data Mapper pattern to persist data. Represents a single 
+ * Utilizes the Data Mapper pattern to persist data. Represents a single
  * guestbook entry.
- * 
+ *
  * @uses       Default_Model_GuestbookMapper
  * @package    QuickStart
  * @subpackage Model
@@ -53,9 +53,23 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
     }
 
     /**
+     * @return array
+     */
+    public function getResourcesTree() {
+        return array(
+            $this->getAclObjectName() => array(
+                'id',
+                'email',
+                'created',
+                'comment',
+            ),
+        );
+    }
+
+    /**
      * Set comment
-     * 
-     * @param  string $text 
+     *
+     * @param  string $text
      * @return Default_Model_Guestbook
      */
     public function setComment($text)
@@ -66,7 +80,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
 
     /**
      * Get comment
-     * 
+     *
      * @return null|string
      */
     public function getComment()
@@ -76,8 +90,8 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
 
     /**
      * Set email
-     * 
-     * @param  string $email 
+     *
+     * @param  string $email
      * @return Default_Model_Guestbook
      */
     public function setEmail($email)
@@ -88,7 +102,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
 
     /**
      * Get email
-     * 
+     *
      * @return null|string
      */
     public function getEmail()
@@ -98,8 +112,8 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
 
     /**
      * Set created timestamp
-     * 
-     * @param  string $ts 
+     *
+     * @param  string $ts
      * @return Default_Model_Guestbook
      */
     public function setCreated($ts)
@@ -110,7 +124,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
 
     /**
      * Get entry timestamp
-     * 
+     *
      * @return string
      */
     public function getCreated()
@@ -120,8 +134,8 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
 
     /**
      * Set entry id
-     * 
-     * @param  int $id 
+     *
+     * @param  int $id
      * @return Default_Model_Guestbook
      */
     public function setId($id)
@@ -132,7 +146,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
 
     /**
      * Retrieve entry id
-     * 
+     *
      * @return null|int
      */
     public function getId()
@@ -142,8 +156,8 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
 
     /**
      * Set data mapper
-     * 
-     * @param  mixed $mapper 
+     *
+     * @param  mixed $mapper
      * @return Default_Model_GuestbookEntry
      */
     public function setMapper($mapper)
@@ -156,7 +170,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      * Get data mapper
      *
      * Lazy loads Default_Model_GuestbookEntryMapper instance if no mapper registered.
-     * 
+     *
      * @return Default_Model_GuestbookEntryMapper
      */
     public function getMapper()
@@ -168,13 +182,53 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
     }
 
     /**
-     * Save the current entry
-     * 
-     * @return void
+     * Put the current entry
+     *
+     * @return Default_Model_GuestbookEntry
      */
-    public function save()
+    public function put()
     {
-        $this->getMapper()->save($this);
+        if ($this->getAcl()) {
+            if (!$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName(), 'put')) {
+                throw Exception('put for ' . $this->getAclObjectName() . ' is not allowed');
+            }
+            if ($this->getComment() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-comment', 'put')) {
+                throw Exception('put for ' . $this->getAclObjectName() . '-comment' . ' is not allowed');
+            }
+            if ($this->getEmail() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-email', 'put')) {
+                throw Exception('put for ' . $this->getAclObjectName() . '-email' . ' is not allowed');
+            }
+            if ($this->getCreated() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-created', 'put')) {
+                throw Exception('put for ' . $this->getAclObjectName() . '-created' . ' is not allowed');
+            }
+        }
+
+        $this->getMapper()->put($this);
+    }
+
+    /**
+     * Post the current entry
+     *
+     * @return Default_Model_GuestbookEntry
+     */
+    public function post()
+    {
+        if ($this->getAcl()) {
+            if (!$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName(), 'post')) {
+                throw Exception('post for ' . $this->getAclObjectName() . ' is not allowed');
+            }
+            if ($this->getComment() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-comment', 'post')) {
+                throw Exception('post for ' . $this->getAclObjectName() . '-comment' . ' is not allowed');
+            }
+            if ($this->getEmail() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-email', 'post')) {
+                throw Exception('post for ' . $this->getAclObjectName() . '-email' . ' is not allowed');
+            }
+            if ($this->getCreated() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-created', 'post')) {
+                throw Exception('post for ' . $this->getAclObjectName() . '-created' . ' is not allowed');
+            }
+        }
+
+        $this->getMapper()->post($this);
     }
 
     /**
@@ -184,6 +238,12 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function delete()
     {
+        if ($this->getAcl()) {
+            if (!$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName(), 'delete')) {
+                throw Exception('delete for ' . $this->getAclObjectName() . ' is not allowed');
+            }
+        }
+
         $this->getMapper()->delete($this);
     }
 
@@ -191,19 +251,19 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      * Find an entry
      *
      * Resets entry state if matching id found.
-     * 
-     * @param  int $id 
+     *
+     * @param  int $id
      * @return Default_Model_GuestbookEntry
      */
-    public function find($id)
+    public function get()
     {
-        $this->getMapper()->find($id, $this);
+        $this->getMapper()->get($this);
         return $this;
     }
 
     /**
      * Fetch all entries
-     * 
+     *
      * @return array
      */
     public function fetchAll()
