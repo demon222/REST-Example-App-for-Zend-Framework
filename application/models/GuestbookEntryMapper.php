@@ -56,12 +56,12 @@ class Default_Model_GuestbookEntryMapper
      * 
      * @param  Default_Model_GuestbookEntry $entry
      * @param  Default_Model_GuestbookEntry $orig
-     * @return void
+     * @return boolean resource found
      */
     public function put(Default_Model_GuestbookEntry $entry, Default_Model_GuestbookEntry $orig = null)
     {
         $entry->setCreated(date('Y-m-d H:i:s'));
-        
+
         $data = array(
             'id'      => $entry->getId(),
             'email'   => $entry->getEmail(),
@@ -75,7 +75,9 @@ class Default_Model_GuestbookEntryMapper
             $idPairs = array('id = ?' => $entry->id);
         }
 
-        $this->getDbTable()->update($data, $idPairs);
+        $updated = $this->getDbTable()->update($data, $idPairs);
+
+        return $updated > 0;
     }
 
     /**
@@ -101,7 +103,7 @@ class Default_Model_GuestbookEntryMapper
      * Delete a guestbook entry
      *
      * @param Default_Model_GuestbookEntry $entry
-     * @return void
+     * @return boolean resource found
      */
     public function delete(Default_Model_GuestbookEntry $entry)
     {
@@ -113,25 +115,29 @@ class Default_Model_GuestbookEntryMapper
 
         $where = $table->getAdapter()->quoteInto('id = ?', $id);
 
-        $table->delete($where);
+        $deleted = $table->delete($where);
+
+        return $deleted > 0;
     }
 
     /**
      * Find a guestbook entry by id
      * 
      * @param  Default_Model_GuestbookEntry $entry
-     * @return void
+     * @return boolean resource found
      */
     public function get(Default_Model_GuestbookEntry $entry)
     {
         $result = $this->getDbTable()->find($entry->getId());
         if (0 == count($result)) {
-            return;
+            return false;
         }
         $row = $result->current();
         $entry->setEmail($row->email)
             ->setComment($row->comment)
             ->setCreated($row->created);
+
+        return true;
     }
 
     /**

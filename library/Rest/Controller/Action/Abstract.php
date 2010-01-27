@@ -1,6 +1,7 @@
 <?php
 
 require_once('Rest/Serializer.php');
+require_once('Rest/Model/NotFoundException.php');
 
 /**
  * Guestbook controller
@@ -39,10 +40,28 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
     public function getAction()
     {
         $model = $this->_modelObjectFactory();
-        $model->find((integer) $this->getRequest()->getParam('id'));
 
-        if (null === $model->getId()) {
+        // get the identifying parameters into the model
+        $idKeys = $model->getIdentityKeys();
+        $ids = array();
+        foreach ($idKeys as $key) {
+            $ids[$key] = $this->getRequest()->getParam($key);
+        }
+        $model->setOptions($ids);
+
+        // load the model
+        try {
+            $model->get();
+        } catch (Zend_Acl_Exception $e) {
+            // acl check failed
+            $this->getResponse()->setHttpResponseCode(401);
+            $this->view->data = $e->getMessage();
+            return;
+        } catch (Rest_Model_NotFoundException $e) {
             $this->getResponse()->setHttpResponseCode(404);
+            return;
+        } catch (Exception $e) {
+            $this->getResponse()->setHttpResponseCode(500);
             return;
         }
 
@@ -54,12 +73,6 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
         $request = $this->getRequest();
 
         $model = $this->_modelObjectFactory();
-        $model->find($request->getParam('id'));
-
-        if (null === $model->getId()) {
-            $this->getResponse()->setHttpResponseCode(404);
-            return;
-        }
 
         // Can't beleive I'm doing this in PHP 5.3 and Zend Framework 1.9.
         // Should be replaced as soon as possible with
@@ -82,12 +95,39 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
         if (!$validate->isValid($input)) {
             $this->getResponse()->setHttpResponseCode(400);
-            $this->view->data = array('_errors' => $validate->getMessages());
+            $this->view->data = $validate->getMessages();
             return;
         }
 
         $model->setOptions($input);
-        $model->put();
+
+        // giving presedence to the resources uri identity parameters over any
+        // that may appear in the content body. Where they are different, it
+        // could be thought of as a request to move/rename the resource but
+        // this is a lower priority, for later.
+
+        // get the identifying parameters into the model
+        $idKeys = $model->getIdentityKeys();
+        $ids = array();
+        foreach ($idKeys as $key) {
+            $ids[$key] = $this->getRequest()->getParam($key);
+        }
+        $model->setOptions($ids);
+
+        try {
+            $model->put();
+        } catch (Zend_Acl_Exception $e) {
+            // acl check failed
+            $this->getResponse()->setHttpResponseCode(401);
+            $this->view->data = $e->getMessage();
+            return;
+        } catch (Rest_Model_NotFoundException $e) {
+            $this->getResponse()->setHttpResponseCode(404);
+            return;
+        } catch (Exception $e) {
+            $this->getResponse()->setHttpResponseCode(500);
+            return;
+        }
 
         $this->view->data = $model->toArray();
     }
@@ -112,12 +152,22 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
         if (!$validate->isValid($input)) {
             $this->getResponse()->setHttpResponseCode(400);
-            $this->view->data = array('_errors' => $validate->getMessages());
+            $this->view->data = $validate->getMessages();
             return;
         }
 
         $model = $this->_modelObjectFactory($input);
-        $model->post();
+        try {
+            $model->post();
+        } catch (Zend_Acl_Exception $e) {
+            // acl check failed
+            $this->getResponse()->setHttpResponseCode(401);
+            $this->view->data = $e->getMessage();
+            return;
+        } catch (Exception $e) {
+            $this->getResponse()->setHttpResponseCode(500);
+            return;
+        }
 
         $this->getResponse()
             ->setHttpResponseCode(201)
@@ -129,14 +179,36 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
     public function deleteAction()
     {
         $model = $this->_modelObjectFactory();
-        $model->find((integer) $this->getRequest()->getParam('id'));
 
-        if (null === $model->getId()) {
+        // get the identifying parameters into the model
+        $idKeys = $model->getIdentityKeys();
+        $ids = array();
+        foreach ($idKeys as $key) {
+            $ids[$key] = $this->getRequest()->getParam($key);
+        }
+        $model->setOptions($ids);
+
+        try {
+            $model->delete();
+        } catch (Zend_Acl_Exception $e) {
+            // acl check failed
+            $this->getResponse()->setHttpResponseCode(401);
+            $this->view->data = $e->getMessage();
+            return;
+        } catch (Rest_Model_NotFoundException $e) {
             $this->getResponse()->setHttpResponseCode(404);
+            return;
+        } catch (Exception $e) {
+            $this->getResponse()->setHttpResponseCode(500);
             return;
         }
 
-        $model->delete();
+        // not sure if returning 200 or 410 is better after a delete
+        // the request was completed successfully but the requested resource
+        // is no longer accessible. 204 could be argued for, but because
+        // meta information is passed back in the content for convience with
+        // this library 204 is never appropriate
+        $this->getResponse()->setHttpResponseCode(200);
     }
 
     public function preDispatch()
@@ -172,11 +244,10 @@ $result = $authAdapter->authenticate();
             
             // Authentication failed; print the reasons why
             $this->getResponse()->setHttpResponseCode(401);
+            $this->view->data = $result->getMessages();
 
             // cancel the action but post dispatch will be executed
             $this->setCancelAction(true);
-
-            $this->view->data = array('_errors' => $result->getMessages());
         }
 
     }

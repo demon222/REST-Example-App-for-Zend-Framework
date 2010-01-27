@@ -14,8 +14,8 @@ interface Rest_Model_Interface
      * @param  array|null $options
      * @return void
      */
-
     public function __construct(array $options = null);
+    
     /**
      * Return a PHP array data structure, not necessarily flat, representing
      * this model. Can return differently dimensioned arrays based on context.
@@ -25,6 +25,15 @@ interface Rest_Model_Interface
      * @return array
      */
     public function toArray();
+
+    /**
+     * Provide a set of id key names. These values are commonly used to determine
+     * what values are needed to uniquely identify a resource for get, put, or
+     * delete methods
+     *
+     * @return array
+     */
+    public function getIdentityKeys();
 
     /**
      * Sets object state by taking an associative array and calling set methods

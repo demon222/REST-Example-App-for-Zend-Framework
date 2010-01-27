@@ -1,6 +1,7 @@
 <?php
 
 require_once('Rest/Model/Abstract.php');
+require_once('Rest/Model/NotFoundException.php');
 
 /**
  * GuestbookEntry model
@@ -55,15 +56,9 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
     /**
      * @return array
      */
-    public function getResourcesTree() {
-        return array(
-            $this->getAclObjectName() => array(
-                'id',
-                'email',
-                'created',
-                'comment',
-            ),
-        );
+    public function getIdentityKeys()
+    {
+        return array('id');
     }
 
     /**
@@ -188,22 +183,15 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function put()
     {
-        if ($this->getAcl()) {
-            if (!$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName(), 'put')) {
-                throw Exception('put for ' . $this->getAclObjectName() . ' is not allowed');
-            }
-            if ($this->getComment() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-comment', 'put')) {
-                throw Exception('put for ' . $this->getAclObjectName() . '-comment' . ' is not allowed');
-            }
-            if ($this->getEmail() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-email', 'put')) {
-                throw Exception('put for ' . $this->getAclObjectName() . '-email' . ' is not allowed');
-            }
-            if ($this->getCreated() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-created', 'put')) {
-                throw Exception('put for ' . $this->getAclObjectName() . '-created' . ' is not allowed');
-            }
+        if ($this->getAcl() && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getResourceId(), 'put')) {
+            throw Zend_Acl_Exception('put for ' . $this->getResourceId() . ' is not allowed');
         }
 
-        $this->getMapper()->put($this);
+        $resourceFound = $this->getMapper()->put($this);
+
+        if (!$resourceFound) {
+            throw new Rest_Model_NotFoundException();
+        }
     }
 
     /**
@@ -213,19 +201,8 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function post()
     {
-        if ($this->getAcl()) {
-            if (!$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName(), 'post')) {
-                throw Exception('post for ' . $this->getAclObjectName() . ' is not allowed');
-            }
-            if ($this->getComment() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-comment', 'post')) {
-                throw Exception('post for ' . $this->getAclObjectName() . '-comment' . ' is not allowed');
-            }
-            if ($this->getEmail() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-email', 'post')) {
-                throw Exception('post for ' . $this->getAclObjectName() . '-email' . ' is not allowed');
-            }
-            if ($this->getCreated() !== null && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName() . '-created', 'post')) {
-                throw Exception('post for ' . $this->getAclObjectName() . '-created' . ' is not allowed');
-            }
+        if ($this->getAcl() && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getResourceId(), 'post')) {
+            throw Zend_Acl_Exception('post for ' . $this->getResourceId() . ' is not allowed');
         }
 
         $this->getMapper()->post($this);
@@ -238,13 +215,15 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function delete()
     {
-        if ($this->getAcl()) {
-            if (!$this->getAcl()->isAllowed($this->getAclRole(), $this->getAclObjectName(), 'delete')) {
-                throw Exception('delete for ' . $this->getAclObjectName() . ' is not allowed');
-            }
+        if ($this->getAcl() && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getResourceId(), 'delete')) {
+            throw Zend_Acl_Exception('delete for ' . $this->getResourceId() . ' is not allowed');
         }
 
-        $this->getMapper()->delete($this);
+        $resourceFound = $this->getMapper()->delete($this);
+        
+        if (!$resourceFound) {
+            throw new Rest_Model_NotFoundException();
+        }
     }
 
     /**
@@ -257,7 +236,16 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function get()
     {
-        $this->getMapper()->get($this);
+        if ($this->getAcl() && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getResourceId(), 'get')) {
+            throw Zend_Acl_Exception('get for ' . $this->getResourceId() . ' is not allowed');
+        }
+
+        $resourceFound = $this->getMapper()->get($this);
+
+        if (!$resourceFound) {
+            throw new Rest_Model_NotFoundException();
+        }
+
         return $this;
     }
 
@@ -299,5 +287,4 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
         }
         return parent::__get($name);
     }
-
 }
