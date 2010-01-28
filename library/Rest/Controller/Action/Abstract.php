@@ -16,8 +16,8 @@ require_once('Rest/Model/NotFoundException.php');
 abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 {
 
-    abstract protected static function _validateObjectFactory();
-    abstract protected static function _modelObjectFactory($options = null);
+    abstract protected static function _getModelObject($options = null);
+    abstract protected static function _getValidateObject();
 
     /*
      * For backwards compatibility (prior to PHP 5.3) '$this->' is being used
@@ -26,7 +26,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
     public function indexAction()
     {
-        $modelObj = $this->_modelObjectFactory();
+        $modelObj = $this->_getModelObject();
         $modelSet = $modelObj->fetchAll();
 
         $data = array();
@@ -39,7 +39,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
     public function getAction()
     {
-        $model = $this->_modelObjectFactory();
+        $model = $this->_getModelObject();
 
         // get the identifying parameters into the model
         $idKeys = $model->getIdentityKeys();
@@ -72,7 +72,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
     {
         $request = $this->getRequest();
 
-        $model = $this->_modelObjectFactory();
+        $model = $this->_getModelObject();
 
         // Can't beleive I'm doing this in PHP 5.3 and Zend Framework 1.9.
         // Should be replaced as soon as possible with
@@ -91,7 +91,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             ->setType($contentType)
             ->getDecodedArray();
         
-        $validate = $this->_validateObjectFactory();
+        $validate = $this->_getValidateObject();
 
         if (!$validate->isValid($input)) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -148,7 +148,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             ->setType($contentType)
             ->getDecodedArray();
 
-        $validate = $this->_validateObjectFactory();
+        $validate = $this->_getValidateObject();
 
         if (!$validate->isValid($input)) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -156,7 +156,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
             return;
         }
 
-        $model = $this->_modelObjectFactory($input);
+        $model = $this->_getModelObject($input);
         try {
             $model->post();
         } catch (Zend_Acl_Exception $e) {
@@ -178,7 +178,7 @@ abstract class Rest_Controller_Action_Abstract extends Zend_Controller_Action
 
     public function deleteAction()
     {
-        $model = $this->_modelObjectFactory();
+        $model = $this->_getModelObject();
 
         // get the identifying parameters into the model
         $idKeys = $model->getIdentityKeys();

@@ -183,7 +183,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function put()
     {
-        if ($this->getAcl() && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getResourceId(), 'put')) {
+        if ($this->getAcl() && !$this->isAllowed('put')) {
             throw Zend_Acl_Exception('put for ' . $this->getResourceId() . ' is not allowed');
         }
 
@@ -201,7 +201,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function post()
     {
-        if ($this->getAcl() && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getResourceId(), 'post')) {
+        if ($this->getAcl() && !$this->isAllowed('post')) {
             throw Zend_Acl_Exception('post for ' . $this->getResourceId() . ' is not allowed');
         }
 
@@ -215,7 +215,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function delete()
     {
-        if ($this->getAcl() && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getResourceId(), 'delete')) {
+        if ($this->getAcl() && !$this->isAllowed('delete')) {
             throw Zend_Acl_Exception('delete for ' . $this->getResourceId() . ' is not allowed');
         }
 
@@ -236,7 +236,7 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
      */
     public function get()
     {
-        if ($this->getAcl() && !$this->getAcl()->isAllowed($this->getAclRole(), $this->getResourceId(), 'get')) {
+        if ($this->getAcl() && !$this->isAllowed('get')) {
             throw Zend_Acl_Exception('get for ' . $this->getResourceId() . ' is not allowed');
         }
 
