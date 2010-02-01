@@ -53,7 +53,7 @@ class Default_Validate_Entry extends ZendPatch_Validate_Abstract
             
             $validate = new Zend_Validate_EmailAddress();
             if (!$validate->isValid($value['email'])) {
-                $this->_absorbValidateMessagesAndErrors($validate);
+                $this->_addValidateMessagesAndErrors($validate);
             }
         }
 
@@ -63,7 +63,7 @@ class Default_Validate_Entry extends ZendPatch_Validate_Abstract
 
             $validate = new Zend_Validate_StringLength(array(0, 20));
             if (!$validate->isValid($value['comment'])) {
-                $this->_absorbValidateMessagesAndErrors($validate);
+                $this->_addValidateMessagesAndErrors($validate);
             }
         }
 

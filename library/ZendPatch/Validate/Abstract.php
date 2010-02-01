@@ -8,7 +8,7 @@ abstract class ZendPatch_Validate_Abstract extends Zend_Validate_Abstract {
      * @param Zend_Validate_Interface $validate
      * return Zend_Validate_Interface
      */
-    protected function _absorbValidateMessagesAndErrors($validate)
+    protected function _addValidateMessagesAndErrors($validate)
     {
         foreach ($validate->getMessages() as $code => $message) {
             $this->_messages[$code] = $message;
