@@ -1,6 +1,7 @@
 <?php
 
-abstract class ZendPatch_Validate_Abstract extends Zend_Validate_Abstract {
+abstract class ZendPatch_Validate_Abstract extends Zend_Validate_Abstract
+{
 
     /**
      * Used to bring in messages and errors from aggregated validates
