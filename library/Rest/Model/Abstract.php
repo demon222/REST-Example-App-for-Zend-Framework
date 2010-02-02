@@ -10,14 +10,19 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface, Zend_Acl_Res
     protected $_acl;
 
     /**
-     * @var Zend_Acl_Role
+     * @var array of Zend_Acl_Role values
      */
-    protected $_aclRole;
+    protected $_aclContextRoles;
 
     /**
      * @var string
      */
     protected $_aclResourceId;
+
+    /**
+     * @var Object
+     */
+    protected $_aclContextIdentity;
 
     /**
      * Constructor
@@ -31,6 +36,11 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface, Zend_Acl_Res
             $this->setOptions($options);
         }
     }
+
+    /**
+     * @return array
+     */
+    abstract protected function _initAclRules();
 
     /**
      * Provide a set of id key names. These values are commonly used to determine
@@ -74,14 +84,14 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface, Zend_Acl_Res
      */
     public function fetchAllAsArrays()
     {
-            $modelSet = $this->fetchAll();
+        $modelSet = $this->fetchAll();
 
-            $data = array();
-            foreach ($modelSet as $model) {
-                $data[] = $model->toArray();
-            }
+        $data = array();
+        foreach ($modelSet as $model) {
+            $data[] = $model->toArray();
+        }
 
-            return $data;
+        return $data;
     }
 
     /**
@@ -97,7 +107,8 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface, Zend_Acl_Res
         if (!method_exists($this, $method) || in_array($name, array(
                 'mapper',
                 'acl',
-                'aclRole',
+                'aclContextRoles',
+                'aclContextIdentity',
                 'resourceId',
             ))
         ) {
@@ -119,7 +130,8 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface, Zend_Acl_Res
                 'identityKeys',
                 'mapper',
                 'acl',
-                'aclRole',
+                'aclContextRoles',
+                'aclContextIdentity',
                 'resourceId',
             ))
         ) {
@@ -164,29 +176,87 @@ abstract class Rest_Model_Abstract implements Rest_Model_Interface, Zend_Acl_Res
     public function setAcl($acl)
     {
         $this->_acl = $acl;
+
+        $this->_initAclRules();
+
         return $this;
     }
 
     /**
      * @return Zend_Acl_Role
      */
-    public function getAclRole()
+    public function getAclContextRoles($specific)
     {
-        return $this->_aclRole;
+        if (null === $this->_aclContextRoles) {
+            $this->_aclContextRoles = Role::get($this->getResourceId($specific), $this->getAclContextIdentity());
+        }
+
+        return $this->_aclContextRoles;
     }
 
     /**
-     * @param string|Zend_Acl_Role $role
+     * @param array of string|Zend_Acl_Role $role
      * @return Default_Model_Guestbook
      */
-    public function setAclRole($role)
+    public function setAclContextRoles($roles)
     {
-        // find the Zend_Acl_Role if not already provided
-        if (!($role instanceof Zend_Acl_Role)) {
-            $role = $this->getAcl()->getRole($role);
+        // convert strings to Zend_Acl_Role objects
+        foreach($roles as &$role) {
+            if (!($role instanceof Zend_Acl_Role) && $this->getAcl() !== null) {
+                $role = $this->getAcl()->getRole($role);
+            }
         }
 
-        $this->_aclRole = $role;
+        $this->_aclContextRoles = $roles;
         return $this;
+    }
+
+    /**
+     * @return Object
+     */
+    public function getAclContextIdentity()
+    {
+        return $this->_aclContextIdentity;
+    }
+
+    /**
+     * @param Object $identityObject
+     * @return Default_Model_Guestbook
+     */
+    public function setAclContextIdentity($identityObject)
+    {
+        $this->_aclContextIdentity = $identityObject;
+        return $this;
+    }
+
+    /**
+     * Loops through the roles to check for one that is allowed for the method.
+     *
+     * @param string $method, same as what Zend_Acl referers to as 'privilege' but 'method' used for REST context
+     * @return boolean
+     */
+    public function isAllowed($method)
+    {
+        $allowed = false;
+        $roles = $this->getAclContextRoles();
+        foreach($roles as $role) {
+            // for the current role check if this specific resource is allowed
+            // or denied. If no record, then proceed to check the resource
+            // generally (and its parents)
+            if (null !== ($itemPermission = Permission::get($this->getResourceId(true), $role, $method))) {
+                if ($itemPermission == 'allow') {
+                    return true;
+                } else {
+                    continue;
+                }
+            }
+
+            if ($this->getAcl()->isAllowed($role, $this->getResourceId(), $method)) {
+                $allowed = true;
+                break;
+            }
+        }
+
+        return $allowed;
     }
 }

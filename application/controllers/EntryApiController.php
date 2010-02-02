@@ -15,13 +15,12 @@ require_once('Rest/Serializer.php');
  */
 class EntryApiController extends Rest_Controller_Action_Abstract
 {
-
-    protected static function _getModelObject($options = null)
+    protected static function _createModelObject($options = null)
     {
         return new Default_Model_GuestbookEntry($options);
     }
 
-    protected static function _getValidateObject()
+    protected static function _createValidateObject()
     {
         return new Default_Validate_Entry();
     }

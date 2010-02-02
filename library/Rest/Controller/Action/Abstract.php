@@ -17,8 +17,8 @@ require_once('ZendPatch/Controller/Action.php');
 abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Action
 {
 
-    abstract protected static function _getModelObject($options = null);
-    abstract protected static function _getValidateObject();
+    abstract protected static function _createModelObject($options = null);
+    abstract protected static function _createValidateObject();
 
     /*
      * For backwards compatibility (prior to PHP 5.3) '$this->' is being used
@@ -27,7 +27,10 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
     public function indexAction()
     {
-        $modelObj = $this->_getModelObject();
+        $modelObj = $this->_createModelObject();
+
+        $model->setAcl(new Zend_Acl());
+
         $modelSet = $modelObj->fetchAll();
 
         $data = array();
@@ -40,7 +43,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
     public function getAction()
     {
-        $model = $this->_getModelObject();
+        $model = $this->_createModelObject();
 
         // get the identifying parameters into the model
         $idKeys = $model->getIdentityKeys();
@@ -49,6 +52,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             $ids[$key] = $this->getRequest()->getParam($key);
         }
         $model->setOptions($ids);
+
+        $model->setAcl(new Zend_Acl());
 
         // load the model
         try {
@@ -73,7 +78,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
     {
         $request = $this->getRequest();
 
-        $model = $this->_getModelObject();
+        $model = $this->_createModelObject();
 
         // Can't beleive I'm doing this in PHP 5.3 and Zend Framework 1.9.
         // Should be replaced as soon as possible with
@@ -91,8 +96,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             ->setEncodedString($rawData)
             ->setType($contentType)
             ->getDecodedArray();
-        
-        $validate = $this->_getValidateObject();
+
+        $validate = $this->_createValidateObject();
 
         if (!$validate->isValid($input)) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -105,7 +110,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         // giving presedence to the resources uri identity parameters over any
         // that may appear in the content body. Where they are different, it
         // could be thought of as a request to move/rename the resource but
-        // this is a lower priority, for later.
+        // this is a feature for another day
 
         // get the identifying parameters into the model
         $idKeys = $model->getIdentityKeys();
@@ -114,6 +119,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             $ids[$key] = $this->getRequest()->getParam($key);
         }
         $model->setOptions($ids);
+
+        $model->setAcl(new Zend_Acl());
 
         try {
             $model->put();
@@ -149,7 +156,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             ->setType($contentType)
             ->getDecodedArray();
 
-        $validate = $this->_getValidateObject();
+        $validate = $this->_createValidateObject();
 
         if (!$validate->isValid($input)) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -157,7 +164,10 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         }
 
-        $model = $this->_getModelObject($input);
+        $model = $this->_createModelObject($input);
+
+        $model->setAcl(new Zend_Acl());
+
         try {
             $model->post();
         } catch (Zend_Acl_Exception $e) {
@@ -179,7 +189,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
     public function deleteAction()
     {
-        $model = $this->_getModelObject();
+        $model = $this->_createModelObject();
 
         // get the identifying parameters into the model
         $idKeys = $model->getIdentityKeys();
@@ -242,7 +252,7 @@ $result = $authAdapter->authenticate();
 
         if (!$result->isValid()) {
             // Bad userame/password, or canceled password prompt
-            
+
             // Authentication failed; print the reasons why
             $this->getResponse()->setHttpResponseCode(401);
             $this->view->data = $result->getMessages();

@@ -145,7 +145,7 @@ class Default_Model_GuestbookEntryMapper
      * 
      * @return array
      */
-    public function fetchAll()
+    public function fetchAll($identity)
     {
         $resultSet = $this->getDbTable()->fetchAll();
         $entries   = array();

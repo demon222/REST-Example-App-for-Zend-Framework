@@ -43,6 +43,18 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
     /**
      * @return array
      */
+    protected function _initAclRules()
+    {
+        $acl = $this->getAcl();
+        $rId = $this->getResourceId();
+
+        $acl->allow(Roles::GUEST, $rId, array('get', 'post'));
+        $acl->allow(Roles::ADMIN, $rId, array('get', 'put', 'delete', 'post'));
+    }
+
+    /**
+     * @return array
+     */
     public function toArray()
     {
         return array(
@@ -177,6 +189,29 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
     }
 
     /**
+     * Find an entry
+     *
+     * Resets entry state if matching id found.
+     *
+     * @param  int $id
+     * @return Default_Model_GuestbookEntry
+     */
+    public function get()
+    {
+        if ($this->getAcl() && !$this->isAllowed('get')) {
+            throw Zend_Acl_Exception('get for ' . $this->getResourceId() . ' is not allowed');
+        }
+
+        $resourceFound = $this->getMapper()->get($this);
+
+        if (!$resourceFound) {
+            throw new Rest_Model_NotFoundException();
+        }
+
+        return $this;
+    }
+
+    /**
      * Put the current entry
      *
      * @return Default_Model_GuestbookEntry
@@ -227,36 +262,13 @@ class Default_Model_GuestbookEntry extends Rest_Model_Abstract
     }
 
     /**
-     * Find an entry
-     *
-     * Resets entry state if matching id found.
-     *
-     * @param  int $id
-     * @return Default_Model_GuestbookEntry
-     */
-    public function get()
-    {
-        if ($this->getAcl() && !$this->isAllowed('get')) {
-            throw Zend_Acl_Exception('get for ' . $this->getResourceId() . ' is not allowed');
-        }
-
-        $resourceFound = $this->getMapper()->get($this);
-
-        if (!$resourceFound) {
-            throw new Rest_Model_NotFoundException();
-        }
-
-        return $this;
-    }
-
-    /**
      * Fetch all entries
      *
      * @return array
      */
     public function fetchAll()
     {
-        return $this->getMapper()->fetchAll();
+        return $this->getMapper()->fetchAll($this->getAclContextIdentity());
     }
 
     /**
