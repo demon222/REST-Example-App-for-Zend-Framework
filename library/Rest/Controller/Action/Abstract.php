@@ -17,7 +17,7 @@ require_once('ZendPatch/Controller/Action.php');
 abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Action
 {
 
-    abstract protected static function _createModelObject($options = null);
+    abstract protected static function _createModelHandler();
     abstract protected static function _createValidateObject();
 
     /*
@@ -27,37 +27,27 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
     public function indexAction()
     {
-        $modelObj = $this->_createModelObject();
+        $handler = $this->_createModelHandler();
 
-        $model->setAcl(new Zend_Acl());
+        $items = $handler->getList();
 
-        $modelSet = $modelObj->fetchAll();
-
-        $data = array();
-        foreach ($modelSet as $model) {
-            $data[] = $model->toArray();
-        }
-
-        $this->view->data = $data;
+        $this->view->data = $items;
     }
 
     public function getAction()
     {
-        $model = $this->_createModelObject();
+        $handler = $this->_createModelHandler();
 
         // get the identifying parameters into the model
-        $idKeys = $model->getIdentityKeys();
+        $idKeys = $handler->getIdentityKeys();
         $ids = array();
         foreach ($idKeys as $key) {
             $ids[$key] = $this->getRequest()->getParam($key);
         }
-        $model->setOptions($ids);
-
-        $model->setAcl(new Zend_Acl());
 
         // load the model
         try {
-            $model->get();
+            $item = $handler->get($ids);
         } catch (Zend_Acl_Exception $e) {
             // acl check failed
             $this->getResponse()->setHttpResponseCode(401);
@@ -71,14 +61,14 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         }
 
-        $this->view->data = $model->toArray();
+        $this->view->data = $item;
     }
 
     public function putAction()
     {
         $request = $this->getRequest();
 
-        $model = $this->_createModelObject();
+        $handler = $this->_createModelHandler();
 
         // Can't beleive I'm doing this in PHP 5.3 and Zend Framework 1.9.
         // Should be replaced as soon as possible with
@@ -105,25 +95,20 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         }
 
-        $model->setOptions($input);
-
         // giving presedence to the resources uri identity parameters over any
         // that may appear in the content body. Where they are different, it
         // could be thought of as a request to move/rename the resource but
         // this is a feature for another day
 
         // get the identifying parameters into the model
-        $idKeys = $model->getIdentityKeys();
+        $idKeys = $handler->getIdentityKeys();
         $ids = array();
         foreach ($idKeys as $key) {
             $ids[$key] = $this->getRequest()->getParam($key);
         }
-        $model->setOptions($ids);
-
-        $model->setAcl(new Zend_Acl());
 
         try {
-            $model->put();
+            $item = $handler->put($ids, $input);
         } catch (Zend_Acl_Exception $e) {
             // acl check failed
             $this->getResponse()->setHttpResponseCode(401);
@@ -137,7 +122,41 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         }
 
-        $this->view->data = $model->toArray();
+        $this->view->data = $item;
+    }
+
+    public function deleteAction()
+    {
+        $handler = $this->_createModelHandler();
+
+        // get the identifying parameters into the model
+        $idKeys = $handler->getIdentityKeys();
+        $ids = array();
+        foreach ($idKeys as $key) {
+            $ids[$key] = $this->getRequest()->getParam($key);
+        }
+
+        try {
+            $handler->delete($ids);
+        } catch (Zend_Acl_Exception $e) {
+            // acl check failed
+            $this->getResponse()->setHttpResponseCode(401);
+            $this->view->data = $e->getMessage();
+            return;
+        } catch (Rest_Model_NotFoundException $e) {
+            $this->getResponse()->setHttpResponseCode(404);
+            return;
+        } catch (Exception $e) {
+            $this->getResponse()->setHttpResponseCode(500);
+            return;
+        }
+
+        // not sure if returning 200 or 410 is better after a delete
+        // the request was completed successfully but the requested resource
+        // is no longer accessible. 204 could be argued for, but because
+        // meta information is passed back in the content for convience with
+        // this library 204 is never appropriate
+        $this->getResponse()->setHttpResponseCode(200);
     }
 
     public function postAction()
@@ -164,12 +183,10 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         }
 
-        $model = $this->_createModelObject($input);
-
-        $model->setAcl(new Zend_Acl());
+        $handler = $this->_createModelHandler();
 
         try {
-            $model->post();
+            $item = $handler->post($input);
         } catch (Zend_Acl_Exception $e) {
             // acl check failed
             $this->getResponse()->setHttpResponseCode(401);
@@ -182,44 +199,9 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
         $this->getResponse()
             ->setHttpResponseCode(201)
-            ->setHeader('Location', $this->view->url(array('action' => 'get', 'id' => $model->getId())));
+            ->setHeader('Location', $this->view->url(array('action' => 'get', 'id' => $item['id'])));
 
-        $this->view->data = $model->toArray();
-    }
-
-    public function deleteAction()
-    {
-        $model = $this->_createModelObject();
-
-        // get the identifying parameters into the model
-        $idKeys = $model->getIdentityKeys();
-        $ids = array();
-        foreach ($idKeys as $key) {
-            $ids[$key] = $this->getRequest()->getParam($key);
-        }
-        $model->setOptions($ids);
-
-        try {
-            $model->delete();
-        } catch (Zend_Acl_Exception $e) {
-            // acl check failed
-            $this->getResponse()->setHttpResponseCode(401);
-            $this->view->data = $e->getMessage();
-            return;
-        } catch (Rest_Model_NotFoundException $e) {
-            $this->getResponse()->setHttpResponseCode(404);
-            return;
-        } catch (Exception $e) {
-            $this->getResponse()->setHttpResponseCode(500);
-            return;
-        }
-
-        // not sure if returning 200 or 410 is better after a delete
-        // the request was completed successfully but the requested resource
-        // is no longer accessible. 204 could be argued for, but because
-        // meta information is passed back in the content for convience with
-        // this library 204 is never appropriate
-        $this->getResponse()->setHttpResponseCode(200);
+        $this->view->data = $item;
     }
 
     public function preDispatch()

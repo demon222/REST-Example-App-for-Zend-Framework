@@ -27,8 +27,8 @@ class EntryController extends Zend_Controller_Action
      */
     public function indexAction()
     {
-        $modelObj = new Default_Model_GuestbookEntry();
-        $data = $modelObj->fetchAllAsArrays();
+        $handler = new Default_Model_Handler_Entry();
+        $data = $handler->getList();
 
 //        $result = Rest_Requestor::apiRequest('GET', '/entry-api/');
 //        $data = $result['content'];
