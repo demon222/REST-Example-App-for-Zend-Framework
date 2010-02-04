@@ -3,11 +3,11 @@
 require_once('Rest/Controller/Action/Abstract.php');
 require_once('Rest/Serializer.php');
 
-class EntryApiController extends Rest_Controller_Action_Abstract
+class RoleApiController extends Rest_Controller_Action_Abstract
 {
-    protected static function _createModelHandler()
+    protected static function _createModelHandler($options = null)
     {
-        return new Default_Model_AclHandler_Entry(Zend_Registry::get('acl'));
+        return new Default_Model_Handler_Role($options);
     }
 
     protected static function _createValidateObject()

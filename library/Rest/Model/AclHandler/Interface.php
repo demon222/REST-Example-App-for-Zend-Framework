@@ -1,38 +1,39 @@
 <?php
+require_once('Rest/Model/Handler/Interface.php');
 
 interface Rest_Model_AclHandler_Interface extends Rest_Model_Handler_Interface
 {
     /**
-     * Important for every AclHandler to add to the acl all the relevant
-     * general resource rules
+     * @param string $name
+     * @return Rest_Model_AclHandler_Interface
      */
-    protected function _initAclRules();
+    public function setResourceId($name);
 
     /**
      * @param array $id
-     * @return array
-     * @throws Rest_Model_NotFoundException, Zend_Acl_Exception
+     * @return string
      */
-    public function get(array $id);
+    public function getResourceSpecificId(array $id);
 
     /**
-     * @param array $id
-     * @param array $prop
-     * @return array
-     * @throws Rest_Model_NotFoundException, Zend_Acl_Exception
+     * @return Zend_Acl
      */
-    public function put(array $id, array $prop = null);
+    public function getAcl();
 
     /**
-     * @param array $id
-     * @throws Rest_Model_NotFoundException, Zend_Acl_Exception
+     * @param Zend_Acl $acl
+     * @return Rest_Model_AclHandler_Interface
      */
-    public function delete(array $id);
+    public function setAcl($acl);
 
     /**
-     * @param array $prop
-     * @return array
-     * @throws Zend_Acl_Exception
+     * @return Object
      */
-    public function post(array $prop);
+    public function getAclContextUser();
+
+    /**
+     * @param Object $userObject
+     * @return Rest_Model_AclHandler_Interface
+     */
+    public function setAclContextUser($userObject);
 }

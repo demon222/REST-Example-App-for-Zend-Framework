@@ -8,6 +8,13 @@
  */
 class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
+
+    protected function _initApplication()
+    {
+        Zend_Registry::set('config', $this->getApplication()->getOptions());
+        Zend_Registry::set('acl', new Zend_Acl());
+    }
+
     /**
      * Bootstrap autoloader for application resources
      * 
@@ -52,7 +59,13 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         
         // set the whole app as using REST routing
         $front = $this->getResource('FrontController');
-        $restRoute = new Zend_Rest_Route($front, array(), array('default' => array('entry-api')));
+        $restControllers = array(
+            'default' => array(
+                'entry-api',
+                'role-api',
+            )
+        );
+        $restRoute = new Zend_Rest_Route($front, array(), $restControllers);
         
         $front->getRouter()->addRoute('rest', $restRoute);
     }
