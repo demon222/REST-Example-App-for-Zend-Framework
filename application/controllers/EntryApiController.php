@@ -7,7 +7,8 @@ class EntryApiController extends Rest_Controller_Action_Abstract
 {
     protected static function _createModelHandler()
     {
-        return new Default_Model_AclHandler_Entry(Zend_Registry::get('acl'));
+        $authResult = Zend_Auth::getInstance()->getIdentity();
+        return new Default_Model_AclHandler_Entry(Zend_Registry::get('acl'), $authResult['username']);
     }
 
     protected static function _createValidateObject()

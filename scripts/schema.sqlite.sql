@@ -6,7 +6,7 @@ CREATE INDEX user_id ON user (id);
 
 CREATE TABLE role (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
+    user_id INTEGER NULL,
     resource VARCHAR(50) NOT NULL,
     role VARCHAR(20) NOT NULL
 );

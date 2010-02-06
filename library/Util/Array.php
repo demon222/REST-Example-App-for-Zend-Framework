@@ -12,4 +12,13 @@ class Util_Array
         }
         return $item;
     }
+
+    public static function arrayFromKeyValuesOfSet($key, $set)
+    {
+        $results = array();
+        foreach ($set as $item) {
+            $results[] = $item[$key];
+        }
+        return $results;
+    }
 }

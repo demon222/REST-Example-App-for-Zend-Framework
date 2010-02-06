@@ -22,13 +22,13 @@ abstract class Rest_Model_AclHandler_Abstract
     /**
      * @param array|Zend_Acl $options
      */
-    function __construct($options = null)
+    function __construct($acl = null, $username = null)
     {
-        if ($options instanceof Zend_Acl) {
-            $this->setAcl($options);
+        if ($acl instanceof Zend_Acl) {
+            $this->setAcl($acl);
         }
-        if (is_array($options) && $options['acl']) {
-            $this->setAcl($options['acl']);
+        if (is_string($username)) {
+            $this->setAclContextUser($username);
         }
     }
 
@@ -136,32 +136,68 @@ abstract class Rest_Model_AclHandler_Abstract
      * @param string $method, same as what Zend_Acl referers to as 'privilege' but 'method' used for REST context
      * @return boolean
      */
-    public function isAllowed(string $method, array $id = null)
+    public function isAllowed($privilege, array $id = null)
     {
-        // check the specific case, done if any of the roles gives an allowed
-        // if all of the specific resource role relations are denied then denied
-        // if not sure yet, check further, check the resource generally against
-        // its roles. Allowed if any are allowed
-        $allowed = false;
-        $roles = $this->getAclContextRoles();
-        foreach($roles as $role) {
-            // for the current role check if this specific resource is allowed
-            // or denied. If no record, then proceed to check the resource
-            // generally (and its parents)
-            if (null !== ($itemPermission = Permission::get($this->getResourceSpecificId($id), $role, $method))) {
-                if ($itemPermission == 'allow') {
-                    return true;
-                } else {
-                    continue;
-                }
-            }
+        $acl = $this->getAcl();
 
-            if ($this->getAcl()->isAllowed($role, $this->getResourceId(), $method)) {
-                $allowed = true;
-                break;
+        $username = $this->getAclContextUser();
+
+        // first check if against this specific resource things are
+        // allowed or denied
+        $resourceSpecific = $this->getResourceSpecificId($id);
+        
+        $sql = 'SELECT p.id, p.permission, p.privilege, p.resource, p.role, r.user_id'
+            . ' FROM permission AS p'
+            . ' LEFT OUTER JOIN role AS r ON p.role = r.role AND p.resource = r.resource'
+            . ' LEFT OUTER JOIN user AS u ON r.user_id = u.id'
+            . ' WHERE ('
+            . '     u.username = :username'
+            . '     OR p.role = "default"'
+            . ')'
+            . ' AND p.resource = :resourceSpecific'
+            . ' AND p.privilege = :privilege'
+            . ' ORDER BY p.permission ASC'
+            . '';
+        $query = $this->_getDbHandler()->prepare($sql);
+        $query->execute(array(
+            ':username' => $username,
+            ':resourceSpecific' => $resourceSpecific,
+            ':privilege' => $privilege,
+        ));
+        $row = $query->fetch(PDO::FETCH_ASSOC);
+
+        if (false !== $row) {
+            // able to say that this specific resource is either allowed or denied
+            return $row['permission'] == 'allow';
+        }
+
+        // specific resource check wasn't definitive, check the general resource
+        $resourceGeneral = $this->getResourceId();
+
+        // get the roles
+        $sql = 'SELECT role FROM role'
+            . ' WHERE user_id = :username'
+            . ' AND resource = :resourceGeneral';
+        $query = $this->_getDbHandler()->query($sql);
+        $query->execute(array(
+            ':username' => $username,
+            ':resourceGeneral' => $resourceGeneral,
+        ));
+        $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
+        $roleSet = Util_Array::arrayFromKeyValuesOfSet('role', $rowSet);
+
+        // add the default role
+        $roleSet[] = 'default';
+        $allowed = false;
+        foreach ($roleSet as $role) {
+            // check if a role is accepted
+            if ($this->getAcl()->isAllowed($role, $resourceGeneral, $privilege)) {
+                // if any role is found that allows, the whole thing allows
+                return true;
             }
         }
 
-        return $allowed;
+        // no allows found in the general resource, so permission is denied
+        return false;
     }
 }

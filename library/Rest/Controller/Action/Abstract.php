@@ -206,9 +206,6 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
     public function preDispatch()
     {
-        // Get a reference to the singleton instance of Zend_Auth
-        $auth = Zend_Auth::getInstance();
-
 $config = array(
     'accept_schemes' => 'basic digest',
     'realm'          => 'Guestbook API',
@@ -230,7 +227,7 @@ $authAdapter->setDigestResolver($digestResolver);
 $authAdapter->setRequest($this->getRequest());
 $authAdapter->setResponse($this->getResponse());
 
-$result = $authAdapter->authenticate();
+$result = Zend_Auth::getInstance()->authenticate($authAdapter);
 
         if (!$result->isValid()) {
             // Bad userame/password, or canceled password prompt
@@ -242,7 +239,6 @@ $result = $authAdapter->authenticate();
             // cancel the action but post dispatch will be executed
             $this->setCancelAction(true);
         }
-
     }
 
     public function postDispatch()
