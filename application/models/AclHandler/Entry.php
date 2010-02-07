@@ -55,6 +55,7 @@ class Default_Model_AclHandler_Entry
                 . '     AND p.privilege = "get"'
                 . '     AND p.permission != "deny"'
                 . ' )'
+                . ' GROUP BY e.id'
                 . '';
         } else {
             // get based on whitelist
@@ -71,6 +72,7 @@ class Default_Model_AclHandler_Entry
                 . ' )'
                 . ' AND p.privilege = "get"'
                 . ' AND p.permission = "allow"'
+                . ' GROUP BY e.id'
                 . '';
         }
 
