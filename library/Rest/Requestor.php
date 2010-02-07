@@ -20,7 +20,7 @@ class Rest_Requestor
         curl_setopt($cr, CURLOPT_TIMEOUT, 2);
         curl_setopt($cr, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($cr, CURLOPT_FOLLOWLOCATION, false);
-        curl_setopt($cr, CURLOPT_USERPWD, 'admin:admin');
+        curl_setopt($cr, CURLOPT_USERPWD, 'Alex:admin');
         $json = curl_exec($cr);
 
         return json_decode($json, true);

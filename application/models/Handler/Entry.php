@@ -39,7 +39,7 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
      */
     public function get(array $id)
     {
-        $result = $this->_getDbTable()->find(array('id' => $id['id']));
+        $result = $this->_getDbTable()->find(array('id = ?' => $id['id']));
 
         if (0 == count($result)) {
             throw new Rest_Model_NotFoundException();
@@ -75,7 +75,7 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
         $item = Util_Array::mapIntersectingKeys($prop, $map);
         $item['created'] = date('Y-m-d H:i:s');
 
-        $updated = $this->_getDbTable()->update($item, array('id' => $id['id']));
+        $updated = $this->_getDbTable()->update($item, array('id = ?' => $id['id']));
 
         if ($updated <= 0) {
             throw new Rest_Model_NotFoundException();
@@ -90,7 +90,7 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
      */
     public function delete(array $id)
     {
-        $deleted = $this->_getDbTable()->delete(array('id' => $id['id']));
+        $deleted = $this->_getDbTable()->delete(array('id = ?' => $id['id']));
 
         if ($deleted == 0) {
             throw new Rest_Model_NotFoundException();

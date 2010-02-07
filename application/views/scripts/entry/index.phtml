@@ -7,8 +7,8 @@ Guestbook Entries: <br />
 <?php foreach ($this->data as $entry): ?>
         <li class="entry">
             <div class="id"><?php echo $this->escape($entry['id']) ?></div>
-            <div class="email"><?php echo $this->escape($entry['email']) ?></div>
             <div class="comment"><?php echo $this->escape($entry['comment']) ?></div>
+            <div class="created"><?php echo $this->escape($entry['created']) ?></div>
         </li>
 <?php endforeach ?>
     </ul>
@@ -26,8 +26,8 @@ $('.guestbook')
 
 
 function refreshEntryFromData(entry, data) {
-    $('div.email', entry).text(data.email);
     $('div.comment', entry).text(data.comment);
+    $('div.created', entry).text(data.created);
 }
 
 function refreshEntry(entry, data) {
@@ -52,7 +52,6 @@ $('.guestbook .entry .control_put').live('click', function() {
 
     form = $('<div class="form"/>').append(
         application['guestbook.entry.form'](
-            $('div.email', entry).text(),
             $('div.comment', entry).text(),
             'PUT'
         )
@@ -67,7 +66,6 @@ $('.guestbook .entry .control_put').live('click', function() {
     $('.submit', form).click(function() {
         var id = $('div.id', entry).text();
         var data = {
-            'email': $('.email', form).val(),
             'comment': $('.comment', form).val()
         };
 
@@ -120,7 +118,7 @@ $('.guestbook .control_post').click(function() {
     guestbookButton.hide();
 
     var form = $('<div class="form"/>').append(
-        application['guestbook.entry.form']('', '', 'POST')
+        application['guestbook.entry.form']('', 'POST')
     ).hide().insertAfter(this).slideDown();
 
     $('.cancel', form).click(function() {
@@ -132,7 +130,6 @@ $('.guestbook .control_post').click(function() {
 
     $('.submit', form).click(function() {
         var data = {
-            'email': $('.email', form).val(),
             'comment': $('.comment', form).val()
         };
 
@@ -153,7 +150,7 @@ $('.guestbook .control_post').click(function() {
                     $(this).remove();
                 });
                 guestbookButton.show();
-                entry = $('<li class="entry"><div class="id"/><div class="email"/><div class="comment"/><input type="button" class="control control_put" value="Edit"/><input type="button" class="control control_delete" value="Delete"/></li>');
+                entry = $('<li class="entry"><div class="id"/><div class="comment"/><input type="button" class="control control_put" value="Edit"/><input type="button" class="control control_delete" value="Delete"/></li>');
                 refreshEntry(entry, result.content);
                 entry.hide().appendTo('div.guestbook ul').slideDown();
             }

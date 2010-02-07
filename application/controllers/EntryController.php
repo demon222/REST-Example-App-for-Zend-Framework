@@ -27,11 +27,12 @@ class EntryController extends Zend_Controller_Action
      */
     public function indexAction()
     {
-        $handler = new Default_Model_Handler_Entry();
+        $authResult = Zend_Auth::getInstance()->getIdentity();
+        $handler = new Default_Model_AclHandler_Entry(Zend_Registry::get('acl'), $authResult['username']);
         $data = $handler->getList();
 
-//        $result = Rest_Requestor::apiRequest('GET', '/entry-api/');
-//        $data = $result['content'];
+        //$result = Rest_Requestor::apiRequest('GET', '/entry-api/');
+        //$data = $result['content'];
 
         $this->view->data = $data;
     }

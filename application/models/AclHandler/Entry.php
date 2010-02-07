@@ -21,7 +21,9 @@ class Default_Model_AclHandler_Entry
 
         $acl->addResource($this);
 
-        $acl->addRole('default');
+        if (!$acl->hasRole('default')) {
+            $acl->addRole('default');
+        }
 
         $acl->allow('default', $this, array('get', 'post'));
         $acl->deny('default', $this, array('put', 'delete'));
@@ -120,7 +122,7 @@ class Default_Model_AclHandler_Entry
             throw new Zend_Acl_Exception('delete for ' . $this->getResourceId() . ' is not allowed');
         }
 
-        return $this->_getModelHandler()->delete($id);
+        return $data = $this->_getModelHandler()->delete($id);
     }
 
     /**
@@ -130,11 +132,15 @@ class Default_Model_AclHandler_Entry
      */
     public function post(array $prop)
     {
-        if ($this->getAcl() && !$this->isAllowed('post', $id)) {
+        if ($this->getAcl() && !$this->isAllowed('post')) {
             throw new Zend_Acl_Exception('post for ' . $this->getResourceId() . ' is not allowed');
         }
 
-        return $this->_getModelHandler()->post($prop);
+        $item = $this->_getModelHandler()->post($prop);
+
+// NEED TO CREATE PERMISSION AND ROLE FOR THE NEW ENTRY
+
+        return $item;
     }
 
     /**
@@ -150,7 +156,7 @@ class Default_Model_AclHandler_Entry
     }
 
     /**
-     * @return Default_Model_Handler_Interface
+     * @return Default_Model_Handler_Entry
      */
     protected function _getModelHandler()
     {

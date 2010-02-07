@@ -4,16 +4,13 @@ function encodeForHTML(str) {
 
 if (typeof(application) == 'undefined') var application = {};
 
-application['guestbook.entry.form'] = function(email, comment, method) {
-    email = typeof(email) != 'undefined' ? email : '';
+application['guestbook.entry.form'] = function(comment, method) {
     comment = typeof(comment) != 'undefined' ? comment : '';
 
     method = typeof(method) != 'undefined' ? method : 'PUT';
 
     return '' +
         '<dl>' +
-        '    <dt><label for="email">Email:</label></dt>' +
-        '    <dd><input type="text" class="email" name="email" value="' + encodeForHTML(email) + '" /></dd>' +
 
         '    <dt><label for="comment">Comment:</label></dt>' +
         '    <dd><textarea class="comment" name="comment" rows="8" cols="40">' + encodeForHTML(comment) + '</textarea></dd>' +

@@ -6,7 +6,7 @@
 
 $(function() {
     var form = $('.form').append(
-        application['guestbook.entry.form']('', '', 'POST')
+        application['guestbook.entry.form']('', 'POST')
     );
 
     $('.cancel', form).click(function() {
@@ -15,7 +15,6 @@ $(function() {
 
     $('.submit', form).click(function() {
         var data = {
-            'email': $('.email', form).val(),
             'comment': $('.comment', form).val()
         };
 
@@ -24,7 +23,7 @@ $(function() {
         $.ajax({
             url: '/entry-api',
             type: 'POST',
-            data: data,
+            data: JSON.stringify(data),
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             beforeSend: function() {
