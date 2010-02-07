@@ -42,18 +42,19 @@ class Default_Model_AclHandler_Entry
             // accept specific resources that are allow or unspecified.
             // IE: not denied
 
-            $sql = 'SELECT e.id, e.comment, e.created'
+            $sql = 'SELECT e.id, e.comment, e.created, u.name'
                 . ' FROM entry AS e'
-                . ' LEFT OUTER JOIN permission AS p ON p.resource = ("Entry=" || e.id)'
-                . ' LEFT OUTER JOIN role AS r ON p.role = r.role AND p.resource = r.resource'
-                . ' LEFT OUTER JOIN user AS u ON r.user_id = u.id'
-                . ' WHERE p.id IS NULL OR ('
+                . ' INNER JOIN user AS u ON e.creator_user_id = u.id'
+                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("Entry=" || e.id)'
+                . ' LEFT OUTER JOIN resource_role AS acl_rr ON acl_p.role = acl_rr.role AND acl_p.resource = acl_rr.resource'
+                . ' LEFT OUTER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
+                . ' WHERE acl_p.id IS NULL OR ('
                 . '     ('
-                . '         u.username = :username'
-                . '         OR p.role = "default"'
+                . '         acl_u.username = :username'
+                . '         OR acl_p.role = "default"'
                 . '     )'
-                . '     AND p.privilege = "get"'
-                . '     AND p.permission != "deny"'
+                . '     AND acl_p.privilege = "get"'
+                . '     AND acl_p.permission != "deny"'
                 . ' )'
                 . ' GROUP BY e.id'
                 . '';
@@ -61,17 +62,18 @@ class Default_Model_AclHandler_Entry
             // get based on whitelist
             // accept specific resource that are allow only
 
-            $sql = 'SELECT e.id, e.comment, e.created'
+            $sql = 'SELECT e.id, e.comment, e.created, u.name'
                 . ' FROM entry AS e'
-                . ' LEFT OUTER JOIN permission AS p ON p.resource = ("Entry=" || e.id)'
-                . ' LEFT OUTER JOIN role AS r ON p.role = r.role AND p.resource = r.resource'
-                . ' LEFT OUTER JOIN user AS u ON r.user_id = u.id'
+                . ' INNER JOIN user AS u ON e.creator_user_id = u.id'
+                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("Entry=" || e.id)'
+                . ' LEFT OUTER JOIN resource_role AS acl_rr ON acl_p.role = acl_rr.role AND acl_p.resource = acl_rr.resource'
+                . ' LEFT OUTER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
                 . ' WHERE ('
-                . '     u.username = :username'
-                . '     OR p.role = "default"'
+                . '     acl_u.username = :username'
+                . '     OR acl_p.role = "default"'
                 . ' )'
-                . ' AND p.privilege = "get"'
-                . ' AND p.permission = "allow"'
+                . ' AND acl_p.privilege = "get"'
+                . ' AND acl_p.permission = "allow"'
                 . ' GROUP BY e.id'
                 . '';
         }
@@ -140,7 +142,8 @@ class Default_Model_AclHandler_Entry
 
         $item = $this->_getModelHandler()->post($prop);
 
-// NEED TO CREATE PERMISSION AND ROLE FOR THE NEW ENTRY
+        // NEED TO CREATE PERMISSION AND ROLE FOR THE NEW ENTRY
+//        Default_Model_Handler_Entry
 
         return $item;
     }

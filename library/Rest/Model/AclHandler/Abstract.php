@@ -145,10 +145,10 @@ abstract class Rest_Model_AclHandler_Abstract
             // allowed or denied
             $resourceSpecific = $this->getResourceSpecificId($id);
 
-            $sql = 'SELECT p.id, p.permission, p.privilege, p.resource, p.role, r.user_id'
+            $sql = 'SELECT p.id, p.permission, p.privilege, p.resource, p.role, rr.user_id'
                 . ' FROM permission AS p'
-                . ' LEFT OUTER JOIN role AS r ON p.role = r.role AND p.resource = r.resource'
-                . ' LEFT OUTER JOIN user AS u ON r.user_id = u.id'
+                . ' LEFT OUTER JOIN resource_role AS rr ON p.role = rr.role AND p.resource = rr.resource'
+                . ' LEFT OUTER JOIN user AS u ON rr.user_id = u.id'
                 . ' WHERE ('
                 . '     u.username = :username'
                 . '     OR p.role = "default"'
@@ -175,7 +175,7 @@ abstract class Rest_Model_AclHandler_Abstract
         $resourceGeneral = $this->getResourceId();
 
         // get the roles
-        $sql = 'SELECT role FROM role'
+        $sql = 'SELECT role FROM resource_role'
             . ' WHERE user_id = :username'
             . ' AND resource = :resourceGeneral';
         $query = $this->_getDbHandler()->query($sql);
