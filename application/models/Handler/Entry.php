@@ -12,6 +12,27 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
     protected $_dbTable;
 
     /**
+     * @param array $params
+     * @return array
+     */
+    public function getList(array $params = null)
+    {
+        $resultSet = $this->_getDbTable()->fetchAll();
+
+        $map = array(
+            'id' => 'id',
+            'comment' => 'comment',
+            'created' => 'created',
+        );
+
+        $items = array();
+        foreach ($resultSet as $row) {
+            $items[] = Util_Array::mapIntersectingKeys($row->toArray(), $map);
+        }
+        return $items;
+    }
+
+    /**
      * @param array $id
      * @return array
      * @throws Rest_Model_NotFoundException
@@ -97,27 +118,6 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
         $item['id'] = $id;
 
         return $item;
-    }
-
-    /**
-     * @param array $params
-     * @return array
-     */
-    public function getList(array $params = null)
-    {
-        $resultSet = $this->_getDbTable()->fetchAll();
-
-        $map = array(
-            'id' => 'id',
-            'comment' => 'comment',
-            'created' => 'created',
-        );
-
-        $items = array();
-        foreach ($resultSet as $row) {
-            $items[] = Util_Array::mapIntersectingKeys($row->toArray(), $map);
-        }
-        return $items;
     }
 
     /**

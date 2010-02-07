@@ -138,37 +138,37 @@ abstract class Rest_Model_AclHandler_Abstract
      */
     public function isAllowed($privilege, array $id = null)
     {
-        $acl = $this->getAcl();
-
         $username = $this->getAclContextUser();
 
-        // first check if against this specific resource things are
-        // allowed or denied
-        $resourceSpecific = $this->getResourceSpecificId($id);
-        
-        $sql = 'SELECT p.id, p.permission, p.privilege, p.resource, p.role, r.user_id'
-            . ' FROM permission AS p'
-            . ' LEFT OUTER JOIN role AS r ON p.role = r.role AND p.resource = r.resource'
-            . ' LEFT OUTER JOIN user AS u ON r.user_id = u.id'
-            . ' WHERE ('
-            . '     u.username = :username'
-            . '     OR p.role = "default"'
-            . ')'
-            . ' AND p.resource = :resourceSpecific'
-            . ' AND p.privilege = :privilege'
-            . ' ORDER BY p.permission ASC'
-            . '';
-        $query = $this->_getDbHandler()->prepare($sql);
-        $query->execute(array(
-            ':username' => $username,
-            ':resourceSpecific' => $resourceSpecific,
-            ':privilege' => $privilege,
-        ));
-        $row = $query->fetch(PDO::FETCH_ASSOC);
+        if (null != $id) {
+            // first check if against this specific resource things are
+            // allowed or denied
+            $resourceSpecific = $this->getResourceSpecificId($id);
 
-        if (false !== $row) {
-            // able to say that this specific resource is either allowed or denied
-            return $row['permission'] == 'allow';
+            $sql = 'SELECT p.id, p.permission, p.privilege, p.resource, p.role, r.user_id'
+                . ' FROM permission AS p'
+                . ' LEFT OUTER JOIN role AS r ON p.role = r.role AND p.resource = r.resource'
+                . ' LEFT OUTER JOIN user AS u ON r.user_id = u.id'
+                . ' WHERE ('
+                . '     u.username = :username'
+                . '     OR p.role = "default"'
+                . ' )'
+                . ' AND p.resource = :resourceSpecific'
+                . ' AND p.privilege = :privilege'
+                . ' ORDER BY p.permission ASC'
+                . '';
+            $query = $this->_getDbHandler()->prepare($sql);
+            $query->execute(array(
+                ':username' => $username,
+                ':resourceSpecific' => $resourceSpecific,
+                ':privilege' => $privilege,
+            ));
+            $row = $query->fetch(PDO::FETCH_ASSOC);
+
+            if (false !== $row) {
+                // able to say that this specific resource is either allowed or denied
+                return $row['permission'] == 'allow';
+            }
         }
 
         // specific resource check wasn't definitive, check the general resource
