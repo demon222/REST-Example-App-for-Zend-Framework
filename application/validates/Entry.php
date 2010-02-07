@@ -43,7 +43,7 @@ class Default_Validate_Entry extends ZendPatch_Validate_Abstract
 
 
         $partialOk = false;
-
+/*
         // validate that the email is correct
         if (isset($value['email'])) {
             $partialOk = true;
@@ -56,6 +56,7 @@ class Default_Validate_Entry extends ZendPatch_Validate_Abstract
                 $this->_addValidateMessagesAndErrors($validate);
             }
         }
+ */
 
         // validate that the comment is set
         if (isset($value['comment'])) {
