@@ -11,11 +11,17 @@ interface Rest_Model_Handler_Interface
     public static function getIdentityKeys();
     
     /**
+     * @param array $params
+     * @return array
+     */
+    public function getList(array $params = null);
+
+    /**
      * @param array $id
      * @return array
      * @throws Rest_Model_NotFoundException
      */
-    public function get(array $id);
+    public function get(array $id, array $params = null);
 
     /**
      * @param array $id
@@ -36,10 +42,4 @@ interface Rest_Model_Handler_Interface
      * @return array
      */
     public function post(array $prop);
-
-    /**
-     * @param array $params 
-     * @return array
-     */
-    public function getList(array $params = null);
 }

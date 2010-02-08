@@ -92,7 +92,7 @@ class Default_Model_AclHandler_User
      * @return array
      * @throws Rest_Model_NotFoundException, Zend_Acl_Exception
      */
-    public function get(array $id)
+    public function get(array $id, array $params = null)
     {
         if ($this->getAcl() && !$this->isAllowed('get', $id)) {
             throw new Zend_Acl_Exception('get for ' . $this->getResourceId() . ' is not allowed');

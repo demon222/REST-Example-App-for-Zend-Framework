@@ -38,7 +38,7 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
      * @return array
      * @throws Rest_Model_NotFoundException
      */
-    public function get(array $id)
+    public function get(array $id, array $params = null)
     {
         $result = $this->_getDbTable()->find(array('id = ?' => $id['id']));
 
