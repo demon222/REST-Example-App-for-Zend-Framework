@@ -10,6 +10,8 @@ class Rest_Serializer
     const JAVASCRIPT = 'application/javascript';
     const XML = 'text/xml';
     const URL_ENCODE = 'application/x-www-form-urlencoded';
+    const URL_JSON_ENCODE = 'url-json-encode';
+    const FULL_URL_UNKNOWN = 'full-url-unknown';
 
     /**
      * Is checked against to determine type, see identifyType method.
@@ -204,6 +206,26 @@ class Rest_Serializer
             return $a;
         }
 
-        return false;
+        if ($type == self::URL_JSON_ENCODE) {
+            return self::decode(rawurldecode($string), self::JSON);
+        }
+
+        if ($type == self::FULL_URL_UNKNOWN) {
+            $encodedData = parse_url($string, PHP_URL_QUERY);
+
+            if (!strlen($encodedData)) {
+                return null;
+            }
+
+            // if the url query part starts with '{' very likely JSON
+            if ('{' == substr(rawurldecode($encodedData), 0, 1)) {
+                return self::decode($encodedData, self::URL_JSON_ENCODE);
+            }
+
+            return self::decode($encodedData, self::URL_ENCODE);
+        }
+
+        return null;
     }
+
 }

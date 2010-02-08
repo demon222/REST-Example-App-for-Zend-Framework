@@ -31,8 +31,11 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
     {
         $handler = $this->_createModelHandler();
 
+        $url = $this->getRequest()->getRequestUri();
+        $params = Rest_Serializer::decode($url, Rest_Serializer::FULL_URL_UNKNOWN);
+
         try {
-            $items = $handler->getList();
+            $items = $handler->getList($params);
         } catch (Rest_Model_MethodNotAllowedException $e) {
             $this->getResponse()->setHttpResponseCode(405);
             $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
@@ -60,9 +63,12 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             $ids[$key] = $this->getRequest()->getParam($key);
         }
 
+        $url = $this->getRequest()->getRequestUri();
+        $params = Rest_Serializer::decode($url, Rest_Serializer::FULL_URL_UNKNOWN);
+
         // load the model
         try {
-            $item = $handler->get($ids);
+            $item = $handler->get($ids, $params);
         } catch (Zend_Acl_Exception $e) {
             // acl check failed
             $this->getResponse()->setHttpResponseCode(401);

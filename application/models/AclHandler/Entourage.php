@@ -32,35 +32,36 @@ class Default_Model_AclHandler_Entourage
     }
 
     /**
+     *   $params = array(
+     *       'User' => array(
+     *           'entourage' => array(
+     *               'Entry' => array(
+     *                   'resourceIdKey' => 'id',
+     *                   'entourageIdKey' => 'creator_user_id',
+     *                   'representAs' => 'Entry',
+     *               ),
+     *           ),
+     *       ),
+     *       'Entry' => array(
+     *           'entourage' => array(
+     *               'User' => array(
+     *                   'resourceIdKey' => 'creator_user_id',
+     *                   'entourageIdKey' => 'id',
+     *                   'representAs' => 'Creator',
+     *                   'singleOnly' => true,
+     *               ),
+     *           ),
+     *       ),
+     *   );
+     *
+     *
      * @param array $params
      * @return array
      */
     public function getList(array $params = null)
     {
         // validate that the needed parameters have been passed
-
-        $params = array(
-            'User' => array(
-                'entourage' => array(
-                    'Entry' => array(
-                        'resourceIdKey' => 'id',
-                        'entourageIdKey' => 'creator_user_id',
-                        'representAs' => 'Entry',
-                    ),
-                ),
-            ),
-            'Entry' => array(
-                'entourage' => array(
-                    'User' => array(
-                        'resourceIdKey' => 'creator_user_id',
-                        'entourageIdKey' => 'id',
-                        'representAs' => 'Creator',
-                        'singleOnly' => true,
-                    ),
-                ),
-            ),
-        );
-        if (!is_array($params)) {
+        if (!is_array($params) || !count($params)) {
             throw new Rest_Model_BadRequestException('must provide a set of source resources for attaching entourage resources');
         }
 
