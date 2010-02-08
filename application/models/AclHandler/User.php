@@ -1,9 +1,11 @@
 <?php
 require_once('Rest/Model/AclHandler/Abstract.php');
+require_once('Rest/Model/EntourageImplementer/Interface.php');
 require_once('Util/Array.php');
 
 class Default_Model_AclHandler_User
     extends Rest_Model_AclHandler_Abstract
+    implements Rest_Model_EntourageImplementer_Interface
 {
     /**
      * @var Default_Model_Handler_User
@@ -32,11 +34,33 @@ class Default_Model_AclHandler_User
     }
 
     /**
+     * @param string $alias
+     * @return array
+     */
+    public function expandEntourageAlias($alias)
+    {
+        if ('Entry' == $alias) {
+            return array(
+                'entourageModel' => 'Entry',
+                'entourageIdKey' => 'creator_user_id',
+                'resourceIdKey' => 'id',
+            );
+        }
+        return null;
+    }
+
+    /**
      * @param array $params
      * @return array
      */
     public function getList(array $params = null)
     {
+        if (isset($params) && isset($params['entourage']) && is_array($params['entourage'])) {
+            $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
+            $data = $entourageHandler->getList(array('User' => $params));
+            return $data['User'];
+        }
+
         $username = $this->getAclContextUser();
 
         if ($this->isAllowed('get')) {
