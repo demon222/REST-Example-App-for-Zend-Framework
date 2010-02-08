@@ -29,7 +29,7 @@ class EntryController extends Zend_Controller_Action
     {
         $authResult = Zend_Auth::getInstance()->getIdentity();
         $handler = new Default_Model_AclHandler_Entry(Zend_Registry::get('acl'), $authResult['username']);
-        $data = $handler->getList();
+        $data = $handler->getList(array('entourage' => 'Creator'));
 
         //$result = Rest_Requestor::apiRequest('GET', '/entry-api/');
         //$data = $result['content'];

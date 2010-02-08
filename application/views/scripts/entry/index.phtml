@@ -9,7 +9,7 @@ Guestbook Entries: <br />
             <div class="id"><?php echo $this->escape($entry['id']) ?></div>
             <div class="comment"><?php echo $this->escape($entry['comment']) ?></div>
             <div class="creator_user_id"><?php echo $this->escape($entry['creator_user_id']) ?></div>
-            <div class="creator_name"><?php echo $this->escape($entry['creator_user_id.name']) ?></div>
+            <div class="creator_name"><?php echo $this->escape($entry['Creator']['name']) ?></div>
             <div class="modified"><?php echo $this->escape($entry['modified']) ?></div>
         </li>
 <?php endforeach ?>
@@ -30,6 +30,13 @@ $('.guestbook')
 function refreshEntryFromData(entry, data) {
     $('div.comment', entry).text(data.comment);
     $('div.creator_user_id', entry).text(data.creator_user_id);
+    if (data.Creator) {
+        $('div.creator_name', entry).text(data.Creator.name);
+    } else {
+        $.getJSON('/api-user/' + escape(data.creator_user_id), function(data) {
+            refreshEntryFromData(data.content);
+        });
+    }
     $('div.modified', entry).text(data.modified);
 }
 
@@ -43,7 +50,7 @@ function refreshEntry(entry, data) {
 
     var id = $('div.id', entry).text();
 
-    $.getJSON('/entry-api/' + escape(id), function(data) {
+    $.getJSON('/api-entry/' + escape(id) + '?' + JSON.stringify({'entourage':'Creator'}), function(data) {
         refreshEntryFromData(data.content);
         $('div.loading', entry).remove();
     });
@@ -75,7 +82,7 @@ $('.guestbook .entry .control_put').live('click', function() {
         var submitButton = $(this);
 
         $.ajax({
-            url: '/entry-api/' + id,
+            url: '/api-entry/' + id,
             type: 'PUT',
             data: JSON.stringify(data),
             dataType: 'json',
@@ -99,7 +106,7 @@ $('.guestbook .entry .control_delete').live('click', function () {
     var id = $('div.id', entry).text();
 
     $.ajax({
-        url: '/entry-api/' + id,
+        url: '/api-entry/' + id,
         type: 'DELETE',
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
@@ -139,7 +146,7 @@ $('.guestbook .control_post').click(function() {
         var submitButton = $(this);
 
         $.ajax({
-            url: '/entry-api',
+            url: '/api-entry',
             type: 'POST',
             data: JSON.stringify(data),
             dataType: 'json',
@@ -153,7 +160,7 @@ $('.guestbook .control_post').click(function() {
                     $(this).remove();
                 });
                 guestbookButton.show();
-                entry = $('<li class="entry"><div class="id"/><div class="comment"/><input type="button" class="control control_put" value="Edit"/><input type="button" class="control control_delete" value="Delete"/></li>');
+                entry = $('<li class="entry"><div class="id"/><div class="comment"/><div class="creator_user_id"/><div class="creator_name"/><div class="modified"/><input type="button" class="control control_put" value="Edit"/><input type="button" class="control control_delete" value="Delete"/></li>');
                 refreshEntry(entry, result.content);
                 entry.hide().appendTo('div.guestbook ul').slideDown();
             }

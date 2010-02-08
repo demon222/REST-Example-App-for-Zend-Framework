@@ -165,6 +165,8 @@ class Default_Model_AclHandler_Entry
             throw new Zend_Acl_Exception('post for ' . $this->getResourceId() . ' is not allowed');
         }
 
+// getAclContextUser is getting the username and not the user_id
+// must be changed
         $prop['creator_user_id'] = $this->getAclContextUser();
 
         $item = $this->_getModelHandler()->post($prop);
