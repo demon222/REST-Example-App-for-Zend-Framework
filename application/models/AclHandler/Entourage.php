@@ -40,18 +40,28 @@ class Default_Model_AclHandler_Entourage
         // validate that the needed parameters have been passed
 
         $params = array(
+            'User' => array(
+                'entourage' => array(
+                    'Entry' => array(
+                        'resourceIdKey' => 'id',
+                        'entourageIdKey' => 'creator_user_id',
+                        'representAs' => 'Entry',
+                    ),
+                ),
+            ),
             'Entry' => array(
                 'entourage' => array(
                     'User' => array(
                         'resourceIdKey' => 'creator_user_id',
                         'entourageIdKey' => 'id',
                         'representAs' => 'Creator',
+                        'singleOnly' => true,
                     ),
                 ),
             ),
         );
         if (!is_array($params)) {
-            throw new Rest_Model_BadRequestException();
+            throw new Rest_Model_BadRequestException('must provide a set of source resources for attaching entourage resources');
         }
 
         $data = array();
@@ -70,66 +80,14 @@ class Default_Model_AclHandler_Entourage
 
             $resourceHandler = new $resourceName($this->getAcl(), $this->getAclContextUser());
 
-            $entourageSetParam = null;
-            if (isset($resourceParam['entourage'])) {
-                $entourageSetParam = $resourceParam['entourage'];
-                unset($resourceParam['entourage']);
-            }
+            $entourageSetParam = isset($resourceParam['entourage']) ? $resourceParam['entourage'] : null;
 
             // get the resource list
+            unset($resourceParam['entourage']);
             $resourceList = $resourceHandler->getList($resourceParam);
 
-            if (null === $entourageSetParam) {
-                // no entourage to attach to the resource, next
-                continue;
-            }
-
-            // attach to the resource all the entourage resources
-            if (!is_array($entourageSetParam)) {
-                throw new Rest_Model_BadRequestException('entourage resources not provided');
-            }
-
-            foreach ($entourageSetParam as $eName => $entourageParam) {
-                // get the entourage set and attach the values to the matching
-                // items in the resource list
-
-                $entourageName = 'Default_Model_AclHandler_' . $eName;
-
-                // see angry comment above about the stupidity of this function
-                if (!@class_exists($resourceName)) {
-                    throw new Rest_Model_BadRequestException('entourage resource "' . $eName . '" does not exist');
-                }
-
-                $entourageHandler = new $entourageName($this->getAcl(), $this->getAclContextUser());
-
-                // validate the input param
-                if (!isset($entourageParam['resourceIdKey'])) {
-                    throw new Rest_Model_BadRequestException('entourage resource "' . $eName . '" does not specify a resourceIdKey (for "' . $rName . '")');
-                }
-                if (!isset($entourageParam['entourageIdKey'])) {
-                    throw new Rest_Model_BadRequestException('entourage resource "' . $eName . '" does not specify a entourageIdKey (for "' . $rName . '")');
-                }
-                if (!isset($entourageParam['representAs'])) {
-                    throw new Rest_Model_BadRequestException('entourage resource "' . $eName . '" does not specify a representAs (for "' . $rName . '")');
-                }
-
-                // get only the entourage resources needed for the resource
-                $resourceJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageParam['resourceIdKey'], $resourceList);
-                $entourageSet = $entourageHandler->getList(array(
-                    'where' => array(
-                        // because the could be duplicate ids: array_unique and reindex with array_values
-                        $entourageParam['entourageIdKey'] => array_values(array_unique($resourceJoinIdList))
-                    )
-                ));
-
-                foreach ($entourageSet as $entourageItem) {
-                    // find items in the resource list that this entourage applies to
-                    $joinKeySet = array_keys($resourceJoinIdList, $entourageItem[$entourageParam['entourageIdKey']]);
-                    foreach ($joinKeySet as $joinKey) {
-                        // inject the entourage item onto the applicable resource list items
-                        $resourceList[$joinKey][$entourageParam['representAs']] = $entourageItem;
-                    }
-                }
+            if (null !== $entourageSetParam) {
+                $this->_entouragePopulate($entourageSetParam, $resourceList);
             }
 
             $data[$rName] = $resourceList;
@@ -143,27 +101,38 @@ class Default_Model_AclHandler_Entourage
      * @return array
      * @throws Rest_Model_NotFoundException, Zend_Acl_Exception
      */
-    public function get(array $id)
+    public function get(array $id, array $params = null)
     {
-        $resourceHandler = new Default_Model_AclHandler_Entry($this->getAcl(), $this->getAclContextUser());
+        if (null === $params) {
+            throw new Rest_Model_BadRequestException('must provide a source resource for attaching entourage resources');
+        }
+
+        // take just the first param, any additional ones will be ignored
+        list($rName, $resourceParam) = each($params);
+
+        // create the full resource name
+        $resourceName = 'Default_Model_AclHandler_' . $rName;
+
+        // see angry comment above about the stupidity of this function
+        if (!@class_exists($resourceName)) {
+            throw new Rest_Model_BadRequestException('resource "' . $rName . '" does not exist');
+        }
+
+        $resourceHandler = new $resourceName($this->getAcl(), $this->getAclContextUser());
+
+        $entourageSetParam = isset($resourceParam['entourage']) ? $resourceParam['entourage'] : null;
+
+        // get the resource
         $resource = $resourceHandler->get($id);
 
-        $resourceJoinIdList = Util_Array::arrayFromKeyValuesOfSet('creator_user_id', $resourceList);
-
-        $entourageHandler = new Default_Model_AclHandler_User($this->getAcl(), $this->getAclContextUser());
-        try {
-            $entourage = $entourageHandler->get($resource['creator_user_id']);
-        } catch (Rest_Model_NotFoundException $e) {
-            // couldn't get anything by that id
-            $entourage = null;
-        } catch (Zend_Acl_Exception $e) {
-            // couldn't get anything by that id
-            $entourage = null;
+        // attach an entourage resources that are specified
+        if (null !== $entourageSetParam) {
+            $resourceList = array($resource);
+            $this->_entouragePopulate($entourageSetParam, $resourceList);
+            $resource = $resourceList[0];
         }
 
-        if (is_array($entourage)) {
-            $resource['Creator'] = $entourage;
-        }
+        return $resource;
     }
 
     /**
@@ -217,6 +186,73 @@ class Default_Model_AclHandler_Entourage
             $this->_modelHandler = new Default_Model_Handler_Entry();
         }
         return $this->_modelHandler;
+    }
+
+    /**
+     *
+     * @param array $entourageSetParam
+     * @param array $resourceList
+     */
+    protected function _entouragePopulate(array $entourageSetParam, &$resourceList)
+    {
+        // attach to the resource all the entourage resources
+        if (!is_array($entourageSetParam)) {
+            throw new Rest_Model_BadRequestException('entourage resources not provided');
+        }
+
+        foreach ($entourageSetParam as $eName => $entourageParam) {
+            // get the entourage set and attach the values to the matching
+            // items in the resource list
+
+            $entourageName = 'Default_Model_AclHandler_' . $eName;
+
+            // see angry comment above about the stupidity of this function
+            if (!@class_exists($entourageName)) {
+                throw new Rest_Model_BadRequestException('entourage resource "' . $eName . '" does not exist');
+            }
+
+            $entourageHandler = new $entourageName($this->getAcl(), $this->getAclContextUser());
+
+            // validate the input param
+            if (!isset($entourageParam['resourceIdKey'])) {
+                throw new Rest_Model_BadRequestException('entourage resource "' . $eName . '" does not specify a resourceIdKey (for "' . $rName . '")');
+            }
+            if (!isset($entourageParam['entourageIdKey'])) {
+                throw new Rest_Model_BadRequestException('entourage resource "' . $eName . '" does not specify a entourageIdKey (for "' . $rName . '")');
+            }
+            if (!isset($entourageParam['representAs'])) {
+                throw new Rest_Model_BadRequestException('entourage resource "' . $eName . '" does not specify a representAs (for "' . $rName . '")');
+            }
+
+            // get only the entourage resources needed for the resource
+            $resourceJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageParam['resourceIdKey'], $resourceList);
+            $entourageList = $entourageHandler->getList(array(
+                'where' => array(
+                    // because the could be duplicate ids: array_unique and reindex with array_values
+                    $entourageParam['entourageIdKey'] => array_values(array_unique($resourceJoinIdList))
+                )
+            ));
+
+            // if specified only return the first match for entourages that match, can make for a
+            // cleaner api for using this
+            $singleOnly = isset($entourageParam['singleOnly']) && $entourageParam['singleOnly'] ? $entourageParam['singleOnly'] : false;
+
+            //
+            $entourageJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageParam['entourageIdKey'], $entourageList);
+            foreach ($resourceList as &$resource) {
+                $joinKeySet = array_keys($entourageJoinIdList, $resource[$entourageParam['resourceIdKey']]);
+
+                if ($singleOnly) {
+                    $first = current($joinKeySet);
+                    $resource[$entourageParam['representAs']] = $first !== false ? $entourageList[$first] : null;
+                } else {
+                    $resource[$entourageParam['representAs']] = array();
+                    foreach ($joinKeySet as $joinKey) {
+                        $resource[$entourageParam['representAs']][] = $entourageList[$joinKey];
+                    }
+                }
+            }
+        }
     }
 
 }
