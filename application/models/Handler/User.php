@@ -4,7 +4,7 @@ require_once('Rest/Model/Handler/Abstract.php');
 require_once('Rest/Model/NotFoundException.php');
 require_once('Util/Array.php');
 
-class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
+class Default_Model_Handler_User extends Rest_Model_Handler_Abstract
 {
     /**
      * @var Zend_Db_Table_Abstract
@@ -21,9 +21,8 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
 
         $map = array(
             'id' => 'id',
-            'comment' => 'comment',
-            'creator_user_id' => 'creator_user_id',
-            'modified' => 'modified',
+            'username' => 'username',
+            'name' => 'name',
         );
 
         $items = array();
@@ -48,9 +47,8 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
 
         $map = array(
             'id' => 'id',
-            'comment' => 'comment',
-            'creator_user_id' => 'creator_user_id',
-            'modified' => 'modified',
+            'username' => 'username',
+            'name' => 'name',
         );
 
         return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
@@ -72,8 +70,8 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
         // could probably implement renaming by having 'id' set by $prop but
         // not going to try to debug that right now
         $map = array(
-            'comment' => 'comment',
-            'creator_user_id' => 'creator_user_id',
+            'username' => 'username',
+            'name' => 'name',
         );
         $item = Util_Array::mapIntersectingKeys($prop, $map);
         $item['modified'] = date('Y-m-d H:i:s');
@@ -107,8 +105,8 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
     public function post(array $prop)
     {
         $map = array(
-            'comment' => 'comment',
-            'creator_user_id' => 'creator_user_id',
+            'username' => 'username',
+            'name' => 'name',
         );
         $item = Util_Array::mapIntersectingKeys($prop, $map);
         $item['modified'] = date('Y-m-d H:i:s');
@@ -132,7 +130,7 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
     protected function _getDbTable()
     {
         if (null === $this->_dbTable) {
-            $this->_dbTable = new Default_Model_DbTable_Entry();
+            $this->_dbTable = new Default_Model_DbTable_User();
         }
         return $this->_dbTable;
     }

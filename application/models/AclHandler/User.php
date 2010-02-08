@@ -2,11 +2,11 @@
 require_once('Rest/Model/AclHandler/Abstract.php');
 require_once('Util/Array.php');
 
-class Default_Model_AclHandler_Entry
+class Default_Model_AclHandler_User
     extends Rest_Model_AclHandler_Abstract
 {
     /**
-     * @var Default_Model_Handler_Entry
+     * @var Default_Model_Handler_User
      */
     protected $_modelHandler;
 
@@ -25,8 +25,8 @@ class Default_Model_AclHandler_Entry
             $acl->addRole('default');
         }
 
-        $acl->allow('default', $this, array('get', 'post'));
-        $acl->deny('default', $this, array('put', 'delete'));
+        $acl->allow('default', $this, array('get'));
+        $acl->deny('default', $this, array('put', 'delete', 'post'));
     }
 
     /**
@@ -42,9 +42,9 @@ class Default_Model_AclHandler_Entry
             // accept specific resources that are allow or unspecified.
             // IE: not denied
 
-            $sql = 'SELECT e.id AS id, e.comment AS comment, e.creator_user_id AS creator_user_id, e.modified as modified'
-                . ' FROM entry AS e'
-                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("Entry=" || e.id)'
+            $sql = 'SELECT u.id AS id, u.username AS username, u.name AS name'
+                . ' FROM user AS u'
+                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("User=" || u.id)'
                 . ' LEFT OUTER JOIN resource_role AS acl_rr ON acl_p.role = acl_rr.role AND acl_p.resource = acl_rr.resource'
                 . ' LEFT OUTER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
                 . ' WHERE acl_p.id IS NULL OR ('
@@ -55,15 +55,15 @@ class Default_Model_AclHandler_Entry
                 . '     AND acl_p.privilege = "get"'
                 . '     AND acl_p.permission != "deny"'
                 . ' )'
-                . ' GROUP BY e.id'
+                . ' GROUP BY u.id'
                 . '';
         } else {
             // get based on whitelist
             // accept specific resource that are allow only
 
-            $sql = 'SELECT e.id AS id, e.comment AS comment, e.creator_user_id AS creator_user_id, e.modified as modified'
-                . ' FROM entry AS e'
-                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("Entry=" || e.id)'
+            $sql = 'SELECT u.id AS id, u.username AS username, u.name AS name'
+                . ' FROM user AS u'
+                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("User=" || u.id)'
                 . ' LEFT OUTER JOIN resource_role AS acl_rr ON acl_p.role = acl_rr.role AND acl_p.resource = acl_rr.resource'
                 . ' LEFT OUTER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
                 . ' WHERE ('
@@ -72,7 +72,7 @@ class Default_Model_AclHandler_Entry
                 . ' )'
                 . ' AND acl_p.privilege = "get"'
                 . ' AND acl_p.permission = "allow"'
-                . ' GROUP BY e.id'
+                . ' GROUP BY u.id'
                 . '';
         }
 
@@ -138,12 +138,10 @@ class Default_Model_AclHandler_Entry
             throw new Zend_Acl_Exception('post for ' . $this->getResourceId() . ' is not allowed');
         }
 
-        $prop['creator_user_id'] = $this->getAclContextUser();
-
         $item = $this->_getModelHandler()->post($prop);
 
-        // NEED TO CREATE PERMISSION AND ROLE FOR THE NEW ENTRY
-//        Default_Model_Handler_Entry
+        // NEED TO CREATE PERMISSION AND ROLE FOR THE NEW USER
+//        Default_Model_Handler_User
 
         return $item;
     }
@@ -161,12 +159,12 @@ class Default_Model_AclHandler_Entry
     }
 
     /**
-     * @return Default_Model_Handler_Entry
+     * @return Default_Model_Handler_User
      */
     protected function _getModelHandler()
     {
         if ($this->_modelHandler === null) {
-            $this->_modelHandler = new Default_Model_Handler_Entry();
+            $this->_modelHandler = new Default_Model_Handler_User();
         }
         return $this->_modelHandler;
     }

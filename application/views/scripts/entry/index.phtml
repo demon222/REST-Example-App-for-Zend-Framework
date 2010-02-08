@@ -8,7 +8,9 @@ Guestbook Entries: <br />
         <li class="entry">
             <div class="id"><?php echo $this->escape($entry['id']) ?></div>
             <div class="comment"><?php echo $this->escape($entry['comment']) ?></div>
-            <div class="created"><?php echo $this->escape($entry['created']) ?></div>
+            <div class="creator_user_id"><?php echo $this->escape($entry['creator_user_id']) ?></div>
+            <div class="creator_name"><?php echo $this->escape($entry['creator_user_id.name']) ?></div>
+            <div class="modified"><?php echo $this->escape($entry['modified']) ?></div>
         </li>
 <?php endforeach ?>
     </ul>
@@ -27,7 +29,8 @@ $('.guestbook')
 
 function refreshEntryFromData(entry, data) {
     $('div.comment', entry).text(data.comment);
-    $('div.created', entry).text(data.created);
+    $('div.creator_user_id', entry).text(data.creator_user_id);
+    $('div.modified', entry).text(data.modified);
 }
 
 function refreshEntry(entry, data) {

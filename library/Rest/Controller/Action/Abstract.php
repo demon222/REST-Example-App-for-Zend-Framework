@@ -2,6 +2,8 @@
 
 require_once('Rest/Serializer.php');
 require_once('Rest/Model/NotFoundException.php');
+require_once('Rest/Model/MethodNotAllowedException.php');
+require_once('Rest/Model/BadRequestException.php');
 require_once('ZendPatch/Controller/Action.php');
 
 /**
@@ -29,7 +31,20 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
     {
         $handler = $this->_createModelHandler();
 
-        $items = $handler->getList();
+        try {
+            $items = $handler->getList();
+        } catch (Rest_Model_MethodNotAllowedException $e) {
+            $this->getResponse()->setHttpResponseCode(405);
+            $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            return;
+        } catch (Rest_Model_BadRequestException $e) {
+            $this->getResponse()->setHttpResponseCode(400);
+            $this->view->data = $e->getMessage();
+            return;
+        } catch (Exception $e) {
+            $this->getResponse()->setHttpResponseCode(500);
+            return;
+        }
 
         $this->view->data = $items;
     }
@@ -55,6 +70,14 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         } catch (Rest_Model_NotFoundException $e) {
             $this->getResponse()->setHttpResponseCode(404);
+            return;
+        } catch (Rest_Model_MethodNotAllowedException $e) {
+            $this->getResponse()->setHttpResponseCode(405);
+            $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            return;
+        } catch (Rest_Model_BadRequestException $e) {
+            $this->getResponse()->setHttpResponseCode(400);
+            $this->view->data = $e->getMessage();
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
@@ -114,8 +137,16 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             $this->getResponse()->setHttpResponseCode(401);
             $this->view->data = $e->getMessage();
             return;
+        } catch (Rest_Model_MethodNotAllowedException $e) {
+            $this->getResponse()->setHttpResponseCode(405);
+            $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            return;
         } catch (Rest_Model_NotFoundException $e) {
             $this->getResponse()->setHttpResponseCode(404);
+            return;
+        } catch (Rest_Model_BadRequestException $e) {
+            $this->getResponse()->setHttpResponseCode(400);
+            $this->view->data = $e->getMessage();
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
@@ -145,6 +176,14 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         } catch (Rest_Model_NotFoundException $e) {
             $this->getResponse()->setHttpResponseCode(404);
+            return;
+        } catch (Rest_Model_MethodNotAllowedException $e) {
+            $this->getResponse()->setHttpResponseCode(405);
+            $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            return;
+        } catch (Rest_Model_BadRequestException $e) {
+            $this->getResponse()->setHttpResponseCode(400);
+            $this->view->data = $e->getMessage();
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
@@ -191,6 +230,10 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             // acl check failed
             $this->getResponse()->setHttpResponseCode(401);
             $this->view->data = $e->getMessage();
+            return;
+        } catch (Rest_Model_MethodNotAllowedException $e) {
+            $this->getResponse()->setHttpResponseCode(405);
+            $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);

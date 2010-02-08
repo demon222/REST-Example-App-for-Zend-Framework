@@ -26,6 +26,6 @@ CREATE TABLE entry (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     comment TEXT NULL,
     creator_user_id INTEGER NOT NULL,
-    created DATETIME NOT NULL
+    modified DATETIME NOT NULL
 );
 CREATE INDEX entry_id ON entry (id);
