@@ -55,7 +55,7 @@ class Default_Model_AclHandler_User
      */
     public function getList(array $params = null)
     {
-        if (isset($params) && isset($params['entourage']) && is_array($params['entourage'])) {
+        if (isset($params) && isset($params['entourage'])) {
             $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
             $data = $entourageHandler->getList(array('User' => $params));
             return $data['User'];
