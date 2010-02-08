@@ -19,7 +19,9 @@ class Default_Model_AclHandler_User
     {
         $acl = $this->getAcl();
 
-        $acl->addResource($this);
+        if (!$acl->has($this)) {
+            $acl->addResource($this);
+        }
 
         if (!$acl->hasRole('default')) {
             $acl->addRole('default');
