@@ -64,48 +64,40 @@ class Default_Model_AclHandler_Entry
 
         $username = $this->getAclContextUser();
 
-        if ($this->isAllowed('get')) {
-            // get excluding the blacklist
-            // accept specific resources that are allow or unspecified.
-            // IE: not denied
 
-            $sql = 'SELECT e.id AS id, e.comment AS comment, e.creator_user_id AS creator_user_id, e.modified as modified'
-                . ' FROM entry AS e'
-                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("Entry=" || e.id)'
-                . ' LEFT OUTER JOIN resource_role AS acl_rr ON acl_p.role = acl_rr.role AND acl_p.resource = acl_rr.resource'
-                . ' LEFT OUTER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
-                . ' WHERE acl_p.id IS NULL OR ('
-                . '     ('
-                . '         acl_u.username = :username'
-                . '         OR acl_p.role = "default"'
-                . '     )'
-                . '     AND acl_p.privilege = "get"'
-                . '     AND acl_p.permission != "deny"'
-                . ' )'
-                . ' GROUP BY e.id'
-                . '';
-        } else {
-            // get based on whitelist
-            // accept specific resource that are allow only
+        $sql = ''
+            // RESOURCE
+            . ' SELECT id, comment, creator_user_id, modified FROM entry AS e'
+            
+            // ACL
+            . ' LEFT OUTER JOIN ('
+            . '     SELECT resource AS acl_resource, MIN(permission) AS acl_permission'
+            . '     FROM permission'
+            . '     WHERE role IN ('
+            . '         SELECT role'
+            . '         FROM resource_role AS acl_rr'
+            . '         INNER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
+            . '         WHERE acl_u.username = :username'
+            . '         AND (acl_rr.resource = :generalResource OR acl_rr.resource = permission.resource)'
+            . '         UNION'
+            . '         SELECT "default" AS role'
+            . '     )'
+            . '     AND privilege = "get"'
+            . '     GROUP BY resource'
+            . ' ) AS acl ON acl_resource = ("Entry=" || id)'
 
-            $sql = 'SELECT e.id AS id, e.comment AS comment, e.creator_user_id AS creator_user_id, e.modified as modified'
-                . ' FROM entry AS e'
-                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("Entry=" || e.id)'
-                . ' LEFT OUTER JOIN resource_role AS acl_rr ON acl_p.role = acl_rr.role AND acl_p.resource = acl_rr.resource'
-                . ' LEFT OUTER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
-                . ' WHERE ('
-                . '     acl_u.username = :username'
-                . '     OR acl_p.role = "default"'
-                . ' )'
-                . ' AND acl_p.privilege = "get"'
-                . ' AND acl_p.permission = "allow"'
-                . ' GROUP BY e.id'
-                . '';
-        }
+            // RESOURCE
+            . 'WHERE 1 = 1'
+
+            // ACL
+            . ' AND (acl_permission = "allow"' . ($this->isAllowed('get') ? ' OR acl_permission IS NULL' : '') . ')'
+            
+            . '';
 
         $query = $this->_getDbHandler()->prepare($sql);
         $query->execute(array(
             ':username' => $username,
+            ':generalResource' => 'Entry',
         ));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
 

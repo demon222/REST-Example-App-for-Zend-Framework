@@ -256,7 +256,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
     public function preDispatch()
     {
 $config = array(
-    'accept_schemes' => 'basic digest',
+//    'accept_schemes' => 'basic digest',
+    'accept_schemes' => 'basic',
     'realm'          => 'Guestbook API',
     'digest_domains' => '/',
     'nonce_timeout'  => 3600,
