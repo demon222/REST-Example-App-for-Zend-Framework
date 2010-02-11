@@ -200,4 +200,32 @@ abstract class Rest_Model_AclHandler_Abstract
         // no allows found in the general resource, so permission is denied
         return false;
     }
+
+    protected function _getGenericAclListJoins()
+    {
+        return ''
+            . ' LEFT OUTER JOIN ('
+            . '     SELECT resource AS acl_resource, MIN(permission) AS acl_permission'
+            . '     FROM permission'
+            . '     WHERE role IN ('
+            . '         SELECT role'
+            . '         FROM resource_role AS acl_rr'
+            . '         INNER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
+            . '         WHERE acl_u.username = :username'
+            . '         AND (acl_rr.resource = :generalResource OR acl_rr.resource = permission.resource)'
+            . '         UNION'
+            . '         SELECT "default" AS role'
+            . '     )'
+            . '     AND privilege = "get"'
+            . '     GROUP BY resource'
+            . ' ) AS acl ON acl_resource = (:generalResource || "=" || id)'
+            . '';
+    }
+
+    protected function _getGenericAclListWheres()
+    {
+        return ''
+            . ' AND (acl_permission = "allow"' . ($this->isAllowed('get') ? ' OR acl_permission IS NULL' : '') . ')'
+            . '';
+    }
 }

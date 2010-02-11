@@ -62,42 +62,25 @@ class Default_Model_AclHandler_Entry
             return $data['Entry'];
         }
 
-        $username = $this->getAclContextUser();
-
-
         $sql = ''
             // RESOURCE
-            . ' SELECT id, comment, creator_user_id, modified FROM entry AS e'
+            . ' SELECT id, comment, creator_user_id, modified'
+            . ' FROM entry'
             
             // ACL
-            . ' LEFT OUTER JOIN ('
-            . '     SELECT resource AS acl_resource, MIN(permission) AS acl_permission'
-            . '     FROM permission'
-            . '     WHERE role IN ('
-            . '         SELECT role'
-            . '         FROM resource_role AS acl_rr'
-            . '         INNER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
-            . '         WHERE acl_u.username = :username'
-            . '         AND (acl_rr.resource = :generalResource OR acl_rr.resource = permission.resource)'
-            . '         UNION'
-            . '         SELECT "default" AS role'
-            . '     )'
-            . '     AND privilege = "get"'
-            . '     GROUP BY resource'
-            . ' ) AS acl ON acl_resource = ("Entry=" || id)'
+            . $this->_getGenericAclListJoins()
 
             // RESOURCE
             . 'WHERE 1 = 1'
 
             // ACL
-            . ' AND (acl_permission = "allow"' . ($this->isAllowed('get') ? ' OR acl_permission IS NULL' : '') . ')'
-            
+            . $this->_getGenericAclListWheres()
             . '';
 
         $query = $this->_getDbHandler()->prepare($sql);
         $query->execute(array(
-            ':username' => $username,
-            ':generalResource' => 'Entry',
+            ':username' => $this->getAclContextUser(),
+            ':generalResource' => $this->getResourceId(),
         ));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
 

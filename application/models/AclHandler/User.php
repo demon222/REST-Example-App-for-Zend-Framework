@@ -61,50 +61,25 @@ class Default_Model_AclHandler_User
             return $data['User'];
         }
 
-        $username = $this->getAclContextUser();
+        $sql = ''
+            // RESOURCE
+            . ' SELECT id, username, name'
+            . ' FROM user'
 
-        if ($this->isAllowed('get')) {
-            // get excluding the blacklist
-            // accept specific resources that are allow or unspecified.
-            // IE: not denied
+            // ACL
+            . $this->_getGenericAclListJoins()
 
-            $sql = 'SELECT u.id AS id, u.username AS username, u.name AS name'
-                . ' FROM user AS u'
-                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("User=" || u.id)'
-                . ' LEFT OUTER JOIN resource_role AS acl_rr ON acl_p.role = acl_rr.role AND acl_p.resource = acl_rr.resource'
-                . ' LEFT OUTER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
-                . ' WHERE acl_p.id IS NULL OR ('
-                . '     ('
-                . '         acl_u.username = :username'
-                . '         OR acl_p.role = "default"'
-                . '     )'
-                . '     AND acl_p.privilege = "get"'
-                . '     AND acl_p.permission != "deny"'
-                . ' )'
-                . ' GROUP BY u.id'
-                . '';
-        } else {
-            // get based on whitelist
-            // accept specific resource that are allow only
+            // RESOURCE
+            . 'WHERE 1 = 1'
 
-            $sql = 'SELECT u.id AS id, u.username AS username, u.name AS name'
-                . ' FROM user AS u'
-                . ' LEFT OUTER JOIN permission AS acl_p ON acl_p.resource = ("User=" || u.id)'
-                . ' LEFT OUTER JOIN resource_role AS acl_rr ON acl_p.role = acl_rr.role AND acl_p.resource = acl_rr.resource'
-                . ' LEFT OUTER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
-                . ' WHERE ('
-                . '     acl_u.username = :username'
-                . '     OR acl_p.role = "default"'
-                . ' )'
-                . ' AND acl_p.privilege = "get"'
-                . ' AND acl_p.permission = "allow"'
-                . ' GROUP BY u.id'
-                . '';
-        }
+            // ACL
+            . $this->_getGenericAclListWheres()
+            . '';
 
         $query = $this->_getDbHandler()->prepare($sql);
         $query->execute(array(
-            ':username' => $username,
+            ':username' => $this->getAclContextUser(),
+            ':generalResource' => $this->getResourceId(),
         ));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
 
