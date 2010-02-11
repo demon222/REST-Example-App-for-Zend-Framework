@@ -2,3 +2,4 @@ Dan:Guestbook API:admin
 Alex:Guestbook API:admin
 Bob:Guestbook API:admin
 Carl:Guestbook API:admin
+Ed:Guestbook API:admin
