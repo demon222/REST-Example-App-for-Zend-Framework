@@ -32,6 +32,26 @@ class Default_Model_AclHandler_Entourage
     }
 
     /**
+     * Used mainly to ensure that the required keys have been passed to
+     * controllers that inturn implement model handlers
+     *
+     * @return array
+     */
+    public static function getIdentityKeys()
+    {
+        return array();
+    }
+
+    /**
+     * Used mainly for testing property requests, where clauses and the like
+     * @return array
+     */
+    public static function getPropertyKeys()
+    {
+        return array();
+    }
+
+    /**
      *   $params = array(
      *       'User' => array(
      *           'entourage' => array(

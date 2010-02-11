@@ -225,7 +225,15 @@ abstract class Rest_Model_AclHandler_Abstract
     protected function _getGenericAclListWheres()
     {
         return ''
-            . ' AND (acl_permission = "allow"' . ($this->isAllowed('get') ? ' OR acl_permission IS NULL' : '') . ')'
+            . ' (acl_permission = "allow"' . ($this->isAllowed('get') ? ' OR acl_permission IS NULL' : '') . ')'
             . '';
+    }
+
+    protected function _getGenericAclListParams()
+    {
+        return array(
+            ':username' => $this->getAclContextUser(),
+            ':generalResource' => $this->getResourceId(),
+        );
     }
 }

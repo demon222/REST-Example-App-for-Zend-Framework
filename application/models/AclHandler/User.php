@@ -2,6 +2,7 @@
 require_once('Rest/Model/AclHandler/Abstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
 require_once('Util/Array.php');
+require_once('Util/Sql.php');
 
 class Default_Model_AclHandler_User
     extends Rest_Model_AclHandler_Abstract
@@ -34,6 +35,15 @@ class Default_Model_AclHandler_User
     }
 
     /**
+     * Used mainly for testing property requests, where clauses and the like
+     * @return array
+     */
+    public static function getPropertyKeys()
+    {
+        return Default_Model_Handler_Entry::getPropertyKeys();
+    }
+
+    /**
      * @param string $alias
      * @return array
      */
@@ -61,6 +71,18 @@ class Default_Model_AclHandler_User
             return $data['User'];
         }
 
+        $whereAndSet = array();
+        if (isset($params) && isset($params['where'])) {
+            $wheres = $params['where'];
+
+            // use default properties to search against if none are provided
+            if (!is_array($wheres)) {
+                $wheres = array('username name' => $wheres);
+            }
+
+            $whereAndSet = Util_Sql::generateSqlWheresAndParams($wheres, $this->getPropertyKeys());
+        }
+
         $sql = ''
             // RESOURCE
             . ' SELECT id, username, name'
@@ -69,18 +91,16 @@ class Default_Model_AclHandler_User
             // ACL
             . $this->_getGenericAclListJoins()
 
-            // RESOURCE
-            . 'WHERE 1 = 1'
-
             // ACL
-            . $this->_getGenericAclListWheres()
+            . ' WHERE ' . $this->_getGenericAclListWheres()
+
+            // RESOURCE
+            . ' AND ' . implode(' AND ', array_merge($whereAndSet['sql'], array('1 = 1')))
+
             . '';
 
         $query = $this->_getDbHandler()->prepare($sql);
-        $query->execute(array(
-            ':username' => $this->getAclContextUser(),
-            ':generalResource' => $this->getResourceId(),
-        ));
+        $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
 
         return $rowSet;

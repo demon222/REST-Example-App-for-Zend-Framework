@@ -9,7 +9,13 @@ interface Rest_Model_Handler_Interface
      * @return array
      */
     public static function getIdentityKeys();
-    
+
+    /**
+     * Used mainly for testing property requests, where clauses and the like
+     * @return array
+     */
+    public static function getPropertyKeys();
+
     /**
      * @param array $params
      * @return array

@@ -12,6 +12,15 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
     protected $_dbTable;
 
     /**
+     * Used mainly for testing property requests, where clauses and the like
+     * @return array
+     */
+    public static function getPropertyKeys()
+    {
+        return array('id', 'comment', 'creator_user_id', 'modified');
+    }
+
+    /**
      * @param array $params
      * @return array
      */
@@ -19,12 +28,9 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
     {
         $resultSet = $this->_getDbTable()->fetchAll();
 
-        $map = array(
-            'id' => 'id',
-            'comment' => 'comment',
-            'creator_user_id' => 'creator_user_id',
-            'modified' => 'modified',
-        );
+        // 1 to 1, same names
+        $keys = $this->getPropertyKeys();
+        $map = array_combine($keys, $keys);
 
         $items = array();
         foreach ($resultSet as $row) {
@@ -46,12 +52,9 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
             throw new Rest_Model_NotFoundException();
         }
 
-        $map = array(
-            'id' => 'id',
-            'comment' => 'comment',
-            'creator_user_id' => 'creator_user_id',
-            'modified' => 'modified',
-        );
+        // 1 to 1, same names
+        $keys = $this->getPropertyKeys();
+        $map = array_combine($keys, $keys);
 
         return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
     }
@@ -71,10 +74,11 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
 
         // could probably implement renaming by having 'id' set by $prop but
         // not going to try to debug that right now
-        $map = array(
-            'comment' => 'comment',
-            'creator_user_id' => 'creator_user_id',
-        );
+
+        // 1 to 1, same names
+        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
+        $map = array_combine($keys, $keys);
+
         $item = Util_Array::mapIntersectingKeys($prop, $map);
         $item['modified'] = date('Y-m-d H:i:s');
 
@@ -106,10 +110,10 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
      */
     public function post(array $prop)
     {
-        $map = array(
-            'comment' => 'comment',
-            'creator_user_id' => 'creator_user_id',
-        );
+        // 1 to 1, same names
+        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
+        $map = array_combine($keys, $keys);
+
         $item = Util_Array::mapIntersectingKeys($prop, $map);
         $item['modified'] = date('Y-m-d H:i:s');
 

@@ -17,7 +17,9 @@ class Util_Array
     {
         $results = array();
         foreach ($set as $item) {
-            $results[] = $item[$key];
+            if (isset($item[$key])) {
+                $results[] = $item[$key];
+            }
         }
         return $results;
     }
