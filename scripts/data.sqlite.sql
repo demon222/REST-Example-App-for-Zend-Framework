@@ -30,11 +30,22 @@ INSERT INTO resource_role (user_id, resource, role) VALUES (789, 'Entry=123', 's
 INSERT INTO permission (resource, role, privilege, permission) VALUES ('Entry=123', 'selected', 'get', 'allow');
 
 /* Alex posts public message */
-INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (124,"well of course! but why do you hide so much?", 456, DATETIME('NOW'));
+INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (124, "well of course! but why do you hide so much?", 456, DATETIME('NOW'));
 INSERT INTO resource_role (user_id, resource, role) VALUES (456, 'Entry=124', 'owner');
 INSERT INTO permission (resource, role, privilege, permission) VALUES ('Entry=124', 'owner', 'get', 'allow');
 INSERT INTO permission (resource, role, privilege, permission) VALUES ('Entry=124', 'owner', 'put', 'allow');
 INSERT INTO permission (resource, role, privilege, permission) VALUES ('Entry=124', 'owner', 'delete', 'allow');
+
+/* Ed posts public message */
+INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (125, "Haha, that funny coming from you!", 234, DATETIME('NOW'));
+INSERT INTO resource_role (user_id, resource, role) VALUES (234, 'Entry=125', 'owner');
+INSERT INTO permission (resource, role, privilege, permission) VALUES ('Entry=125', 'owner', 'get', 'allow');
+INSERT INTO permission (resource, role, privilege, permission) VALUES ('Entry=125', 'owner', 'put', 'allow');
+INSERT INTO permission (resource, role, privilege, permission) VALUES ('Entry=125', 'owner', 'delete', 'allow');
+
+/* Carl posts public message */
+INSERT INTO entry (comment, creator_user_id, modified) VALUES ("He's got a point there Alex", 789, DATETIME('NOW'));
+
 
 /* admins can do anything
 Hard Coded:
@@ -46,4 +57,3 @@ Entry, admin, post, allow
 /* Bob is admin*/
 INSERT INTO user (id, username, name) VALUES (111, 'Bob', 'Bob');
 INSERT INTO resource_role (user_id, resource, role) VALUES (111, 'Entry', 'admin');
-
