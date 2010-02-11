@@ -71,17 +71,15 @@ class Default_Model_AclHandler_User
             return $data['User'];
         }
 
-        $whereAndSet = array();
         if (isset($params) && isset($params['where'])) {
-            $wheres = $params['where'];
-
             // use default properties to search against if none are provided
-            if (!is_array($wheres)) {
-                $wheres = array('username name' => $wheres);
+            if (!is_array($params['where'])) {
+                $params['where'] = array('comment creator_user_id' => $params['where']);
             }
-
-            $whereAndSet = Util_Sql::generateSqlWheresAndParams($wheres, $this->getPropertyKeys());
+        } else {
+            $params['where'] = array();
         }
+        $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
 
         $sql = ''
             // RESOURCE
