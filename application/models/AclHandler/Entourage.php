@@ -266,7 +266,7 @@ class Default_Model_AclHandler_Entourage
             $resourceJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageParam['resourceIdKey'], $resourceList);
             $entourageList = $entourageHandler->getList(array(
                 'where' => array(
-                    // because the could be duplicate ids: array_unique and reindex with array_values
+                    // because there could be duplicate ids: array_unique and reindex with array_values
                     $entourageParam['entourageIdKey'] => array_values(array_unique($resourceJoinIdList))
                 )
             ));

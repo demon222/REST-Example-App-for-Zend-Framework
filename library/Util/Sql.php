@@ -40,4 +40,26 @@ class Util_Sql
         return array('sql' => $andSet, 'param' => $params);
     }
 
+    public static function generateSqlSort($sortList, $validPropertyKeys)
+    {
+        // this just basically validates that the specified properties are
+        // valid and that the direction is specified correctly
+        $resultList = array();
+        foreach ($sortList as $sortTerm) {
+            list($prop, $direction) = explode(' ', $sortTerm . ' ');
+
+            if (!in_array($prop, $validPropertyKeys)) {
+                throw new Rest_Model_BadRequestException($prop . ' is not a valid sort property [' . implode(', ', $validPropertyKeys) . ']');
+            }
+            if ($direction != '' && $direction != 'asc' && $direction != 'desc') {
+                throw new Rest_Model_BadRequestException($direction . ' is not a valid sort direction [asc, desc]');
+            }
+            if ($direction === null) {
+                $direction = 'asc';
+            }
+            $resultList[] = $prop . ' ' . strtoupper($direction);
+        }
+        return $resultList;
+    }
+
 }

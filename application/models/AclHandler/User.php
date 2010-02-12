@@ -40,7 +40,7 @@ class Default_Model_AclHandler_User
      */
     public static function getPropertyKeys()
     {
-        return Default_Model_Handler_Entry::getPropertyKeys();
+        return Default_Model_Handler_User::getPropertyKeys();
     }
 
     /**
@@ -65,13 +65,15 @@ class Default_Model_AclHandler_User
      */
     public function getList(array $params = null)
     {
-        if (isset($params) && isset($params['entourage'])) {
+        $params = is_array($params) ? $params : array();
+
+        if (isset($params['entourage'])) {
             $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
             $data = $entourageHandler->getList(array('User' => $params));
             return $data['User'];
         }
 
-        if (isset($params) && isset($params['where'])) {
+        if (isset($params['where'])) {
             // use default properties to search against if none are provided
             if (!is_array($params['where'])) {
                 $params['where'] = array('comment creator_user_id' => $params['where']);
@@ -79,7 +81,13 @@ class Default_Model_AclHandler_User
         } else {
             $params['where'] = array();
         }
+
+        if (!isset($params['sort']) || !is_array($params['sort'])) {
+            $params['sort'] = array('name');
+        }
+
         $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
+        $sortList = Util_Sql::generateSqlSort($params['sort'], $this->getPropertyKeys());
 
         $sql = ''
             // RESOURCE
@@ -94,6 +102,7 @@ class Default_Model_AclHandler_User
 
             // RESOURCE
             . ' AND ' . implode(' AND ', array_merge($whereAndSet['sql'], array('1 = 1')))
+            . ' ORDER BY ' . implode(', ', $sortList)
 
             . '';
 
