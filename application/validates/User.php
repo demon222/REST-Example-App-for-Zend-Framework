@@ -7,7 +7,7 @@ require_once('ZendPatch/Validate/Abstract.php');
  * @package    QuickStart
  * @subpackage Validate
  */
-class Default_Validate_Entry extends ZendPatch_Validate_Abstract
+class Default_Validate_User extends ZendPatch_Validate_Abstract
 {
     const NOT_DATA = 'notData';
     const NOT_ENOUGH_DATA = 'notEnoughData';
@@ -42,13 +42,37 @@ class Default_Validate_Entry extends ZendPatch_Validate_Abstract
         }
 
         $partialOk = false;
-
-        // validate that the comment is set
-        if (isset($value['comment'])) {
+/*
+        // validate that the email is correct
+        if (isset($value['email'])) {
             $partialOk = true;
 
-            $validate = new Zend_Validate_StringLength(array(1, 1000));
-            if (!$validate->isValid($value['comment'])) {
+            $filter = new Zend_Filter_StringTrim();
+            $value['email'] = $filter->filter($value['email']);
+            
+            $validate = new Zend_Validate_EmailAddress();
+            if (!$validate->isValid($value['email'])) {
+                $this->_addValidateMessagesAndErrors($validate);
+            }
+        }
+ */
+
+        // validate that the name is set
+        if (isset($value['name'])) {
+            $partialOk = true;
+
+            $validate = new Zend_Validate_StringLength(array(1, 50));
+            if (!$validate->isValid($value['name'])) {
+                $this->_addValidateMessagesAndErrors($validate);
+            }
+        }
+
+        // validate that the username is set
+        if (isset($value['username'])) {
+            $partialOk = true;
+
+            $validate = new Zend_Validate_StringLength(array(1, 50));
+            if (!$validate->isValid($value['username'])) {
                 $this->_addValidateMessagesAndErrors($validate);
             }
         }
