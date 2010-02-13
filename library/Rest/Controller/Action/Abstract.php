@@ -57,11 +57,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         $handler = $this->_createModelHandler();
 
         // get the identifying parameters into the model
-        $idKeys = $handler->getIdentityKeys();
-        $ids = array();
-        foreach ($idKeys as $key) {
-            $ids[$key] = $this->getRequest()->getParam($key);
-        }
+        $ids = _getIdsOfRequest();
 
         $url = $this->getRequest()->getRequestUri();
         $params = Rest_Serializer::decode($url, Rest_Serializer::FULL_URL_UNKNOWN);
@@ -130,11 +126,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         // this is a feature for another day
 
         // get the identifying parameters into the model
-        $idKeys = $handler->getIdentityKeys();
-        $ids = array();
-        foreach ($idKeys as $key) {
-            $ids[$key] = $this->getRequest()->getParam($key);
-        }
+        $ids = _getIdsOfRequest();
 
         try {
             $item = $handler->put($ids, $input);
@@ -167,11 +159,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         $handler = $this->_createModelHandler();
 
         // get the identifying parameters into the model
-        $idKeys = $handler->getIdentityKeys();
-        $ids = array();
-        foreach ($idKeys as $key) {
-            $ids[$key] = $this->getRequest()->getParam($key);
-        }
+        $ids = _getIdsOfRequest();
 
         try {
             $handler->delete($ids);
@@ -202,6 +190,21 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         // meta information is passed back in the content for convience with
         // this library 204 is never appropriate
         $this->getResponse()->setHttpResponseCode(200);
+    }
+
+    protected function _getIdsOfRequest()
+    {
+        $idKeys = $handler->getIdentityKeys();
+        $ids = array();
+        foreach ($idKeys as $key) {
+            $value = $this->getRequest()->getParam($key);
+            if (null === $value) {
+                $this->getResponse()->setHttpResponseCode(400);
+                $this->view->data = $key . ' is required and was not provided in the request';
+            }
+            $ids[$key] = $value;
+        }
+        return $ids;
     }
 
     public function postAction()
