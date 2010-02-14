@@ -1,4 +1,11 @@
 <?php
+
+/*
+// for some quick profiling, see bottom of page
+$t1 = microtime(true);
+$m1 = memory_get_usage();
+*/
+
 // Set the initial include_path. You may need to change this to ensure that 
 // Zend Framework is in the include_path; additionally, for performance 
 // reasons, it's best to move this to your web server configuration or php.ini 
@@ -26,3 +33,10 @@ $application = new Zend_Application(
 );
 $application->bootstrap();
 $application->run();
+
+/*
+// continuation of quick profiling
+$t2 = microtime(true);
+$m2 = memory_get_usage();
+var_dump(array('time (s)' => $t2 - $t1, 'memory total (MB)' => (int) ($m2 / 1000), 'memory diff (MB)' => (int) (($m2 - $m1) / 1000)));
+*/
