@@ -242,6 +242,9 @@ class Default_Model_AclHandler_Entourage
             // if entourage item wasn't expanded then get it from resource
             if (!is_array($entourageParam)) {
                 $entourageParam = $resourceHandler->expandEntourageAlias($name);
+                if (null === $entourageParam) {
+                    throw new Rest_Model_BadRequestException('entourage alias "' . $name . '" is not known');
+                }
             }
 
             // validate the input param
