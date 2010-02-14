@@ -1,7 +1,6 @@
 <?php
 require_once('Rest/Model/AclHandler/Abstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
-require_once('Util/Array.php');
 
 abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
     extends Rest_Model_AclHandler_Abstract
@@ -16,6 +15,9 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
      */
     protected $_dbHandler;
 
+    /**
+     * @return Rest_Model_Handler_Interface
+     */
     abstract protected static function _createModelHandler();
 
     /**
@@ -25,6 +27,11 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
      */
     public function get(array $id, array $params = null)
     {
+        if (isset($params['entourage'])) {
+            $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
+            return $entourageHandler->get($id, array($this, $params['entourage']));
+        }
+
         if ($this->getAcl() && !$this->isAllowed('get', $id)) {
             throw new Zend_Acl_Exception('get for ' . $this->getResourceId() . ' is not allowed');
         }

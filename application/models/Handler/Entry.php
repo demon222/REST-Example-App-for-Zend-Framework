@@ -1,16 +1,10 @@
 <?php
-
-require_once('Rest/Model/Handler/Abstract.php');
-require_once('Rest/Model/NotFoundException.php');
+require_once('Rest/Model/Handler/SimpleTableMapAbstract.php');
+require_once('Rest/Model/BadRequestException.php');
 require_once('Util/Array.php');
 
-class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
+class Default_Model_Handler_Entry extends Rest_Model_Handler_SimpleTableMapAbstract
 {
-    /**
-     * @var Zend_Db_Table_Abstract
-     */
-    protected $_dbTable;
-
     /**
      * Used mainly for testing property requests, where clauses and the like
      * @return array
@@ -21,111 +15,30 @@ class Default_Model_Handler_Entry extends Rest_Model_Handler_Abstract
     }
 
     /**
-     * @param array $params
-     * @return array
+     * @param array $item
      */
-    public function getList(array $params = null)
+    protected function _put_pre_persist(array &$item)
     {
-        $resultSet = $this->_getDbTable()->fetchAll();
-
-        // 1 to 1, same names
-        $keys = $this->getPropertyKeys();
-        $map = array_combine($keys, $keys);
-
-        $items = array();
-        foreach ($resultSet as $row) {
-            $items[] = Util_Array::mapIntersectingKeys($row->toArray(), $map);
-        }
-        return $items;
-    }
-
-    /**
-     * @param array $id
-     * @return array
-     * @throws Rest_Model_NotFoundException
-     */
-    public function get(array $id, array $params = null)
-    {
-        $result = $this->_getDbTable()->find(array('id = ?' => $id['id']));
-
-        if (0 == count($result)) {
-            throw new Rest_Model_NotFoundException();
-        }
-
-        // 1 to 1, same names
-        $keys = $this->getPropertyKeys();
-        $map = array_combine($keys, $keys);
-
-        return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
-    }
-
-    /**
-     * @param array $id
-     * @param array $prop
-     * @return array
-     * @throws Rest_Model_NotFoundException
-     */
-    public function put(array $id, array $prop = null)
-    {
-        // if a seperate $prop list is not provided, use the $id list
-        if ($prop === null) {
-            $prop = $id;
-        }
-
-        // could probably implement renaming by having 'id' set by $prop but
-        // not going to try to debug that right now
-
-        // 1 to 1, same names
-        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
-        $map = array_combine($keys, $keys);
-
-        $item = Util_Array::mapIntersectingKeys($prop, $map);
         $item['modified'] = date('Y-m-d H:i:s');
 
-        $updated = $this->_getDbTable()->update($item, array('id = ?' => $id['id']));
-
-        if ($updated <= 0) {
-            throw new Rest_Model_NotFoundException();
-        }
-
-        return $item;
-    }
-
-    /**
-     * @param array $id
-     * @throws Rest_Model_NotFoundException
-     */
-    public function delete(array $id)
-    {
-        $deleted = $this->_getDbTable()->delete(array('id = ?' => $id['id']));
-
-        if ($deleted == 0) {
-            throw new Rest_Model_NotFoundException();
+        // not allowing creator to be changed
+        if (isset($item['creator_user_id'])) {
+            unset($item['creator_user_id']);
         }
     }
 
     /**
-     * @param array $prop
-     * @return array
+     * @param array $item
      */
-    public function post(array $prop)
+    protected function _post_pre_persist(array &$item)
     {
-        // 1 to 1, same names
-        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
-        $map = array_combine($keys, $keys);
-
-        $item = Util_Array::mapIntersectingKeys($prop, $map);
         $item['modified'] = date('Y-m-d H:i:s');
 
-        $id = $this->_getDbTable()->insert($item);
-
-        if ($id === null) {
-            return Exception('Unable to post into databse, not sure why');
+        $userTable = new Default_Model_DbTable_User();
+        $resultSet = $userTable->find($item['creator_user_id']);
+        if (false === current($resultSet)) {
+            throw new Rest_Model_BadRequestException('creator_user_id does not match with an existing user');
         }
-
-        $item['id'] = $id;
-
-        return $item;
     }
 
     /**

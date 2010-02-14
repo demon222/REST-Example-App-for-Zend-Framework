@@ -4,7 +4,7 @@ require_once('Rest/Model/Handler/Abstract.php');
 require_once('Rest/Model/NotFoundException.php');
 require_once('Util/Array.php');
 
-class Default_Model_Handler_Role extends Rest_Model_Handler_Abstract
+abstract class Rest_Model_Handler_SimpleTableMapAbstract extends Rest_Model_Handler_Abstract
 {
     /**
      * @var Zend_Db_Table_Abstract
@@ -19,12 +19,9 @@ class Default_Model_Handler_Role extends Rest_Model_Handler_Abstract
     {
         $resultSet = $this->_getDbTable()->fetchAll();
 
-        $map = array(
-            'id' => 'id',
-            'user_id' => 'user_id',
-            'resource' => 'resource',
-            'role' => 'role',
-        );
+        // 1 to 1, same names
+        $keys = $this->getIdentityKeys();
+        $map = array_combine($keys, $keys);
 
         $items = array();
         foreach ($resultSet as $row) {
@@ -40,18 +37,15 @@ class Default_Model_Handler_Role extends Rest_Model_Handler_Abstract
      */
     public function get(array $id, array $params = null)
     {
-        $result = $this->_getDbTable()->find(array('id' => $id['id']));
+        $result = $this->_getDbTable()->find(array('id = ?' => $id['id']));
 
         if (0 == count($result)) {
             throw new Rest_Model_NotFoundException();
         }
 
-        $map = array(
-            'id' => 'id',
-            'user_id' => 'user_id',
-            'resource' => 'resource',
-            'role' => 'role',
-        );
+        // 1 to 1, same names
+        $keys = $this->getPropertyKeys();
+        $map = array_combine($keys, $keys);
 
         return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
     }
@@ -71,20 +65,37 @@ class Default_Model_Handler_Role extends Rest_Model_Handler_Abstract
 
         // could probably implement renaming by having 'id' set by $prop but
         // not going to try to debug that right now
-        $map = array(
-            'user_id' => 'user_id',
-            'resource' => 'resource',
-            'role' => 'role',
-        );
+        // 1 to 1, same names
+        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
+        $map = array_combine($keys, $keys);
+
         $item = Util_Array::mapIntersectingKeys($prop, $map);
 
-        $updated = $this->_getDbTable()->update($item, array('id' => $id['id']));
+        $this->_put_pre_persist($item);
+
+        $updated = $this->_getDbTable()->update($item, array('id = ?' => $id['id']));
 
         if ($updated <= 0) {
             throw new Rest_Model_NotFoundException();
         }
 
+        $this->_put_post_persist($item);
+
         return $item;
+    }
+
+    /**
+     * @param array $item
+     */
+    protected function _put_pre_persist(array &$item)
+    {
+    }
+
+    /**
+     * @param array $item
+     */
+    protected function _put_post_persist(array $item)
+    {
     }
 
     /**
@@ -93,7 +104,7 @@ class Default_Model_Handler_Role extends Rest_Model_Handler_Abstract
      */
     public function delete(array $id)
     {
-        $deleted = $this->_getDbTable()->delete(array('id' => $id['id']));
+        $deleted = $this->_getDbTable()->delete(array('id = ?' => $id['id']));
 
         if ($deleted == 0) {
             throw new Rest_Model_NotFoundException();
@@ -106,13 +117,12 @@ class Default_Model_Handler_Role extends Rest_Model_Handler_Abstract
      */
     public function post(array $prop)
     {
-        $map = array(
-            'user_id' => 'user_id',
-            'resource' => 'resource',
-            'role' => 'role',
-        );
+        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
+        $map = array_combine($keys, $keys);
+
         $item = Util_Array::mapIntersectingKeys($prop, $map);
-        $item['created'] = date('Y-m-d H:i:s');
+
+        $this->_post_pre_persist($item);
 
         $id = $this->_getDbTable()->insert($item);
 
@@ -122,19 +132,22 @@ class Default_Model_Handler_Role extends Rest_Model_Handler_Abstract
 
         $item['id'] = $id;
 
+        $this->_post_post_persist($item);
+
         return $item;
     }
 
     /**
-     * Get registered Zend_Db_Table instance, lazy load
-     *
-     * @return Zend_Db_Table_Abstract
+     * @param array $item
      */
-    protected function _getDbTable()
+    protected function _post_pre_persist(array &$item)
     {
-        if (null === $this->_dbTable) {
-            $this->_dbTable = new Default_Model_DbTable_Role();
-        }
-        return $this->_dbTable;
+    }
+
+    /**
+     * @param array $item
+     */
+    protected function _post_post_persist(array $item)
+    {
     }
 }

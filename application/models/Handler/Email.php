@@ -2,7 +2,7 @@
 require_once('Rest/Model/Handler/SimpleTableMapAbstract.php');
 require_once('Util/Array.php');
 
-class Default_Model_Handler_User extends Rest_Model_Handler_SimpleTableMapAbstract
+class Default_Model_Handler_Email extends Rest_Model_Handler_SimpleTableMapAbstract
 {
     /**
      * Used mainly for testing property requests, where clauses and the like
@@ -10,7 +10,18 @@ class Default_Model_Handler_User extends Rest_Model_Handler_SimpleTableMapAbstra
      */
     public static function getPropertyKeys()
     {
-        return array('id', 'username', 'name');
+        return array('id', 'user_id', 'email');
+    }
+
+    /**
+     * @param array $item
+     */
+    protected function _put_pre_persist(array &$item)
+    {
+        // disable transfering the email to a different user
+        if (isset($item['user_id'])) {
+            unset($item['user_id']);
+        }
     }
 
     /**
@@ -21,7 +32,7 @@ class Default_Model_Handler_User extends Rest_Model_Handler_SimpleTableMapAbstra
     protected function _getDbTable()
     {
         if (null === $this->_dbTable) {
-            $this->_dbTable = new Default_Model_DbTable_User();
+            $this->_dbTable = new Default_Model_DbTable_Email();
         }
         return $this->_dbTable;
     }

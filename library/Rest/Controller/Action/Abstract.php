@@ -1,5 +1,4 @@
 <?php
-
 require_once('Rest/Serializer.php');
 require_once('Rest/Model/NotFoundException.php');
 require_once('Rest/Model/MethodNotAllowedException.php');
@@ -19,7 +18,13 @@ require_once('ZendPatch/Controller/Action.php');
 abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Action
 {
 
+    /**
+     * @return Rest_Model_Handler_Interface
+     */
     abstract protected static function _createModelHandler();
+    /**
+     * @return Rest_Validate_Abstract
+     */
     abstract protected static function _createValidateObject();
 
     /*
@@ -57,7 +62,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         $handler = $this->_createModelHandler();
 
         // get the identifying parameters into the model
-        $ids = _getIdsOfRequest();
+        $ids = $this->_getIdsOfRequest($handler);
 
         $url = $this->getRequest()->getRequestUri();
         $params = Rest_Serializer::decode($url, Rest_Serializer::FULL_URL_UNKNOWN);
@@ -112,7 +117,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             ->setType($contentType)
             ->getDecodedArray();
 
-        $validate = $this->_createValidateObject();
+        $validate = $this->_createValidateObject()->setMethodContext('put');
 
         if (!$validate->isValid($input)) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -126,7 +131,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         // this is a feature for another day
 
         // get the identifying parameters into the model
-        $ids = _getIdsOfRequest();
+        $ids = $this->_getIdsOfRequest($handler);
 
         try {
             $item = $handler->put($ids, $input);
@@ -159,7 +164,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         $handler = $this->_createModelHandler();
 
         // get the identifying parameters into the model
-        $ids = _getIdsOfRequest();
+        $ids = $this->_getIdsOfRequest($handler);
 
         try {
             $handler->delete($ids);
@@ -187,13 +192,14 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         // not sure if returning 200 or 410 is better after a delete
         // the request was completed successfully but the requested resource
         // is no longer accessible. 204 could be argued for, but because
-        // meta information is passed back in the content for convience with
-        // this library 204 is never appropriate
+        // meta information is passed back in the content (for convience, with
+        // this library) 204 is not appropriate
         $this->getResponse()->setHttpResponseCode(200);
     }
 
-    protected function _getIdsOfRequest()
+    protected function _getIdsOfRequest($handler)
     {
+
         $idKeys = $handler->getIdentityKeys();
         $ids = array();
         foreach ($idKeys as $key) {
@@ -223,7 +229,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             ->setType($contentType)
             ->getDecodedArray();
 
-        $validate = $this->_createValidateObject();
+        $validate = $this->_createValidateObject()->setMethodContext('post');
 
         if (!$validate->isValid($input)) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -280,6 +286,10 @@ $authAdapter->setRequest($this->getRequest());
 $authAdapter->setResponse($this->getResponse());
 
 $result = Zend_Auth::getInstance()->authenticate($authAdapter);
+
+$ident = $result->getIdentity();
+$userTable = new Default_Model_DbTable_User();
+Zend_Registry::set('userId', $userTable->fetchRow(array('username = ?' => $ident['username']))->id);
 
         if (!$result->isValid()) {
             // Bad userame/password, or canceled password prompt

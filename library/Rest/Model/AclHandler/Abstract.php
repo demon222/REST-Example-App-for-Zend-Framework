@@ -1,5 +1,6 @@
 <?php
 require_once('Rest/Model/AclHandler/Interface.php');
+require_once('Util/Array.php');
 
 abstract class Rest_Model_AclHandler_Abstract
     implements Rest_Model_AclHandler_Interface, Zend_Acl_Resource_Interface
@@ -138,7 +139,7 @@ abstract class Rest_Model_AclHandler_Abstract
      */
     public function isAllowed($privilege, array $id = null)
     {
-        $username = $this->getAclContextUser();
+        $userId = $this->getAclContextUser();
 
         if (null != $id) {
             // first check if against this specific resource things are
@@ -148,9 +149,8 @@ abstract class Rest_Model_AclHandler_Abstract
             $sql = 'SELECT p.id, p.permission, p.privilege, p.resource, p.role, rr.user_id'
                 . ' FROM permission AS p'
                 . ' LEFT OUTER JOIN resource_role AS rr ON p.role = rr.role AND p.resource = rr.resource'
-                . ' LEFT OUTER JOIN user AS u ON rr.user_id = u.id'
                 . ' WHERE ('
-                . '     u.username = :username'
+                . '     rr.user_id = :userId'
                 . '     OR p.role = "default"'
                 . ' )'
                 . ' AND p.resource = :resourceSpecific'
@@ -159,7 +159,7 @@ abstract class Rest_Model_AclHandler_Abstract
                 . '';
             $query = $this->_getDbHandler()->prepare($sql);
             $query->execute(array(
-                ':username' => $username,
+                ':userId' => $userId,
                 ':resourceSpecific' => $resourceSpecific,
                 ':privilege' => $privilege,
             ));
@@ -176,11 +176,11 @@ abstract class Rest_Model_AclHandler_Abstract
 
         // get the roles
         $sql = 'SELECT role FROM resource_role'
-            . ' WHERE user_id = :username'
+            . ' WHERE user_id = :userId'
             . ' AND resource = :resourceGeneral';
         $query = $this->_getDbHandler()->query($sql);
         $query->execute(array(
-            ':username' => $username,
+            ':userId' => $userId,
             ':resourceGeneral' => $resourceGeneral,
         ));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -210,8 +210,7 @@ abstract class Rest_Model_AclHandler_Abstract
             . '     WHERE role IN ('
             . '         SELECT role'
             . '         FROM resource_role AS acl_rr'
-            . '         INNER JOIN user AS acl_u ON acl_rr.user_id = acl_u.id'
-            . '         WHERE acl_u.username = :username'
+            . '         WHERE acl_rr.user_id = :userId'
             . '         AND (acl_rr.resource = :generalResource OR acl_rr.resource = permission.resource)'
             . '         UNION'
             . '         SELECT "default" AS role'
@@ -232,7 +231,7 @@ abstract class Rest_Model_AclHandler_Abstract
     protected function _getGenericAclListParams()
     {
         return array(
-            ':username' => $this->getAclContextUser(),
+            ':userId' => $this->getAclContextUser(),
             ':generalResource' => $this->getResourceId(),
         );
     }

@@ -1,23 +1,16 @@
 <?php
 require_once('Rest/Model/AclHandler/SimpleTableMapAbstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
-require_once('Util/Array.php');
 require_once('Util/Sql.php');
 
 class Default_Model_AclHandler_Entry
     extends Rest_Model_AclHandler_SimpleTableMapAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
-    /**
-     * @var Default_Model_Handler_Entry
-     */
-    protected $_modelHandler;
 
     /**
-     * @var PDO
+     * @return Rest_Model_Handler_Interface
      */
-    protected $_dbHandler;
-
     protected static function _createModelHandler()
     {
         return new Default_Model_Handler_Entry();
@@ -35,8 +28,14 @@ class Default_Model_AclHandler_Entry
             $acl->addRole('default');
         }
 
+        if (!$acl->hasRole('member')) {
+            $acl->addRole('member');
+        }
+
         $acl->allow('default', $this, array('get', 'post'));
         $acl->deny('default', $this, array('put', 'delete'));
+
+        $acl->allow('member', $this, array('get'));
     }
 
     /**
@@ -129,15 +128,11 @@ class Default_Model_AclHandler_Entry
         if ($this->getAcl() && !$this->isAllowed('post')) {
             throw new Zend_Acl_Exception('post for ' . $this->getResourceId() . ' is not allowed');
         }
-
-// getAclContextUser is getting the username and not the user_id
-// must be changed
         $prop['creator_user_id'] = $this->getAclContextUser();
 
         $item = $this->_getModelHandler()->post($prop);
 
         // NEED TO CREATE PERMISSION AND ROLE FOR THE NEW ENTRY
-//        Default_Model_Handler_Entry
 
         return $item;
     }

@@ -5,13 +5,17 @@ Entry, default, post, allow
 */
 
 /* Dan posts */
-INSERT INTO user (id, username, name) VALUES (384, 'Dan', 'Dan');
+INSERT INTO user (id, username, name, primary_email_id) VALUES (384, 'Dan', 'Dan', 384);
+INSERT INTO email (id, user_id, email) VALUES (384, 384, 'dvalentiate+REST_Dan@gmail.com');
 INSERT INTO entry (comment, creator_user_id, modified) VALUES ("information wants to be free", 384, "2010-02-10 15:26:32");
 
 /* Alex and Ed are members of all entries */
-INSERT INTO user (id, username, name) VALUES (456, 'Alex', 'Alex');
+INSERT INTO user (id, username, name, primary_email_id) VALUES (456, 'Alex', 'Alex', 456);
+INSERT INTO email (id, user_id, email) VALUES (456, 456, 'dvalentiate+REST_Alex@gmail.com');
 INSERT INTO resource_role (user_id, resource, role) VALUES (456, 'Entry', 'member');
-INSERT INTO user (id, username, name) VALUES (234, 'Ed', 'Ed');
+INSERT INTO user (id, username, name, primary_email_id) VALUES (234, 'Ed', 'Ed', 234);
+INSERT INTO email (id, user_id, email) VALUES (234, 234, 'dvalentiate+REST_Ed@gmail.com');
+INSERT INTO email (id, user_id, email) VALUES (235, 234, 'dvalentiate+REST_Ed_Other@gmail.com');
 INSERT INTO resource_role (user_id, resource, role) VALUES (234, 'Entry', 'member');
 
 /* Alex posts private message, because he is a member he is also given ownership over his post */

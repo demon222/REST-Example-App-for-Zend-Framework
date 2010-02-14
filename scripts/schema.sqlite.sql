@@ -1,8 +1,16 @@
 CREATE TABLE user (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) NOT NULL,
-    name VARCHAR(50) NOT NULL
+    name VARCHAR(50) NOT NULL,
+    primary_email_id INTEGER
 );
+
+CREATE TABLE email (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    email VARCHAR(254) NOT NULL
+);
+
 CREATE INDEX user_id ON user (id);
 
 CREATE TABLE resource_role (

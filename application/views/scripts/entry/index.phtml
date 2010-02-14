@@ -51,7 +51,7 @@ function refreshEntry(entry, data) {
     var id = $('div.id', entry).text();
 
     $.getJSON('/api-entry/' + escape(id) + '?' + JSON.stringify({'entourage':'Creator'}), function(data) {
-        refreshEntryFromData(data.content);
+        refreshEntryFromData(entry, data.content);
         $('div.loading', entry).remove();
     });
 }
@@ -95,7 +95,7 @@ $('.guestbook .entry .control_put').live('click', function() {
                 form.slideUp(function() {
                     $(this).remove();
                 });
-                refreshEntry(entry, result.content);
+                refreshEntry(entry);
             }
         });
     });

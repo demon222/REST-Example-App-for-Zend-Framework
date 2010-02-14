@@ -3,7 +3,7 @@ require_once('Rest/Model/AclHandler/SimpleTableMapAbstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
 require_once('Util/Sql.php');
 
-class Default_Model_AclHandler_User
+class Default_Model_AclHandler_Email
     extends Rest_Model_AclHandler_SimpleTableMapAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
@@ -13,7 +13,7 @@ class Default_Model_AclHandler_User
      */
     protected static function _createModelHandler()
     {
-        return new Default_Model_Handler_User();
+        return new Default_Model_Handler_Email();
     }
 
     protected function _initAclRules()
@@ -28,8 +28,8 @@ class Default_Model_AclHandler_User
             $acl->addRole('default');
         }
 
-        $acl->allow('default', $this, array('get'));
-        $acl->deny('default', $this, array('put', 'delete', 'post'));
+        $acl->allow('default', $this, array('get', 'post'));
+        $acl->deny('default', $this, array('put', 'delete'));
     }
 
     /**
@@ -38,7 +38,7 @@ class Default_Model_AclHandler_User
      */
     public static function getPropertyKeys()
     {
-        return Default_Model_Handler_User::getPropertyKeys();
+        return Default_Model_Handler_Email::getPropertyKeys();
     }
 
     /**
@@ -47,11 +47,12 @@ class Default_Model_AclHandler_User
      */
     public function expandEntourageAlias($alias)
     {
-        if ('Entry' == $alias) {
+        if ('User' == $alias) {
             return array(
-                'entourageModel' => 'Entry',
-                'entourageIdKey' => 'creator_user_id',
-                'resourceIdKey' => 'id',
+                'entourageModel' => 'User',
+                'entourageIdKey' => 'id',
+                'resourceIdKey' => 'user_id',
+                'singleOnly' => true,
             );
         }
         return null;
@@ -68,20 +69,20 @@ class Default_Model_AclHandler_User
         if (isset($params['entourage'])) {
             $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
             $data = $entourageHandler->getList(array('User' => $params));
-            return $data['User'];
+            return $data['Entry'];
         }
 
         if (isset($params['where'])) {
             // use default properties to search against if none are provided
             if (!is_array($params['where'])) {
-                $params['where'] = array('comment creator_user_id' => $params['where']);
+                $params['where'] = array('email user_id' => $params['where']);
             }
         } else {
             $params['where'] = array();
         }
 
         if (!isset($params['sort']) || !is_array($params['sort'])) {
-            $params['sort'] = array('name');
+            $params['sort'] = array('modified');
         }
 
         $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
@@ -89,8 +90,8 @@ class Default_Model_AclHandler_User
 
         $sql = ''
             // RESOURCE
-            . ' SELECT id, username, name'
-            . ' FROM user'
+            . ' SELECT id, user_id, email'
+            . ' FROM email'
 
             // ACL
             . $this->_getGenericAclListJoins()
@@ -109,23 +110,5 @@ class Default_Model_AclHandler_User
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
 
         return $rowSet;
-    }
-
-    /**
-     * @param array $prop
-     * @return array
-     * @throws Zend_Acl_Exception
-     */
-    public function post(array $prop)
-    {
-        if ($this->getAcl() && !$this->isAllowed('post')) {
-            throw new Zend_Acl_Exception('post for ' . $this->getResourceId() . ' is not allowed');
-        }
-
-        $item = $this->_getModelHandler()->post($prop);
-
-        // NEED TO CREATE PERMISSION AND ROLE FOR THE NEW USER
-
-        return $item;
     }
 }

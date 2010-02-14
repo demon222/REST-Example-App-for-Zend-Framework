@@ -1,4 +1,5 @@
 <?php
+require_once('Rest/Model/AclHandler/Interface.php');
 require_once('Rest/Model/AclHandler/Abstract.php');
 require_once('Rest/Model/MethodNotAllowedException.php');
 require_once('Rest/Model/BadRequestException.php');
@@ -124,24 +125,25 @@ class Default_Model_AclHandler_Entourage
      */
     public function get(array $id, array $params = null)
     {
-        if (null === $params) {
+        if (null === $params || !is_array($params) || empty($params)) {
             throw new Rest_Model_BadRequestException('must provide a source resource for attaching entourage resources');
         }
 
         // take just the first param, any additional ones will be ignored
-        list($name, $resourceParam) = each($params);
+        $resourceHandler = current($params);
+        $entourageSetParam = next($params);
 
-        // create the full resource name
-        $resourceName = 'Default_Model_AclHandler_' . $name;
+        if (!($resourceHandler instanceof Rest_Model_AclHandler_Interface)) {
+            // create the full resource name
+            $resourceName = 'Default_Model_AclHandler_' . $resourceHandler;
 
-        // see angry comment above about the stupidity of this function
-        if (!@class_exists($resourceName)) {
-            throw new Rest_Model_BadRequestException('resource "' . $name . '" does not exist');
+            // see angry comment above about the stupidity of this function
+            if (!@class_exists($resourceName)) {
+                throw new Rest_Model_BadRequestException('resource "' . $resourceHandler . '" does not exist');
+            }
+
+            $resourceHandler = new $resourceName($this->getAcl(), $this->getAclContextUser());
         }
-
-        $resourceHandler = new $resourceName($this->getAcl(), $this->getAclContextUser());
-
-        $entourageSetParam = isset($resourceParam['entourage']) ? $resourceParam['entourage'] : null;
 
         // get the resource
         $resource = $resourceHandler->get($id);
