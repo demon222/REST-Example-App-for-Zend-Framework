@@ -255,32 +255,45 @@ class Default_Model_AclHandler_Entourage
                 throw new Rest_Model_BadRequestException('entourage alias "' . $name . '" does not specify a entourageModel');
             }
 
-            $entourageResource = 'Default_Model_AclHandler_' . $entourageParam['entourageModel'];
+            $resourceIdKey = $entourageParam['resourceIdKey'];
+            unset($entourageParam['resourceIdKey']); // wont be passed into entourage getList
+            $entourageIdKey = $entourageParam['entourageIdKey'];
+            unset($entourageParam['entourageIdKey']); // wont be passed into entourage getList
+            $entourageModel = $entourageParam['entourageModel'];
+            unset($entourageParam['entourageModel']); // wont be passed into entourage getList
+
+            // if specified only return the first match for entourages that match, can make for a
+            // cleaner api for using this
+            $singleOnly = isset($entourageParam['singleOnly']) && $entourageParam['singleOnly'] ? $entourageParam['singleOnly'] : false;
+            unset($entourageParam['singleOnly']); // wont be passed into entourage getList
+
+            $entourageResource = 'Default_Model_AclHandler_' . $entourageModel;
 
             // see angry comment above about the stupidity of this function
             if (!@class_exists($entourageResource)) {
-                throw new Rest_Model_BadRequestException($entourageParam['entourageModel'] . ' resource for entourage alias "' . $name . '" does not exist');
+                throw new Rest_Model_BadRequestException($entourageModel . ' resource for entourage alias "' . $name . '" does not exist');
             }
 
             $entourageHandler = new $entourageResource($this->getAcl(), $this->getAclContextUser());
 
             // get only the entourage resources needed for the resource
-            $resourceJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageParam['resourceIdKey'], $resourceList);
-            $entourageList = $entourageHandler->getList(array(
-                'where' => array(
-                    // because there could be duplicate ids: array_unique and reindex with array_values
-                    $entourageParam['entourageIdKey'] => array_values(array_unique($resourceJoinIdList))
-                )
-            ));
+            $resourceJoinIdList = Util_Array::arrayFromKeyValuesOfSet($resourceIdKey, $resourceList);
+            if (empty($resourceJoinIdList)) {
+                throw new Rest_Model_BadRequestException('entourage alias "' . $name . '" specifies an invalid resourceIdKey "' . $resourceIdKey . '"');
+            }
 
-            // if specified only return the first match for entourages that match, can make for a
-            // cleaner api for using this
-            $singleOnly = isset($entourageParam['singleOnly']) && $entourageParam['singleOnly'] ? $entourageParam['singleOnly'] : false;
+            $entourageParam['where'] = array_merge(isset($entourageParam['where']) ? $entourageParam['where'] : array(),
+                array(
+                    // because there could be duplicate ids: array_unique and reindex with array_values
+                    $entourageIdKey => array_values(array_unique($resourceJoinIdList))
+                )
+            );
+            $entourageList = $entourageHandler->getList($entourageParam);
 
             //
-            $entourageJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageParam['entourageIdKey'], $entourageList);
+            $entourageJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageIdKey, $entourageList);
             foreach ($resourceList as &$resource) {
-                $joinKeySet = array_keys($entourageJoinIdList, $resource[$entourageParam['resourceIdKey']]);
+                $joinKeySet = array_keys($entourageJoinIdList, $resource[$resourceIdKey]);
 
                 if ($singleOnly) {
                     $first = current($joinKeySet);

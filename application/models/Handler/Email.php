@@ -10,7 +10,7 @@ class Default_Model_Handler_Email extends Rest_Model_Handler_SimpleTableMapAbstr
      */
     public static function getPropertyKeys()
     {
-        return array('id', 'user_id', 'email');
+        return array('id', 'user_id', 'email', 'primary');
     }
 
     /**

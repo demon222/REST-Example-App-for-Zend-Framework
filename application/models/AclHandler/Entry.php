@@ -97,7 +97,7 @@ class Default_Model_AclHandler_Entry
         $sql = ''
             // RESOURCE
             . ' SELECT id, comment, creator_user_id, modified'
-            . ' FROM entry'
+            . ' FROM entry AS resource'
 
             // ACL
             . $this->_getGenericAclListJoins()

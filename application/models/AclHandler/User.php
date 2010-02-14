@@ -54,6 +54,26 @@ class Default_Model_AclHandler_User
                 'resourceIdKey' => 'id',
             );
         }
+        if ('Email' == $alias) {
+            return array(
+                'entourageModel' => 'Email',
+                'entourageIdKey' => 'user_id',
+                'resourceIdKey' => 'id',
+                'singleOnly' => true,
+                // doesn work because primary isn't a real column and SQLite
+                // isn't going to where by that. Because this is singleOnly
+                // the sort below works fine
+                //'where' => array('primary' => 1),
+                'sort' => array('primary desc'),
+            );
+        }
+        if ('Emails' == $alias) {
+            return array(
+                'entourageModel' => 'Email',
+                'entourageIdKey' => 'user_id',
+                'resourceIdKey' => 'id',
+            );
+        }
         return null;
     }
 
@@ -90,7 +110,7 @@ class Default_Model_AclHandler_User
         $sql = ''
             // RESOURCE
             . ' SELECT id, username, name'
-            . ' FROM user'
+            . ' FROM user AS resource'
 
             // ACL
             . $this->_getGenericAclListJoins()

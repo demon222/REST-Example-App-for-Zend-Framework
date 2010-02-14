@@ -68,8 +68,8 @@ class Default_Model_AclHandler_Email
 
         if (isset($params['entourage'])) {
             $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('User' => $params));
-            return $data['Entry'];
+            $data = $entourageHandler->getList(array('Email' => $params));
+            return $data['Email'];
         }
 
         if (isset($params['where'])) {
@@ -82,7 +82,7 @@ class Default_Model_AclHandler_Email
         }
 
         if (!isset($params['sort']) || !is_array($params['sort'])) {
-            $params['sort'] = array('modified');
+            $params['sort'] = array('user_id', 'primary asc', 'email');
         }
 
         $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
@@ -90,8 +90,9 @@ class Default_Model_AclHandler_Email
 
         $sql = ''
             // RESOURCE
-            . ' SELECT id, user_id, email'
-            . ' FROM email'
+            . ' SELECT resource.id AS id, user_id, email, (resource.id = primary_email_id) AS "primary"'
+            . ' FROM email AS resource'
+            . ' INNER JOIN user ON user.id = user_id'
 
             // ACL
             . $this->_getGenericAclListJoins()
@@ -104,7 +105,6 @@ class Default_Model_AclHandler_Email
             . ' ORDER BY ' . implode(', ', $sortList)
 
             . '';
-
         $query = $this->_getDbHandler()->prepare($sql);
         $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);

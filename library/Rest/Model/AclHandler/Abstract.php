@@ -217,7 +217,7 @@ abstract class Rest_Model_AclHandler_Abstract
             . '     )'
             . '     AND privilege = "get"'
             . '     GROUP BY resource'
-            . ' ) AS acl ON acl_resource = (:generalResource || "=" || id)'
+            . ' ) AS acl ON acl_resource = (:generalResource || "=" || resource.id)'
             . '';
     }
 

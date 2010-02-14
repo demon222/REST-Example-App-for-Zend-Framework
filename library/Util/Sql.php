@@ -26,12 +26,16 @@ class Util_Sql
                             $i++;
                         }
                     }
-                    $orSet[] = $cond . ' IN (' . implode(', ', $orKeys) . ')';
+                    $orSet[] = '"' . $cond . '" IN (' . implode(', ', $orKeys) . ')';
                 } elseif (is_string($value) || is_int($value)) {
                     $params[':value_' . $i] = $value;
-                    $orSet[] = $cond . ' = ' . ':value_' . $i;
+                    $orSet[] = '"' . $cond . '" = ' . ':value_' . $i;
                     $i++;
                 }
+            }
+
+            if (empty($orSet)) {
+                continue;
             }
 
             $andSet[] = implode(' OR ', $orSet);
@@ -57,7 +61,7 @@ class Util_Sql
             if ($direction === null) {
                 $direction = 'asc';
             }
-            $resultList[] = $prop . ' ' . strtoupper($direction);
+            $resultList[] = '"' . $prop . '" ' . strtoupper($direction);
         }
         return $resultList;
     }
