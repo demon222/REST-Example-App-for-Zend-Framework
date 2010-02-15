@@ -1,0 +1,214 @@
+<style>
+    .left-panel  {position: absolute; top: 0; left: 0;  width: 50%;  height: 100%;}
+    .right-panel {position: absolute; top: 0; right: 0; width: 50%;  height: 100%;}
+    .status       {height: 5%;   overflow: hidden; padding: 0 0 0 10px;    font-size: small; text-align: right}
+    .result       {height: 95%;  overflow: auto;   padding: 0 0 0 10px;    font-size: x-small}
+    .test-list    {height: 100%; overflow: auto;   padding: 0 10px 0 10px; font-size: small}
+
+    .test {overflow: auto}
+    .test .index {float: left; width: 2em}
+    .test .description {float: left}
+    .test .run {display: block; float: right; border: 1px solid blue; color: blue; padding: 2px; margin: 1px; text-decoration: none; font-size: small}
+</style>
+
+<style>
+    .result ul, .result ol, .result dl, .result li, .result dt, .result dd {margin: 0; padding: 0; display: block}
+    .result .string {font-family: arial; max-width: 15em; overflow: hidden; max-height: 4em}
+    .result .number {font-family: monospace}
+    .result .array {border-left: 0.2em solid #F4A460; overflow: auto; margin: 0.5em 0; min-height: 1.5em}
+    .result .array-index {position: relative; left: 0.2em; float: left; clear: left; text-align: right; overflow: hidden; padding: 0 0.25em; margin-left: 1em}
+    .result .array-item {float: left}
+    .result .object {border-left: 0.2em solid #ADD8E6; overflow: auto; margin: 0.5em 0; min-height: 1.5em}
+    .result .object-prop {position: relative; left: 0.2em; float: left; clear: left; text-align: right; overflow: hidden; padding-right: 1em; margin-left: 1em}
+    .result .object-data {float: left}
+    .result .object > .object-prop {width: 5em}
+    .result .object-withNarrowProps > .object-prop {width: 2em}
+    .result .object-withWideProps > .object-prop {width: 10em}
+</style>
+<script>
+
+var tests = {
+    service:'http://',
+    host:'localhost',
+    method:'GET',
+    credentials: 'Ed:admin',
+    set:[
+        {
+            description: 'user resource contains [id, name, username]',
+            resoureceUrlPart: 'api-user',
+            expectedResponseTest: function(response) {
+                assertKeys = ['id', 'name', 'username'];
+
+                var keys = [];
+                for (var key in response.content[0]) {
+                    keys.push(key);
+                }
+
+                if (keys.length != assertKeys.length) {
+                    // result isn't the same length'
+                    return false;
+                }
+
+                for (var i in assertKeys) {
+                    if ($.inArray(assertKeys[i], keys) == -1) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        },
+        {
+            description: 'entry resource contains [id, comment, creator_user_id, modified]',
+            resoureceUrlPart: 'api-entry/',
+            expectedResponseTest: function(response) {
+                assertKeys = ['id', 'comment', 'creator_user_id', 'modified'];
+
+                var keys = [];
+                for (var key in response.content[0]) {
+                    keys.push(key);
+                }
+
+                if (keys.length != assertKeys.length) {
+                    // result isn't the same length'
+                    return false;
+                }
+
+                for (var i in assertKeys) {
+                    if ($.inArray(assertKeys[i], keys) == -1) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        },
+        {
+            description: 'email resource contains [id, user_id, email, primary]',
+            resoureceUrlPart: 'api-email/',
+            expectedResponseTest: function(response) {
+                assertKeys = ['id', 'user_id', 'email', 'primary'];
+
+                var keys = [];
+                for (var key in response.content[0]) {
+                    keys.push(key);
+                }
+
+                if (keys.length != assertKeys.length) {
+                    // result isn't the same length'
+                    return false;
+                }
+
+                for (var i in assertKeys) {
+                    if ($.inArray(assertKeys[i], keys) == -1) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        },
+        {
+            description: 'entourage called from resource (entry resource, entourage Creator alias)',
+            resoureceUrlPart: 'api-entry/?entourage=Creator',
+            expectedResponseTest: function(response) {
+                return typeof response.content[0].Creator != 'undefined';
+            }
+        }
+    ]
+};
+
+function toHtml(obj) {
+    if (typeof obj == 'string') {
+        return '<div class="string">' + obj + '</div>';
+    }
+    if (typeof obj == 'number') {
+        return '<div class="number">' + obj + '</div>';
+    }
+    if ($.isArray(obj)) {
+        // likely an array
+        var html = [];
+        for (var index in obj) {
+            html.push('<dt class="array-index">' + index + '</dt><dd class="array-item">' + toHtml(obj[index]) + '</dd>');
+        }
+        return '<dl class="array">' + html.join('') + '</dl>';
+
+    }
+    if (typeof obj == 'object') {
+        var html = [];
+        var maxWidth = 0;
+        for (var prop in obj) {
+            maxWidth = String(prop).length > maxWidth ? String(prop).length : maxWidth;
+            html.push('<dt class="object-prop" title="' + String(prop) + '">' + toHtml(prop) + '</dt><dd class="object-data">' + toHtml(obj[prop]) + '</dd>');
+        }
+        var widthType;
+        if (maxWidth <= 3) {
+            widthType = ' object-withNarrowProps';
+        } else if (maxWidth <= 10) {
+            widthType = '';
+        } else {
+            widthType = ' object-withWideProps';
+        }
+        return '<dl class="object' + widthType + '">' + html.join('') + '</dl>';
+    }
+    return '<div class="unknown">' + obj + '</div>';
+}
+
+function styleResults() {
+    $('.result .object-prop, .result .array-index').each(function() {
+        var e = $(this);
+        var objOrArray = e.next().children('.object, .array');
+        if (!objOrArray.size()) {
+            return;
+        }
+        e.css('background-color', objOrArray.css('border-left-color'));
+    });
+}
+
+$('.test .run').live('click', function() {
+    var index = $(this).siblings('.index').text();
+    var t = tests.set[index];
+
+    var neededProperties = ['service', 'host', 'credentials', 'resourceUrlPart', 'method'];
+    for (var i in neededProperties) {
+        p = neededProperties[i];
+        t[p] = (typeof t[p] == 'undefined') ? tests[p] : t[p];
+    }
+
+    $.ajax({
+        url: t.service + t.host + '/' + t.resoureceUrlPart,
+        type: t.method,
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        beforeSend: function() {
+            $('.status').text('Working...');
+        },
+        success: function(result) {
+            var pass = t.expectedResponseTest(result);
+            $('.test_' + index + ' > .run').css('background-color', pass ? 'green' : 'red');
+            $('.status').text('Complete');
+            $('.result').html(toHtml(result));
+            styleResults();
+        },
+        error: function(xmlHttpRequest) {
+            $('.status').text(xmlHttpRequest.status + ' - ' + xmlHttpRequest.statusText);
+        }
+    });
+});
+
+$(function() {
+
+    for (var i in tests.set) {
+        $('.test-list').append('<div class="test test_' + i + '"><div class="index">' + i + '</div><div class="description">' + tests.set[i].description + '</div><a class="run" href="#">&gt;&gt;&gt;</a></div>');
+    }
+});
+</script>
+<div class="workspace">
+    <div class="left-panel">
+        <div class="test-list"></div>
+    </div>
+    <div class="right-panel">
+        <div class="status"></div>
+        <div class="result"></div>
+    </div>
+</div>
