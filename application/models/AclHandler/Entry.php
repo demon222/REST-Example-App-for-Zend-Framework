@@ -29,7 +29,7 @@ class Default_Model_AclHandler_Entry
         }
 
         if (!$acl->hasRole('member')) {
-            $acl->addRole('member');
+            $acl->addRole('member', 'default');
         }
 
         $acl->allow('default', $this, array('get', 'post'));
