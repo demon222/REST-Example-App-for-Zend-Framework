@@ -8,7 +8,7 @@
     .test {overflow: auto}
     .test .index {float: left; width: 2em}
     .test .description {float: left}
-    .test .run {display: block; float: right; border: 1px solid blue; color: blue; padding: 2px; margin: 1px; text-decoration: none; font-size: small}
+    .test .run {display: block; float: right; border: 1px solid blue; color: blue; padding: 2px; margin: 1px; text-decoration: none; font-size: xx-small}
 </style>
 
 <style>
@@ -34,7 +34,7 @@ var tests = {
     credentials: 'Ed:admin',
     set:[
         {
-            description: 'user resource contains [id, name, username]',
+            description: 'user resource list contains [id, name, username]',
             resoureceUrlPart: 'api-user',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'name', 'username'];
@@ -59,7 +59,7 @@ var tests = {
             }
         },
         {
-            description: 'entry resource contains [id, comment, creator_user_id, modified]',
+            description: 'entry resource list contains [id, comment, creator_user_id, modified]',
             resoureceUrlPart: 'api-entry/',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'comment', 'creator_user_id', 'modified'];
@@ -84,7 +84,7 @@ var tests = {
             }
         },
         {
-            description: 'email resource contains [id, user_id, email, primary]',
+            description: 'email resource list contains [id, user_id, email, primary]',
             resoureceUrlPart: 'api-email/',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'user_id', 'email', 'primary'];
@@ -109,10 +109,19 @@ var tests = {
             }
         },
         {
-            description: 'entourage called from resource (entry resource, entourage Creator alias)',
+            description: 'entourage called from resource list (entry resource, entourage Creator alias)',
             resoureceUrlPart: 'api-entry/?entourage=Creator',
             expectedResponseTest: function(response) {
                 return typeof response.content[0].Creator != 'undefined';
+            }
+        },
+        {
+            description: 'multiple entourages called from resource list (entry resource, entourage Creator alias)',
+            resoureceUrlPart: 'api-user/?entourage[]=Email&entourage[]=Entry',
+            expectedResponseTest: function(response) {
+                return true
+                    && (typeof response.content[0].Email != 'undefined')
+                    && (typeof response.content[0].Entry != 'undefined');
             }
         }
     ]
