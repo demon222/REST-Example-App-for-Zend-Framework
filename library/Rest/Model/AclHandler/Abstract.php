@@ -79,7 +79,7 @@ abstract class Rest_Model_AclHandler_Abstract
      */
     public function getResourceSpecificId(array $id)
     {
-        return $this->getResourceId() . '=' . implode(',', $id);
+        return implode(',', $id);
     }
 
     /**
@@ -141,27 +141,72 @@ abstract class Rest_Model_AclHandler_Abstract
     {
         $userId = $this->getAclContextUser();
 
-        if (null != $id) {
-            // first check if against this specific resource things are
-            // allowed or denied
+        $resourceGeneral = $this->getResourceId();
+
+        // first get the possible roles this user has with the resource
+        if (null === $id) {
+            $sql = 'SELECT role FROM resource_role'
+                . ' WHERE user_id = :userId'
+                . ' AND resource = :resourceGeneral'
+                . ' AND resource_id IS NULL'
+                . '';
+            $query = $this->_getDbHandler()->query($sql);
+            $query->execute(array(
+                ':userId' => $userId,
+                ':resourceGeneral' => $resourceGeneral,
+            ));
+        } else {
+            // include roles from specific case
             $resourceSpecific = $this->getResourceSpecificId($id);
 
-            $sql = 'SELECT p.id, p.permission, p.privilege, p.resource, p.role, rr.user_id'
-                . ' FROM permission AS p'
-                . ' LEFT OUTER JOIN resource_role AS rr ON p.role = rr.role AND p.resource = rr.resource'
-                . ' WHERE ('
-                . '     rr.user_id = :userId'
-                . '     OR p.role = "default"'
+            $sql = 'SELECT role FROM resource_role'
+                . ' WHERE user_id = :userId'
+                . ' AND ('
+                . '     resource = :resourceGeneral'
+                . '     AND ('
+                . '         resource_id IS NULL'
+                . '         OR resource_id = :resourceSpecific'
+                . '     )'
                 . ' )'
-                . ' AND p.resource = :resourceSpecific'
+                . '';
+            $query = $this->_getDbHandler()->query($sql);
+            $query->execute(array(
+                ':userId' => $userId,
+                ':resourceGeneral' => $resourceGeneral,
+                ':resourceSpecific' => $resourceSpecific,
+            ));
+        }
+        $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
+        $roleSet = Util_Array::arrayFromKeyValuesOfSet('role', $rowSet);
+        // make sure 'default' role is in there
+        if (!in_array('default', $roleSet)) {
+            $roleSet[] = 'default';
+        }
+
+        if (null !== $id) {
+            // first check if against this specific resource things are
+            // allowed or denied
+            $roleVarKeyLookup = array();
+            foreach ($roleSet as $index => $role) {
+                $roleVarKeyLookup[':role_' . $index] = $role;
+            }
+
+            $sql = 'SELECT p.id, p.permission, p.privilege, p.resource, p.role'
+                . ' FROM permission AS p'
+                . ' WHERE p.role IN (' . implode(', ', array_keys($roleVarKeyLookup)) . ')'
+                . ' AND p.resource = :resourceGeneral'
+                . ' AND p.resource_id = :resourceSpecific'
                 . ' AND p.privilege = :privilege'
                 . ' ORDER BY p.permission ASC'
                 . '';
             $query = $this->_getDbHandler()->prepare($sql);
-            $query->execute(array(
-                ':userId' => $userId,
-                ':resourceSpecific' => $resourceSpecific,
-                ':privilege' => $privilege,
+            $query->execute(array_merge(
+                array(
+                    ':resourceGeneral' => $resourceGeneral,
+                    ':resourceSpecific' => $resourceSpecific,
+                    ':privilege' => $privilege,
+                ),
+                $roleVarKeyLookup
             ));
             $row = $query->fetch(PDO::FETCH_ASSOC);
 
@@ -172,22 +217,8 @@ abstract class Rest_Model_AclHandler_Abstract
         }
 
         // specific resource check wasn't definitive, check the general resource
-        $resourceGeneral = $this->getResourceId();
-
-        // get the roles
-        $sql = 'SELECT role FROM resource_role'
-            . ' WHERE user_id = :userId'
-            . ' AND resource = :resourceGeneral';
-        $query = $this->_getDbHandler()->query($sql);
-        $query->execute(array(
-            ':userId' => $userId,
-            ':resourceGeneral' => $resourceGeneral,
-        ));
-        $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
-        $roleSet = Util_Array::arrayFromKeyValuesOfSet('role', $rowSet);
 
         // add the default role
-        $roleSet[] = 'default';
         $allowed = false;
         foreach ($roleSet as $role) {
             // check if a role is accepted
@@ -205,18 +236,27 @@ abstract class Rest_Model_AclHandler_Abstract
     {
         return ''
             . ' LEFT OUTER JOIN ('
+            . ' SELECT rr.resource AS resource, max(COALESCE(rr.resource_id, p.resource_id)) AS resource_id, p.permission AS permission'
+            . ' FROM resource_role AS rr'
+            . ' INNER JOIN permission AS p ON (rr.role = p.role OR p.role = "default") AND rr.resource = p.resource'
+            . ' WHERE p.privilege = "get"'
+            . ' AND p.resource = :generalResource'
+            . ' AND rr.user_id = :userId'
+            . ' GROUP BY permission'
+/*
             . '     SELECT resource AS acl_resource, MIN(permission) AS acl_permission'
             . '     FROM permission'
             . '     WHERE role IN ('
             . '         SELECT role'
             . '         FROM resource_role AS acl_rr'
             . '         WHERE acl_rr.user_id = :userId'
-            . '         AND (acl_rr.resource = :generalResource OR acl_rr.resource = permission.resource)'
+            . '         AND (acl_rr.resource = :generalResource OR substr(acl_rr.resource, 1, length(permission.resource)) = permission.resource)'
             . '         UNION'
             . '         SELECT "default" AS role'
             . '     )'
             . '     AND privilege = "get"'
             . '     GROUP BY resource'
+*/
             . ' ) AS acl ON acl_resource = (:generalResource || "=" || resource.id)'
             . '';
     }
