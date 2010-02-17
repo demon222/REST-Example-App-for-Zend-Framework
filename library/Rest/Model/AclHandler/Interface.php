@@ -13,7 +13,7 @@ interface Rest_Model_AclHandler_Interface extends Rest_Model_Handler_Interface
      * @param array $id
      * @return string
      */
-    public function getResourceSpecificId(array $id);
+    public function getSpecificResourceId(array $id);
 
     /**
      * @return Zend_Acl

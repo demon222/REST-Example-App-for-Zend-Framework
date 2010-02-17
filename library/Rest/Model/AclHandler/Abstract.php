@@ -77,7 +77,7 @@ abstract class Rest_Model_AclHandler_Abstract
      * @param array $id
      * @return string
      */
-    public function getResourceSpecificId(array $id)
+    public function getSpecificResourceId(array $id)
     {
         return implode(',', $id);
     }
@@ -157,7 +157,7 @@ abstract class Rest_Model_AclHandler_Abstract
             ));
         } else {
             // include roles from specific case
-            $resourceSpecific = $this->getResourceSpecificId($id);
+            $resourceSpecific = $this->getSpecificResourceId($id);
 
             $sql = 'SELECT role FROM resource_role'
                 . ' WHERE user_id = :userId'
@@ -234,30 +234,17 @@ abstract class Rest_Model_AclHandler_Abstract
 
     protected function _getGenericAclListJoins()
     {
+        $nl = "\n";
         return ''
-            . ' LEFT OUTER JOIN ('
-            . ' SELECT rr.resource AS resource, max(COALESCE(rr.resource_id, p.resource_id)) AS resource_id, p.permission AS permission'
-            . ' FROM resource_role AS rr'
-            . ' INNER JOIN permission AS p ON (rr.role = p.role OR p.role = "default") AND rr.resource = p.resource'
-            . ' WHERE p.privilege = "get"'
-            . ' AND p.resource = :generalResource'
-            . ' AND rr.user_id = :userId'
-            . ' GROUP BY permission'
-/*
-            . '     SELECT resource AS acl_resource, MIN(permission) AS acl_permission'
-            . '     FROM permission'
-            . '     WHERE role IN ('
-            . '         SELECT role'
-            . '         FROM resource_role AS acl_rr'
-            . '         WHERE acl_rr.user_id = :userId'
-            . '         AND (acl_rr.resource = :generalResource OR substr(acl_rr.resource, 1, length(permission.resource)) = permission.resource)'
-            . '         UNION'
-            . '         SELECT "default" AS role'
-            . '     )'
-            . '     AND privilege = "get"'
-            . '     GROUP BY resource'
-*/
-            . ' ) AS acl ON acl_resource = (:generalResource || "=" || resource.id)'
+            . ' LEFT OUTER JOIN (' . $nl
+            . '     SELECT COALESCE(rr.resource_id, p.resource_id) AS acl_resource_id, min(p.permission) AS acl_permission' . $nl
+            . '     FROM resource_role AS rr' . $nl
+            . '     INNER JOIN permission AS p ON (rr.role = p.role OR p.role = "default") AND rr.resource = p.resource' . $nl
+            . '     WHERE p.privilege = "get"' . $nl
+            . '     AND p.resource = :generalResource' . $nl
+            . '     AND rr.user_id = :userId' . $nl
+            . '     GROUP BY acl_resource_id' . $nl
+            . ' ) AS acl ON acl_resource_id = resource.id' . $nl
             . '';
     }
 

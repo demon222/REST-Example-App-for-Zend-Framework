@@ -35,6 +35,10 @@ class Default_Model_AclHandler_Email
         }
 
         $acl->allow('owner', $this, array('get', 'put', 'delete', 'post'));
+
+        if (!$acl->hasRole('member')) {
+            $acl->addRole('member');
+        }
     }
 
     /**

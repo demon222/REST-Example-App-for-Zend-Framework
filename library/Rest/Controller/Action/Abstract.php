@@ -51,6 +51,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
+            // should output 500 errors conditional to APP_ENV being dev
+            // should log errors no matter what environment
             return;
         }
 
@@ -88,6 +90,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
+            // should output 500 errors conditional to APP_ENV being dev
+            // should log errors no matter what environment
             return;
         }
 
@@ -153,6 +157,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
+            // should output 500 errors conditional to APP_ENV being dev
+            // should log errors no matter what environment
             return;
         }
 
@@ -186,6 +192,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
+            // should output 500 errors conditional to APP_ENV being dev
+            // should log errors no matter what environment
             return;
         }
 
@@ -252,6 +260,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
+            // should output 500 errors conditional to APP_ENV being dev
+            // should log errors no matter what environment
             return;
         }
 
