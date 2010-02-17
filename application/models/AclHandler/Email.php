@@ -28,8 +28,13 @@ class Default_Model_AclHandler_Email
             $acl->addRole('default');
         }
 
-        $acl->allow('default', $this, array('get', 'post'));
-        $acl->deny('default', $this, array('put', 'delete'));
+        $acl->deny('default', $this, array('get', 'put', 'delete', 'post'));
+
+        if (!$acl->hasRole('owner')) {
+            $acl->addRole('owner');
+        }
+
+        $acl->allow('owner', $this, array('get', 'put', 'delete', 'post'));
     }
 
     /**

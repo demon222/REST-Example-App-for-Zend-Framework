@@ -28,12 +28,12 @@ class Default_Model_AclHandler_Entry
             $acl->addRole('default');
         }
 
+        $acl->allow('default', $this, array('get', 'post'));
+        $acl->deny('default', $this, array('put', 'delete'));
+
         if (!$acl->hasRole('member')) {
             $acl->addRole('member', 'default');
         }
-
-        $acl->allow('default', $this, array('get', 'post'));
-        $acl->deny('default', $this, array('put', 'delete'));
 
         $acl->allow('member', $this, array('get'));
     }

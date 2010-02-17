@@ -30,6 +30,12 @@ class Default_Model_AclHandler_User
 
         $acl->allow('default', $this, array('get'));
         $acl->deny('default', $this, array('put', 'delete', 'post'));
+
+        if (!$acl->hasRole('owner')) {
+            $acl->addRole('owner');
+        }
+
+        $acl->allow('owner', $this, array('get', 'put', 'delete', 'post'));
     }
 
     /**
@@ -54,7 +60,7 @@ class Default_Model_AclHandler_User
                 'resourceIdKey' => 'id',
             );
         }
-        if ('Email' == $alias) {
+        if ('PrimaryEmail' == $alias) {
             return array(
                 'entourageModel' => 'Email',
                 'entourageIdKey' => 'user_id',
@@ -67,7 +73,7 @@ class Default_Model_AclHandler_User
                 'sort' => array('primary desc'),
             );
         }
-        if ('Emails' == $alias) {
+        if ('Email' == $alias) {
             return array(
                 'entourageModel' => 'Email',
                 'entourageIdKey' => 'user_id',
