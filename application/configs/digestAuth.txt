@@ -1,5 +1,5 @@
-Dan:Guestbook API:bc1d0eacefb997968b59361d810bd752
-Alex:Guestbook API:3da282e62fcb74d47fef0e1c9b3c6def
-Bob:Guestbook API:d867b74ac81413102206f1f22e9f24ea
-Carl:Guestbook API:22d446e6db88b5055f0a5d55bfff44e2
-Ed:Guestbook API:7422cb74967f9a09e9756f074e37d9d6
+Dan:Guestbook API:c78a4c2191ae1bc9d0be569879f8558b
+Alex:Guestbook API:634de7f46b56cf4d46ca133d17dfc9ed
+Bob:Guestbook API:a648246d0f46d92ac8ae7a41501ce878
+Carl:Guestbook API:b1d9faff4029bb1cc0b98bab58f062a4
+Ed:Guestbook API:544bdd5262a7c90858f12403eedd8855

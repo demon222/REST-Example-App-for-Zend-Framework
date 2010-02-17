@@ -1,5 +1,5 @@
-Dan:Guestbook API:admin
-Alex:Guestbook API:admin
-Bob:Guestbook API:admin
-Carl:Guestbook API:admin
-Ed:Guestbook API:admin
+Dan:Guestbook API:Dan
+Alex:Guestbook API:Alex
+Bob:Guestbook API:Bob
+Carl:Guestbook API:Carl
+Ed:Guestbook API:Ed
