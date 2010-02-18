@@ -116,12 +116,21 @@ var tests = {
             }
         },
         {
-            description: 'multiple entourages called from resource list (entry resource, entourage Creator alias)',
+            description: 'multiple entourages called from resource list (entry resource, entourage Creator)',
             resoureceUrlPart: 'api-user/?entourage[]=Email&entourage[]=Entry',
             expectedResponseTest: function(response) {
                 return true
                     && (typeof response.content[0].Email != 'undefined')
                     && (typeof response.content[0].Entry != 'undefined');
+            }
+        },
+        {
+            description: 'get of an specific resource with entourage (entry 823, entourage Creator)',
+            resoureceUrlPart: 'api-entry/823?entourage[]=Creator',
+            expectedResponseTest: function(response) {
+                return true
+                    && (typeof response.content.id != 823)
+                    && (typeof response.content.Creator != 'undefined');
             }
         }
     ]
