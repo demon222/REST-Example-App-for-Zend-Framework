@@ -4,9 +4,6 @@ Entry, default, get, allow
 Entry, default, post, allow
 */
 
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('User', NULL, 'owner', 'get', 'allow');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Email', NULL, 'owner', 'get', 'allow');
-
 /* temporary development permissions that will be loaded dynamically later */
 INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Email', NULL, 'default', 'get', 'deny');
 INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Email', NULL, 'default', 'put', 'deny');

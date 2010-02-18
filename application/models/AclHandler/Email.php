@@ -8,37 +8,26 @@ class Default_Model_AclHandler_Email
     implements Rest_Model_EntourageImplementer_Interface
 {
 
+    protected $_roles = array(
+        'owner',
+        'member',
+    );
+
+    protected $_staticPermissions = array(
+        'default' => array(
+            'deny' => array('get', 'put', 'delete', 'post'),
+        ),
+        'owner' => array(
+            'allow' => array('get', 'put', 'delete', 'post'),
+        )
+    );
+
     /**
      * @return Rest_Model_Handler_Interface
      */
     protected static function _createModelHandler()
     {
         return new Default_Model_Handler_Email();
-    }
-
-    protected function _initAclRules()
-    {
-        $acl = $this->getAcl();
-
-        if (!$acl->has($this)) {
-            $acl->addResource($this);
-        }
-
-        if (!$acl->hasRole('default')) {
-            $acl->addRole('default');
-        }
-
-        $acl->deny('default', $this, array('get', 'put', 'delete', 'post'));
-
-        if (!$acl->hasRole('owner')) {
-            $acl->addRole('owner');
-        }
-
-        $acl->allow('owner', $this, array('get', 'put', 'delete', 'post'));
-
-        if (!$acl->hasRole('member')) {
-            $acl->addRole('member');
-        }
     }
 
     /**

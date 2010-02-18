@@ -34,11 +34,68 @@ abstract class Rest_Model_AclHandler_Abstract
     }
 
     /**
+     * A set of roles that the concrete class requires to be initialized.
+     * Note: the default role doesn't need to be defined it is assumed
+     * @var array
+     */
+     protected $_roles = array();
+
+     /**
+      * Defines permissions that apply to the all the resource items of the
+      * model. For instance, the public (default) can't see an entry, but
+      * members can and owners can edit, create and delete entries. Keep in mind
+      * that the scope of a permission can be indicated by roles which are
+      * dynamic and based in the database.
+      *
+      *
+      * EXAMPLE:
+      * protected $_staticPermissions = array(
+      *     'default' => array(
+      *         'deny' => array('get', 'put', 'delete', 'post'),
+      *     ),
+      *     'owner' => array(
+      *         'allow' => array('get', 'put', 'delete', 'post'),
+      *     ),
+      *     'member' => array(
+      *         'allow' => array('get'),
+      *         'deny' => array('put', 'delete', 'post'),
+      *     )
+      * );
+      * 
+      * @var array
+      */
+     protected $_staticPermissions = array();
+
+    /**
      * Important for every AclHandler to add to the acl all the relevant
      * general resource rules
      */
     protected function _initAclRules()
     {
+        $acl = $this->getAcl();
+
+        if (!$acl->has($this)) {
+            $acl->addResource($this);
+        }
+
+        if (!$acl->hasRole('default')) {
+            $acl->addRole('default');
+        }
+
+        foreach($this->_roles as $role) {
+            if (!$acl->hasRole($role)) {
+                $acl->addRole($role, 'default');
+            }
+        }
+
+        foreach($this->_staticPermissions as $role => $permission) {
+            if (isset($permission['allow'])) {
+                $acl->allow($role, $this, $permission['allow']);
+            }
+            if (isset($permission['deny'])) {
+                $acl->deny($role, $this, $permission['deny']);
+            }
+        }
     }
 
     /**
@@ -235,13 +292,44 @@ abstract class Rest_Model_AclHandler_Abstract
     protected function _getGenericAclListJoins()
     {
         $nl = "\n";
+
+        $staticPermissionsSql = '';
+        foreach ($this->_staticPermissions as $role => $permissionSet) {
+            foreach($permissionSet as $permission => $privilegeSet) {
+                if (!in_array('get', $privilegeSet)) {
+                    continue;
+                }
+                $staticPermissionsSql .= 'UNION SELECT NULL, "' . $role . '", "' . $permission . '"' . $nl;
+            }
+        }
+
         return ''
             . ' LEFT OUTER JOIN (' . $nl
             . '     SELECT COALESCE(rr.resource_id, p.resource_id) AS acl_resource_id, min(p.permission) AS acl_permission' . $nl
             . '     FROM resource_role AS rr' . $nl
-            . '     INNER JOIN permission AS p ON (rr.role = p.role OR p.role = "default") AND rr.resource = p.resource' . $nl
+            . '     INNER JOIN (' . $nl
+            . '         SELECT resource_id, role, permission FROM permission' . $nl
+            . '         WHERE resource = :generalResource' . $nl
+            . '         AND privilege = "get"' . $nl
+            . '         ' . $staticPermissionsSql
+            . '     ) AS p ON (rr.role = p.role OR p.role = "default")' . $nl
+            . '     WHERE rr.user_id = :userId' . $nl
+            . '     AND rr.resource = :generalResource' . $nl
+            . '     GROUP BY acl_resource_id' . $nl
+            . ' ) AS acl ON acl_resource_id = resource.id' . $nl
+            . '';
+        return ''
+            . ' LEFT OUTER JOIN (' . $nl
+            . '     SELECT COALESCE(rr.resource_id, p.resource_id) AS acl_resource_id, min(p.permission) AS acl_permission' . $nl
+            . '     FROM resource_role AS rr' . $nl
+            . '     INNER JOIN (' . $nl
+            . '         SELECT resource, resource_id, role, privilege, permission FROM permission' . $nl
+            . '         UNION SELECT "Email", NULL, "owner", "get", "allow"'
+            . '         UNION SELECT "User", NULL, "owner", "get", "allow"'
+            . '         UNION SELECT "Entry", NULL, "owner", "get", "allow"'
+            . '     ) AS p ON (rr.role = p.role OR p.role = "default") AND rr.resource = p.resource' . $nl
             . '     WHERE p.privilege = "get"' . $nl
-            . '     AND p.resource = :generalResource' . $nl
+            . '     AND rr.resource = :generalResource' . $nl
             . '     AND rr.user_id = :userId' . $nl
             . '     GROUP BY acl_resource_id' . $nl
             . ' ) AS acl ON acl_resource_id = resource.id' . $nl

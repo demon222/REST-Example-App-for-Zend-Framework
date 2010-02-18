@@ -8,34 +8,26 @@ class Default_Model_AclHandler_Entry
     implements Rest_Model_EntourageImplementer_Interface
 {
 
+    protected $_roles = array(
+        'member',
+    );
+
+    protected $_staticPermissions = array(
+        'default' => array(
+            'allow' => array('get', 'post'),
+            'deny' => array('put', 'delete'),
+        ),
+        'member' => array(
+            'allow' => array('get'),
+        )
+    );
+
     /**
      * @return Rest_Model_Handler_Interface
      */
     protected static function _createModelHandler()
     {
         return new Default_Model_Handler_Entry();
-    }
-
-    protected function _initAclRules()
-    {
-        $acl = $this->getAcl();
-
-        if (!$acl->has($this)) {
-            $acl->addResource($this);
-        }
-
-        if (!$acl->hasRole('default')) {
-            $acl->addRole('default');
-        }
-
-        $acl->allow('default', $this, array('get', 'post'));
-        $acl->deny('default', $this, array('put', 'delete'));
-
-        if (!$acl->hasRole('member')) {
-            $acl->addRole('member', 'default');
-        }
-
-        $acl->allow('member', $this, array('get'));
     }
 
     /**
