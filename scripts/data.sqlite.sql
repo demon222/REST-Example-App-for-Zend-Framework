@@ -4,22 +4,12 @@ Entry, default, get, allow
 Entry, default, post, allow
 */
 
-/* temporary development permissions that will be loaded dynamically later */
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Email', NULL, 'default', 'get', 'deny');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Email', NULL, 'default', 'put', 'deny');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Email', NULL, 'default', 'delete', 'deny');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Email', NULL, 'default', 'post', 'deny');
-
-INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (456, 'Email', NULL, 'member');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Email', 384, 'member', 'get', 'allow');
-
-
 /* Dan posts */
 INSERT INTO user (id, username, name, primary_email_id) VALUES (384, 'Dan', 'Dan', 384);
 INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (384, 'User', 384, 'owner');
 INSERT INTO email (id, user_id, email) VALUES (384, 384, 'dvalentiate+REST_Dan@gmail.com');
 INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (384, 'Email', 384, 'owner');
-INSERT INTO entry (comment, creator_user_id, modified) VALUES ("information wants to be free", 384, "2010-02-10 15:26:32");
+INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (823, "information wants to be free", 384, "2010-02-10 15:26:32");
 
 /* Alex and Ed are members of all entries */
 INSERT INTO user (id, username, name, primary_email_id) VALUES (456, 'Alex', 'Alex', 456);
@@ -40,9 +30,6 @@ INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (234, 'E
 INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (123, "the dead don't talk much", 456, "2010-02-10 18:14:02");
 INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (456, 'Entry', '123', 'owner');
 /* WILL LOOK INTO USING SQL UNION TO ADD FROM PHP ALL/GENERAL PERMISSIONS TO LIST QUERY */
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '123', 'owner', 'get', 'allow');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '123', 'owner', 'put', 'allow');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '123', 'owner', 'delete', 'allow');
 INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '123', 'default', 'get', 'deny');
 INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '123', 'member', 'get', 'allow');
 
@@ -55,16 +42,10 @@ INSERT INTO permission (resource, resource_id, role, privilege, permission) VALU
 /* Alex posts public message */
 INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (124, "well of course! but why do you hide so much?", 456, "2010-02-10 18:20:56");
 INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (456, 'Entry', '124', 'owner');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '124', 'owner', 'get', 'allow');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '124', 'owner', 'put', 'allow');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '124', 'owner', 'delete', 'allow');
 
 /* Ed posts public message */
 INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (125, "Haha, that funny coming from you!", 234, "2010-02-11 11:40:05");
 INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (234, 'Entry', '125', 'owner');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '125', 'owner', 'get', 'allow');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '125', 'owner', 'put', 'allow');
-INSERT INTO permission (resource, resource_id, role, privilege, permission) VALUES ('Entry', '125', 'owner', 'delete', 'allow');
 
 /* Carl posts public message */
 INSERT INTO entry (comment, creator_user_id, modified) VALUES ("He's got a point there Alex", 789, "2010-02-11 13:04:23");

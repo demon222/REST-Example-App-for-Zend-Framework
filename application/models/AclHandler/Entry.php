@@ -10,16 +10,21 @@ class Default_Model_AclHandler_Entry
 
     protected $_roles = array(
         'member',
+        'owner',
     );
 
     protected $_staticPermissions = array(
         'default' => array(
-            'allow' => array('get', 'post'),
-            'deny' => array('put', 'delete'),
+            'allow' => array('post'),
+            'deny' => array('get', 'put', 'delete'),
         ),
         'member' => array(
             'allow' => array('get'),
-        )
+        ),
+        'owner' => array(
+            'allow' => array('get', 'put', 'delete'),
+            'deny' => array('post'),
+        ),
     );
 
     /**
