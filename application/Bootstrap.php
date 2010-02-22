@@ -62,6 +62,7 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         $restControllers = array(
             'default' => array(
                 'api-entry',
+                'api-entry-owner',
                 'api-user',
                 'api-entourage',
                 'api-email',
