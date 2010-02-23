@@ -297,20 +297,22 @@ $authAdapter->setResponse($this->getResponse());
 
 $result = Zend_Auth::getInstance()->authenticate($authAdapter);
 
+if (!$result->isValid()) {
+    // Bad userame/password, or canceled password prompt
+
+    // Authentication failed; print the reasons why
+    $this->getResponse()->setHttpResponseCode(401);
+    $this->view->data = $result->getMessages();
+
+    // cancel the action but post dispatch will be executed
+    $this->setCancelAction(true);
+    return;
+}
+
 $ident = $result->getIdentity();
+
 $userTable = new Default_Model_DbTable_User();
 Zend_Registry::set('userId', $userTable->fetchRow(array('username = ?' => $ident['username']))->id);
-
-        if (!$result->isValid()) {
-            // Bad userame/password, or canceled password prompt
-
-            // Authentication failed; print the reasons why
-            $this->getResponse()->setHttpResponseCode(401);
-            $this->view->data = $result->getMessages();
-
-            // cancel the action but post dispatch will be executed
-            $this->setCancelAction(true);
-        }
     }
 
     public function postDispatch()
