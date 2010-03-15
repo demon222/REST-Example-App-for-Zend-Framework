@@ -323,7 +323,7 @@ Zend_Registry::set('userId', $userTable->fetchRow(array('username = ?' => $ident
         // disable layout
         $this->_helper->layout()->disableLayout();
         // disable view
-        $viewRenderer = Zend_Controller_Action_HelperBroker
+        Zend_Controller_Action_HelperBroker
             ::getStaticHelper('viewRenderer')->setNoRender();
 
         $contentType = $this->getRequest()->getHeader('Accept');
