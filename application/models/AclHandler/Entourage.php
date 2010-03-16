@@ -266,7 +266,7 @@ class Default_Model_AclHandler_Entourage
             unset($entourageParam['entourageModel']); // wont be passed into entourage getList
 
             // if specified only return the first match for entourages that match, can make for a
-            // cleaner api for using this
+            // cleaner api for some use cases
             $singleOnly = isset($entourageParam['singleOnly']) && $entourageParam['singleOnly'] ? $entourageParam['singleOnly'] : false;
             unset($entourageParam['singleOnly']); // wont be passed into entourage getList
 
@@ -277,6 +277,7 @@ class Default_Model_AclHandler_Entourage
                 throw new Rest_Model_BadRequestException($entourageModel . ' resource for entourage alias "' . $name . '" does not exist');
             }
 
+            // create a new resource handler object
             $entourageHandler = new $entourageResource($this->getAcl(), $this->getAclContextUser());
 
             // get only the entourage resources needed for the resource
@@ -291,9 +292,11 @@ class Default_Model_AclHandler_Entourage
                     $entourageIdKey => array_values(array_unique($resourceJoinIdList))
                 )
             );
+
+            // load the entourage items
             $entourageList = $entourageHandler->getList($entourageParam);
 
-            //
+            // attach the entourage items to the resource
             $entourageJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageIdKey, $entourageList);
             foreach ($resourceList as &$resource) {
                 $joinKeySet = array_keys($entourageJoinIdList, $resource[$resourceIdKey]);
