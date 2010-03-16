@@ -129,8 +129,72 @@ var tests = {
             resoureceUrlPart: 'api-entry/823?entourage[]=Creator',
             expectedResponseTest: function(response) {
                 return true
-                    && (typeof response.content.id != 823)
+                    && (response.content.id == 823)
                     && (typeof response.content.Creator != 'undefined');
+            }
+        },
+        {
+            description: 'get resources with specific creator, using JSON query param (creator 384)',
+            resoureceUrlPart: 'api-entry/?{"where":{"creator_user_id":384}}',
+            expectedResponseTest: function(response) {
+                if (!$.isArray(response.content)) {
+                    return false;
+                }
+                for (var i in response.content) {
+                    item = response.content[i];
+                    if (item.creator_user_id != 384) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        },
+        {
+            description: 'get resources with specific creator, using PHP encoded query param (creator 384)',
+            resoureceUrlPart: 'api-entry/?where%5Bcreator_user_id%5D=384',
+            expectedResponseTest: function(response) {
+                if (!$.isArray(response.content)) {
+                    return false;
+                }
+                for (var i in response.content) {
+                    item = response.content[i];
+                    if (item.creator_user_id != 384) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        },
+        {
+            description: 'get resources with multiple specific creators, using JSON query param (creator 384, 456)',
+            resoureceUrlPart: 'api-entry/?{"where":{"creator_user_id":[384,456]}}',
+            expectedResponseTest: function(response) {
+                if (!$.isArray(response.content)) {
+                    return false;
+                }
+                for (var i in response.content) {
+                    item = response.content[i];
+                    if (-1 == $.inArray(parseInt(item.creator_user_id), [384, 456])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        },
+        {
+            description: 'get the owners of an entry (entry 123)',
+            resoureceUrlPart: 'api-entry-owner/?{"where":{"entry_id":123}}',
+            expectedResponseTest: function(response) {
+                if (!$.isArray(response.content)) {
+                    return false;
+                }
+                for (var i in response.content) {
+                    item = response.content[i];
+                    if (item.user_id != 123) {
+                        return false;
+                    }
+                }
+                return true;
             }
         }
     ]
@@ -209,7 +273,18 @@ $('.test .run').live('click', function() {
             styleResults();
         },
         error: function(xmlHttpRequest) {
+            $('.test_' + index + ' > .run').css('background-color', 'red');
             $('.status').text(xmlHttpRequest.status + ' - ' + xmlHttpRequest.statusText);
+            var content = xmlHttpRequest.responseText;
+            if (typeof content == 'string') {
+                if ('{' == content.substring(0,1)) {
+                    // assuming it is JSON
+                    $('.result').html(toHtml($.parseJSON(content)));
+                } else {
+                    // assuming it is a string, could contain HTML
+                    $('.result').html(xmlHttpRequest.responseText);
+                }
+            }
         }
     });
 });
