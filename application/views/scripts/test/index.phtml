@@ -31,7 +31,7 @@ var tests = {
     service:'http://',
     host:'localhost',
     method:'GET',
-    credentials: 'Ed:admin',
+    credentials: 'Ed:Ed',
     set:[
         {
             description: 'user resource list contains [id, name, username]',
@@ -182,8 +182,25 @@ var tests = {
             }
         },
         {
+            description: 'have permission to get an entry as the owner (entry 123, user Alex)',
+            resoureceUrlPart: 'api-entry/123',
+            credentials: 'Alex:Alex',
+            expectedResponseTest: function(response) {
+                return (response.meta && response.meta._status_code != 401);
+            }
+        },
+        {
+            description: 'shouldn\'t have permission to get an entry (entry 123, user Ed)',
+            resoureceUrlPart: 'api-entry/123',
+            credentials: 'Dan:Dan',
+            expectedResponseTest: function(response) {
+                return (response.meta && response.meta['_status-code'] == 401);
+            }
+        },
+        {
             description: 'get the owners of an entry (entry 123)',
             resoureceUrlPart: 'api-entry-owner/?{"where":{"entry_id":123}}',
+            credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
                     return false;
@@ -195,6 +212,14 @@ var tests = {
                     }
                 }
                 return true;
+            }
+        },
+        {
+            description: 'get the owners of an entry (entry 123)',
+            resoureceUrlPart: 'api-entry-owner/?{"where":{"entry_id":123}}',
+            credentials: 'Alex:Alex',
+            expectedResponseTest: function(response) {
+                return (response.meta && response.meta['_status-code'] == 401);
             }
         }
     ]
@@ -258,7 +283,7 @@ $('.test .run').live('click', function() {
     }
 
     $.ajax({
-        url: t.service + t.host + '/' + t.resoureceUrlPart,
+        url: t.service + (t.credentials ? (t.credentials + '@') : '') + t.host + '/' + t.resoureceUrlPart,
         type: t.method,
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
@@ -273,18 +298,21 @@ $('.test .run').live('click', function() {
             styleResults();
         },
         error: function(xmlHttpRequest) {
-            $('.test_' + index + ' > .run').css('background-color', 'red');
-            $('.status').text(xmlHttpRequest.status + ' - ' + xmlHttpRequest.statusText);
+            var pass = false;
             var content = xmlHttpRequest.responseText;
             if (typeof content == 'string') {
                 if ('{' == content.substring(0,1)) {
                     // assuming it is JSON
-                    $('.result').html(toHtml($.parseJSON(content)));
+                    var obj = $.parseJSON(content);
+                    pass = t.expectedResponseTest(obj);
+                    $('.result').html(toHtml(obj));
                 } else {
                     // assuming it is a string, could contain HTML
                     $('.result').html(xmlHttpRequest.responseText);
                 }
             }
+            $('.test_' + index + ' > .run').css('background-color', pass ? 'green' : 'red');
+            $('.status').text(xmlHttpRequest.status + ' - ' + xmlHttpRequest.statusText);
         }
     });
 });
