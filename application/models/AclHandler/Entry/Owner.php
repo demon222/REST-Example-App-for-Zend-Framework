@@ -15,7 +15,8 @@ class Default_Model_AclHandler_Entry_Owner
 
     protected $_roles = array(
         'owner',
-        'admin'
+        'admin',
+        'member',
     );
 
     protected $_staticPermissions = array(
@@ -87,8 +88,8 @@ class Default_Model_AclHandler_Entry_Owner
 
         if (isset($params['entourage'])) {
             $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('Entry' => $params));
-            return $data['Entry'];
+            $data = $entourageHandler->getList(array('Entry_Owner' => $params));
+            return $data['Entry_Owner'];
         }
 
         if (isset($params['where'])) {
@@ -126,10 +127,10 @@ class Default_Model_AclHandler_Entry_Owner
             . '';
 
         $query = $this->_getDbHandler()->prepare($sql);
-var_dump($this->_getDbHandler()->errorInfo());
-exit();
         $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rowSet;
     }
 
     /**
