@@ -16,7 +16,7 @@ class Default_Model_AclHandler_Entry_Owner
     protected $_roles = array(
         'owner',
         'admin',
-        'member',
+        'member', // WANT TO REMOVE member and have things work
     );
 
     protected $_staticPermissions = array(
@@ -31,7 +31,18 @@ class Default_Model_AclHandler_Entry_Owner
         ),
     );
 
+    /**
+     * @return string
+     */
     public function getResourceId()
+    {
+        return 'Entry_Owner';
+    }
+
+    /**
+     * @return string
+     */
+    public function getRoleResourceId()
     {
         return 'Entry';
     }
@@ -145,7 +156,7 @@ class Default_Model_AclHandler_Entry_Owner
             return $entourageHandler->get($id, array($this, $params['entourage']));
         }
 
-        if ($this->getAcl() && !$this->isAllowed('get', $id)) {
+        if ($this->getAcl() && !$this->isAllowed('get', null, $id)) {
             throw new Zend_Acl_Exception('get for ' . $this->getResourceId() . ' is not allowed');
         }
 
@@ -177,7 +188,7 @@ class Default_Model_AclHandler_Entry_Owner
      */
     public function put(array $id, array $prop = null)
     {
-        if ($this->getAcl() && !$this->isAllowed('put', $id)) {
+        if ($this->getAcl() && !$this->isAllowed('put', null, $id)) {
             throw new Zend_Acl_Exception('put for ' . $this->getResourceId() . ' is not allowed');
         }
 
@@ -216,7 +227,7 @@ class Default_Model_AclHandler_Entry_Owner
      */
     public function delete(array $id)
     {
-        if ($this->getAcl() && !$this->isAllowed('delete', $id)) {
+        if ($this->getAcl() && !$this->isAllowed('delete', null, $id)) {
             throw new Zend_Acl_Exception('delete for ' . $this->getResourceId() . ' is not allowed');
         }
 
@@ -277,43 +288,47 @@ class Default_Model_AclHandler_Entry_Owner
      * @param string $method, same as what Zend_Acl referers to as 'privilege' but 'method' used for REST context
      * @return boolean
      */
-    public function isAllowed($privilege, array $id = null)
+    public function isAllowed($privilege, array $resourceId = null, $roleResourceId = null)
     {
+        if (null === $roleResourceId && null !== $resourceId) {
+            $roleResourceId = $resourceId;
+        }
+
         $userId = $this->getAclContextUser();
 
-        $resourceGeneral = $this->getResourceId();
+        $roleResourceGeneral = $this->getRoleResourceId();
 
         // first get the possible roles this user has with the resource
-        if (null === $id) {
+        if (null === $roleResourceId) {
             $sql = 'SELECT role FROM resource_role'
                 . ' WHERE user_id = :userId'
-                . ' AND resource = :resourceGeneral'
+                . ' AND resource = :roleResourceGeneral'
                 . ' AND resource_id IS NULL'
                 . '';
             $query = $this->_getDbHandler()->query($sql);
             $query->execute(array(
                 ':userId' => $userId,
-                ':resourceGeneral' => $resourceGeneral,
+                ':roleResourceGeneral' => $roleResourceGeneral,
             ));
         } else {
             // include roles from specific case
-            $resourceSpecific = $this->getSpecificResourceId($id);
+            $roleResourceSpecific = $this->getSpecificRoleResourceId($roleResourceId);
 
             $sql = 'SELECT role FROM resource_role'
                 . ' WHERE user_id = :userId'
                 . ' AND ('
-                . '     resource = :resourceGeneral'
+                . '     resource = :roleResourceGeneral'
                 . '     AND ('
                 . '         resource_id IS NULL'
-                . '         OR resource_id = :resourceSpecific'
+                . '         OR resource_id = :roleResourceSpecific'
                 . '     )'
                 . ' )'
                 . '';
             $query = $this->_getDbHandler()->query($sql);
             $query->execute(array(
                 ':userId' => $userId,
-                ':resourceGeneral' => $resourceGeneral,
-                ':resourceSpecific' => $resourceSpecific,
+                ':roleResourceGeneral' => $roleResourceGeneral,
+                ':roleResourceSpecific' => $roleResourceSpecific,
             ));
         }
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -323,7 +338,11 @@ class Default_Model_AclHandler_Entry_Owner
             $roleSet[] = 'default';
         }
 
-        if (null !== $id) {
+        $resourceGeneral = $this->getResourceId();
+
+        if (null !== $resourceId) {
+            $resourceSpecific = $this->getSpecificResourceId($resourceId);
+
             // first check if against this specific resource things are
             // allowed or denied
             $roleVarKeyLookup = array();
@@ -397,7 +416,7 @@ class Default_Model_AclHandler_Entry_Owner
             . '         ' . $staticPermissionsSql
             . '     ) AS p ON (rr.role = p.role OR p.role = "default")' . $nl
             . '     WHERE rr.user_id = :userId' . $nl
-            . '     AND rr.resource = :generalResource' . $nl
+            . '     AND rr.resource = :generalRoleResource' . $nl
             . '     GROUP BY acl_resource_id' . $nl
             . ' ) AS acl ON acl_resource_id = resource.id' . $nl
             . '';
@@ -415,6 +434,7 @@ class Default_Model_AclHandler_Entry_Owner
         return array(
             ':userId' => $this->getAclContextUser(),
             ':generalResource' => $this->getResourceId(),
+            ':generalRoleResource' => $this->getRoleResourceId(),
         );
     }
 

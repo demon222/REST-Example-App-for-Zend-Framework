@@ -44,7 +44,7 @@ INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (124, "well of
 INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (456, 'Entry', '124', 'owner');
 
 /* Ed posts public message */
-INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (125, "Haha, that funny coming from you!", 234, "2010-02-11 11:40:05");
+INSERT INTO entry (id, comment, creator_user_id, modified) VALUES (125, "Haha, that is funny coming from you!", 234, "2010-02-11 11:40:05");
 INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (234, 'Entry', '125', 'owner');
 
 /* Carl posts public message */

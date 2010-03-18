@@ -110,7 +110,6 @@ abstract class Rest_Model_AclHandler_Abstract
     }
 
     /**
-     * @param array $id
      * @return string
      */
     public function getResourceId()
@@ -147,6 +146,30 @@ abstract class Rest_Model_AclHandler_Abstract
     {
         $this->_aclResourceId = $name;
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRoleResourceId()
+    {
+        return $this->getResourceId();
+    }
+
+    /**
+     * @param string $name
+     * @return Rest_Model_AclHandler_Interface
+     */
+    public function setRoleResourceId($name) {
+        return $this->setResourceId($name);
+    }
+
+    /**
+     * @param array $id
+     * @return string
+     */
+    public function getSpecificRoleResourceId(array $id) {
+        return $this->getSpecificResourceId($id);
     }
 
     /**

@@ -16,6 +16,23 @@ interface Rest_Model_AclHandler_Interface extends Rest_Model_Handler_Interface
     public function getSpecificResourceId(array $id);
 
     /**
+     * @return string
+     */
+    public function getRoleResourceId();
+
+    /**
+     * @param string $name
+     * @return Rest_Model_AclHandler_Interface
+     */
+    public function setRoleResourceId($name);
+
+    /**
+     * @param array $id
+     * @return string
+     */
+    public function getSpecificRoleResourceId(array $id);
+
+    /**
      * @return Zend_Acl
      */
     public function getAcl();
