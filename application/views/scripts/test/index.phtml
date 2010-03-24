@@ -5,9 +5,9 @@
     .result       {height: 95%;  overflow: auto;   padding: 0 0 0 10px;    font-size: x-small}
     .test-list    {height: 100%; overflow: auto;   padding: 0 10px 0 10px; font-size: small}
 
-    .test {overflow: auto}
+    .test {overflow: auto; margin-bottom: 0.25em}
     .test .index {float: left; width: 2em}
-    .test .description {float: left}
+    .test .description {margin: 0 2em}
     .test .run {display: block; float: right; border: 1px solid blue; color: blue; padding: 2px; margin: 1px; text-decoration: none; font-size: xx-small}
 </style>
 
@@ -320,7 +320,7 @@ $('.test .run').live('click', function() {
 $(function() {
 
     for (var i in tests.set) {
-        $('.test-list').append('<div class="test test_' + i + '"><div class="index">' + i + '</div><div class="description">' + tests.set[i].description + '</div><a class="run" href="#">&gt;&gt;&gt;</a></div>');
+        $('.test-list').append('<div class="test test_' + i + '"><div class="index">' + i + '</div><a class="run" href="#">&gt;&gt;&gt;</a><div class="description">' + tests.set[i].description + '</div></div>');
     }
 });
 </script>
