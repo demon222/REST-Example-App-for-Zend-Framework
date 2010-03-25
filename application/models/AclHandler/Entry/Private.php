@@ -3,7 +3,7 @@ require_once('Rest/Model/AclHandler/StandardAbstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
 require_once('Util/Sql.php');
 
-class Default_Model_AclHandler_Entry_Owner
+class Default_Model_AclHandler_Entry_Private
     extends Rest_Model_AclHandler_StandardAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
@@ -27,7 +27,7 @@ class Default_Model_AclHandler_Entry_Owner
      */
     public function getResourceId()
     {
-        return 'Entry_Owner';
+        return 'Entry_Private';
     }
 
     /**
@@ -52,12 +52,7 @@ class Default_Model_AclHandler_Entry_Owner
      */
     public static function getPropertyKeys()
     {
-        return array('id', 'entry_id', 'user_id');
-    }
-
-    private static function _getInternalPropertyKeys()
-    {
-        return array('id', 'resource_id', 'user_id');
+        return array('id', 'entry_id');
     }
 
     /**
@@ -66,14 +61,6 @@ class Default_Model_AclHandler_Entry_Owner
      */
     public function expandEntourageAlias($alias)
     {
-        if ('User' == $alias) {
-            return array(
-                'entourageModel' => 'User',
-                'entourageIdKey' => 'id',
-                'resourceIdKey' => 'user_id',
-                'singleOnly' => true,
-            );
-        }
         if ('Entry' == $alias) {
             return array(
                 'entourageModel' => 'Entry',
@@ -95,14 +82,14 @@ class Default_Model_AclHandler_Entry_Owner
 
         if (isset($params['entourage'])) {
             $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('Entry_Owner' => $params));
-            return $data['Entry_Owner'];
+            $data = $entourageHandler->getList(array('Entry_Private' => $params));
+            return $data['Entry_Private'];
         }
 
         if (isset($params['where'])) {
             // use default properties to search against if none are provided
             if (!is_array($params['where'])) {
-                $params['where'] = array('entry_id user_id' => $params['where']);
+                $params['where'] = array('entry_id' => $params['where']);
             }
         } else {
             $params['where'] = array();
@@ -140,7 +127,7 @@ class Default_Model_AclHandler_Entry_Owner
         return $rowSet;
     }
 
-    protected function _get(array $id, array $params = null)
+    public function _get(array $id, array $params = null)
     {
         $dbTable = new Default_Model_DbTable_ResourceRole();
 
@@ -150,13 +137,14 @@ class Default_Model_AclHandler_Entry_Owner
             throw new Rest_Model_NotFoundException();
         }
 
-        // map from db properties to public resource properties
-        $map = array_combine($this->_getInternalPropertyKeys(), $this->getPropertyKeys());
+        // 1 to 1, same names
+        $keys = $this->getPropertyKeys();
+        $map = array_combine($keys, $keys);
 
         return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
     }
 
-    protected function _put(array $id, array $prop = null)
+    public function _put(array $id, array $prop = null)
     {
         $dbTable = new Default_Model_DbTable_ResourceRole();
 
@@ -164,8 +152,6 @@ class Default_Model_AclHandler_Entry_Owner
         if ($prop === null) {
             $prop = $id;
         }
-
-// currently the map of keys is messed up for PUT
 
         // could probably implement renaming by having 'id' set by $prop but
         // not going to try to debug that right now
@@ -184,7 +170,7 @@ class Default_Model_AclHandler_Entry_Owner
         return $item;
     }
 
-    protected function _delete(array $id)
+    public function _delete(array $id)
     {
         $dbTable = new Default_Model_DbTable_ResourceRole();
 
@@ -195,7 +181,7 @@ class Default_Model_AclHandler_Entry_Owner
         }
     }
 
-    protected function _post(array $prop)
+    public function _post(array $prop)
     {
         $dbTable = new Default_Model_DbTable_ResourceRole();
 

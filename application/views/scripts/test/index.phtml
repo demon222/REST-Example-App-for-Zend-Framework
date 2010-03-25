@@ -35,7 +35,7 @@ var tests = {
     set:[
         {
             description: 'user resource list contains [id, name, username]',
-            resoureceUrlPart: 'api-user',
+            resourceUrlPart: 'api-user',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'name', 'username'];
 
@@ -60,7 +60,7 @@ var tests = {
         },
         {
             description: 'entry resource list contains [id, comment, creator_user_id, modified]',
-            resoureceUrlPart: 'api-entry/',
+            resourceUrlPart: 'api-entry/',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'comment', 'creator_user_id', 'modified'];
 
@@ -85,7 +85,7 @@ var tests = {
         },
         {
             description: 'email resource list contains [id, user_id, email, primary]',
-            resoureceUrlPart: 'api-email/',
+            resourceUrlPart: 'api-email/',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'user_id', 'email', 'primary'];
 
@@ -110,14 +110,14 @@ var tests = {
         },
         {
             description: 'entourage called from resource list (entry resource, entourage Creator alias)',
-            resoureceUrlPart: 'api-entry/?entourage=Creator',
+            resourceUrlPart: 'api-entry/?entourage=Creator',
             expectedResponseTest: function(response) {
                 return typeof response.content[0].Creator != 'undefined';
             }
         },
         {
             description: 'multiple entourages called from resource list (entry resource, entourage Creator)',
-            resoureceUrlPart: 'api-user/?entourage[]=Email&entourage[]=Entry',
+            resourceUrlPart: 'api-user/?entourage[]=Email&entourage[]=Entry',
             expectedResponseTest: function(response) {
                 return true
                     && (typeof response.content[0].Email != 'undefined')
@@ -126,7 +126,7 @@ var tests = {
         },
         {
             description: 'get of an specific resource with entourage (entry 823, entourage Creator)',
-            resoureceUrlPart: 'api-entry/823?entourage[]=Creator',
+            resourceUrlPart: 'api-entry/823?entourage[]=Creator',
             expectedResponseTest: function(response) {
                 return true
                     && (response.content.id == 823)
@@ -135,7 +135,7 @@ var tests = {
         },
         {
             description: 'get resources with specific creator, using JSON query param (creator 384)',
-            resoureceUrlPart: 'api-entry/?{"where":{"creator_user_id":384}}',
+            resourceUrlPart: 'api-entry/?{"where":{"creator_user_id":384}}',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
                     return false;
@@ -151,7 +151,7 @@ var tests = {
         },
         {
             description: 'get resources with specific creator, using PHP encoded query param (creator 384)',
-            resoureceUrlPart: 'api-entry/?where%5Bcreator_user_id%5D=384',
+            resourceUrlPart: 'api-entry/?where%5Bcreator_user_id%5D=384',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
                     return false;
@@ -167,7 +167,7 @@ var tests = {
         },
         {
             description: 'get resources with multiple specific creators, using JSON query param (creator 384, 456)',
-            resoureceUrlPart: 'api-entry/?{"where":{"creator_user_id":[384,456]}}',
+            resourceUrlPart: 'api-entry/?{"where":{"creator_user_id":[384,456]}}',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
                     return false;
@@ -183,7 +183,7 @@ var tests = {
         },
         {
             description: 'have permission to get an entry as the owner (entry 123, user Alex)',
-            resoureceUrlPart: 'api-entry/123',
+            resourceUrlPart: 'api-entry/123',
             credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
                 return (response.meta && response.meta._status_code != 401);
@@ -191,15 +191,15 @@ var tests = {
         },
         {
             description: 'shouldn\'t have permission to get an entry (entry 123, user Ed)',
-            resoureceUrlPart: 'api-entry/123',
+            resourceUrlPart: 'api-entry/123',
             credentials: 'Dan:Dan',
             expectedResponseTest: function(response) {
                 return (response.meta && response.meta['_status-code'] == 401);
             }
         },
         {
-            description: 'get the owners of an entry (entry 123)',
-            resoureceUrlPart: 'api-entry-owner/?{"where":{"entry_id":123}}',
+            description: 'only results matching filter (entry where creator_user_id 456)',
+            resourceUrlPart: 'api-entry/?{"where":{"creator_user_id":456}}',
             credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
@@ -207,7 +207,7 @@ var tests = {
                 }
                 for (var i in response.content) {
                     item = response.content[i];
-                    if (item.user_id != 123) {
+                    if (item.creator_user_id != 456) {
                         return false;
                     }
                 }
@@ -215,11 +215,56 @@ var tests = {
             }
         },
         {
-            description: 'get the owners of an entry (entry 123)',
-            resoureceUrlPart: 'api-entry-owner/?{"where":{"entry_id":123}}',
+            description: 'list the entry-owners of an entry (entry 123)',
+            resourceUrlPart: 'api-entry-owner/?{"where":{"entry_id":123, "user_id":456}}',
             credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
-                return (response.meta && response.meta['_status-code'] == 401);
+                if (!$.isArray(response.content)) {
+                    return false;
+                }
+                // test only one entry
+                if (1 != response.content.length) {
+                    return false;
+                }
+                item = response.content[0];
+                // test that the entry looks valid
+                if (123 != item.entry_id || 456 != item.user_id) {
+                    return false;
+                }
+                return true;
+            }
+        },
+        {
+            description: 'get a specific entry-owner (entry-owner 10)',
+            resourceUrlPart: 'api-entry-owner/10',
+            credentials: 'Alex:Alex',
+            expectedResponseTest: function(response) {
+                item = response.content;
+                // test that the entry looks valid
+                if (123 != item.entry_id || 456 != item.user_id) {
+                    return false;
+                }
+                return true;
+            }
+        },
+        {
+            description: 'list the entry-selected for entries',
+            resourceUrlPart: 'api-entry-selected/',
+            credentials: 'Carl:Carl',
+            expectedResponseTest: function(response) {
+                if (!$.isArray(response.content)) {
+                    return false;
+                }
+                // test only one entry
+                if (1 != response.content.length) {
+                    return false;
+                }
+                item = response.content[0];
+                // test that the entry looks valid
+                if (123 != item.entry_id || 456 != item.user_id) {
+                    return false;
+                }
+                return true;
             }
         }
     ]
@@ -276,14 +321,15 @@ $('.test .run').live('click', function() {
     var index = $(this).siblings('.index').text();
     var t = tests.set[index];
 
-    var neededProperties = ['service', 'host', 'credentials', 'resourceUrlPart', 'method'];
-    for (var i in neededProperties) {
-        p = neededProperties[i];
-        t[p] = (typeof t[p] == 'undefined') ? tests[p] : t[p];
+    for (var p in tests) {
+        if ('set' == p) {
+            continue;
+        }
+        t[p] = 'undefined' == typeof t[p] ? tests[p] : t[p];
     }
 
     $.ajax({
-        url: t.service + (t.credentials ? (t.credentials + '@') : '') + t.host + '/' + t.resoureceUrlPart,
+        url: t.service + (t.credentials ? (t.credentials + '@') : '') + t.host + '/' + t.resourceUrlPart,
         type: t.method,
         dataType: 'json',
         contentType: "application/json; charset=utf-8",

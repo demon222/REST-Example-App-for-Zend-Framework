@@ -15,8 +15,8 @@ class Default_Model_AclHandler_Entry
 
     protected $_staticPermissions = array(
         'default' => array(
-            'allow' => array('post'),
-            'deny' => array('get', 'put', 'delete'),
+            'allow' => array('get', 'post'),
+            'deny' => array('put', 'delete'),
         ),
         'member' => array(
             'allow' => array('get'),

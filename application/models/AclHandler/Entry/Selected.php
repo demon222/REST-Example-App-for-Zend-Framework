@@ -3,7 +3,7 @@ require_once('Rest/Model/AclHandler/StandardAbstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
 require_once('Util/Sql.php');
 
-class Default_Model_AclHandler_Entry_Owner
+class Default_Model_AclHandler_Entry_Selected
     extends Rest_Model_AclHandler_StandardAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
@@ -27,7 +27,7 @@ class Default_Model_AclHandler_Entry_Owner
      */
     public function getResourceId()
     {
-        return 'Entry_Owner';
+        return 'Entry_Selected';
     }
 
     /**
@@ -53,11 +53,6 @@ class Default_Model_AclHandler_Entry_Owner
     public static function getPropertyKeys()
     {
         return array('id', 'entry_id', 'user_id');
-    }
-
-    private static function _getInternalPropertyKeys()
-    {
-        return array('id', 'resource_id', 'user_id');
     }
 
     /**
@@ -95,8 +90,8 @@ class Default_Model_AclHandler_Entry_Owner
 
         if (isset($params['entourage'])) {
             $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('Entry_Owner' => $params));
-            return $data['Entry_Owner'];
+            $data = $entourageHandler->getList(array('Entry_Selected' => $params));
+            return $data['Entry_Selected'];
         }
 
         if (isset($params['where'])) {
@@ -119,7 +114,7 @@ class Default_Model_AclHandler_Entry_Owner
             // RESOURCE
             . ' SELECT rr.id, rr.resource_id AS entry_id, rr.user_id'
             . ' FROM entry AS resource'
-            . ' INNER JOIN resource_role AS rr ON rr.resource_id = resource.id AND rr.role = "owner" AND rr.resource = "Entry"'
+            . ' INNER JOIN resource_role AS rr ON rr.resource_id = resource.id AND rr.role = "selected" AND rr.resource = "Entry"'
 
             // ACL
             . $this->_getGenericAclListJoins()
@@ -140,23 +135,24 @@ class Default_Model_AclHandler_Entry_Owner
         return $rowSet;
     }
 
-    protected function _get(array $id, array $params = null)
+    public function _get(array $id, array $params = null)
     {
         $dbTable = new Default_Model_DbTable_ResourceRole();
 
-        $result = $dbTable->find(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'owner'));
+        $result = $dbTable->find(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'selected'));
 
         if (0 == count($result)) {
             throw new Rest_Model_NotFoundException();
         }
 
-        // map from db properties to public resource properties
-        $map = array_combine($this->_getInternalPropertyKeys(), $this->getPropertyKeys());
+        // 1 to 1, same names
+        $keys = $this->getPropertyKeys();
+        $map = array_combine($keys, $keys);
 
         return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
     }
 
-    protected function _put(array $id, array $prop = null)
+    public function _put(array $id, array $prop = null)
     {
         $dbTable = new Default_Model_DbTable_ResourceRole();
 
@@ -164,8 +160,6 @@ class Default_Model_AclHandler_Entry_Owner
         if ($prop === null) {
             $prop = $id;
         }
-
-// currently the map of keys is messed up for PUT
 
         // could probably implement renaming by having 'id' set by $prop but
         // not going to try to debug that right now
@@ -175,7 +169,7 @@ class Default_Model_AclHandler_Entry_Owner
 
         $item = Util_Array::mapIntersectingKeys($prop, $map);
 
-        $updated = $dbTable->update($item, array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'owner'));
+        $updated = $dbTable->update($item, array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'selected'));
 
         if ($updated <= 0) {
             throw new Rest_Model_NotFoundException();
@@ -184,18 +178,18 @@ class Default_Model_AclHandler_Entry_Owner
         return $item;
     }
 
-    protected function _delete(array $id)
+    public function _delete(array $id)
     {
         $dbTable = new Default_Model_DbTable_ResourceRole();
 
-        $deleted = $dbTable->delete(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'owner'));
+        $deleted = $dbTable->delete(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'selected'));
 
         if ($deleted == 0) {
             throw new Rest_Model_NotFoundException();
         }
     }
 
-    protected function _post(array $prop)
+    public function _post(array $prop)
     {
         $dbTable = new Default_Model_DbTable_ResourceRole();
 
@@ -205,7 +199,7 @@ class Default_Model_AclHandler_Entry_Owner
         $item = Util_Array::mapIntersectingKeys($prop, $map);
 
         $item['resource'] = 'Entry';
-        $item['role'] = 'owner';
+        $item['role'] = 'selected';
 
         $id = $dbTable->insert($item);
 
