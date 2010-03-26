@@ -7,6 +7,9 @@ class Default_Model_AclHandler_Entry_Private
     extends Rest_Model_AclHandler_StandardAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
+    // a key part of this private model is that it has two components: the
+    // permission denying the default role for get on entry and the permission
+    // allowing the members role for get on entry.
 
     protected $_roles = array(
         'owner',
@@ -14,11 +17,8 @@ class Default_Model_AclHandler_Entry_Private
     );
 
     protected $_staticPermissions = array(
-        'default' => array(
-            'deny' => array('get', 'put', 'delete', 'post'),
-        ),
         'owner' => array(
-            'allow' => array('get', 'put', 'delete', 'post'),
+            'allow' => array('get', 'put', 'delete'),
         ),
     );
 
@@ -43,7 +43,7 @@ class Default_Model_AclHandler_Entry_Private
      */
     public static function getIdentityKeys()
     {
-        return array('id');
+        return array('entry_id');
     }
 
     /**
@@ -52,7 +52,7 @@ class Default_Model_AclHandler_Entry_Private
      */
     public static function getPropertyKeys()
     {
-        return array('id', 'entry_id');
+        return array('entry_id');
     }
 
     /**
@@ -104,9 +104,10 @@ class Default_Model_AclHandler_Entry_Private
 
         $sql = ''
             // RESOURCE
-            . ' SELECT rr.id, rr.resource_id AS entry_id, rr.user_id'
+            . ' SELECT resource.id AS entry_id'
             . ' FROM entry AS resource'
-            . ' INNER JOIN resource_role AS rr ON rr.resource_id = resource.id AND rr.role = "owner" AND rr.resource = "Entry"'
+            . ' INNER JOIN permission AS p1 ON p1.resource_id = resource.id AND p1.resource = "Entry" AND p1.role = "default" AND p1.privilege = "get" AND p1.permission = "deny"'
+            . ' INNER JOIN permission AS p2 ON p2.resource_id = resource.id AND p2.resource = "Entry" AND p2.role = "member" AND p2.privilege = "get" AND p2.permission = "allow"'
 
             // ACL
             . $this->_getGenericAclListJoins()
@@ -129,10 +130,14 @@ class Default_Model_AclHandler_Entry_Private
 
     public function _get(array $id, array $params = null)
     {
-        $dbTable = new Default_Model_DbTable_ResourceRole();
+        $dbTable = new Default_Model_DbTable_Permission();
 
-        $result = $dbTable->find(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'owner'));
+        $result = $dbTable->find(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'default', 'privilege = ?' => 'get', 'permission = ?' => 'deny'));
+        if (0 == count($result)) {
+            throw new Rest_Model_NotFoundException();
+        }
 
+        $result = $dbTable->find(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'member', 'privilege = ?' => 'get', 'permission = ?' => 'allow'));
         if (0 == count($result)) {
             throw new Rest_Model_NotFoundException();
         }
@@ -141,66 +146,53 @@ class Default_Model_AclHandler_Entry_Private
         $keys = $this->getPropertyKeys();
         $map = array_combine($keys, $keys);
 
-        return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
+        return Util_Array::mapIntersectingKeys($id, $map);
     }
 
     public function _put(array $id, array $prop = null)
     {
-        $dbTable = new Default_Model_DbTable_ResourceRole();
+        $dbTable = new Default_Model_DbTable_Permission();
 
-        // if a seperate $prop list is not provided, use the $id list
-        if ($prop === null) {
-            $prop = $id;
+        $dbTable->getDefaultAdapter()->beginTransaction();
+
+        $id = $dbTable->insert(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'default', 'privilege = ?' => 'get', 'permission = ?' => 'deny'));
+        if ($id === null) {
+            throw Exception('Unable to post into databse, not sure why');
         }
 
-        // could probably implement renaming by having 'id' set by $prop but
-        // not going to try to debug that right now
-        // 1 to 1, same names
-        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
-        $map = array_combine($keys, $keys);
-
-        $item = Util_Array::mapIntersectingKeys($prop, $map);
-
-        $updated = $dbTable->update($item, array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'owner'));
-
-        if ($updated <= 0) {
-            throw new Rest_Model_NotFoundException();
+        $id = $dbTable->insert(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'member', 'privilege = ?' => 'get', 'permission = ?' => 'allow'));
+        if ($id === null) {
+            throw Exception('Unable to post into databse, not sure why');
         }
 
-        return $item;
+        $dbTable->getDefaultAdapter()->commit();
     }
 
     public function _delete(array $id)
     {
-        $dbTable = new Default_Model_DbTable_ResourceRole();
+        $dbTable = new Default_Model_DbTable_Permission();
 
-        $deleted = $dbTable->delete(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'owner'));
+        $dbTable->getDefaultAdapter()->beginTransaction();
 
+        $deleted = $dbTable->delete(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'default', 'privilege = ?' => 'get', 'permission = ?' => 'deny'));
         if ($deleted == 0) {
             throw new Rest_Model_NotFoundException();
         }
+
+        $deleted = $dbTable->delete(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'member', 'privilege = ?' => 'get', 'permission = ?' => 'allow'));
+        if ($deleted == 0) {
+            throw new Rest_Model_NotFoundException();
+        }
+
+        $dbTable->getDefaultAdapter()->commit();
     }
 
     public function _post(array $prop)
     {
-        $dbTable = new Default_Model_DbTable_ResourceRole();
-
-        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
-        $map = array_combine($keys, $keys);
-
-        $item = Util_Array::mapIntersectingKeys($prop, $map);
-
-        $item['resource'] = 'Entry';
-        $item['role'] = 'owner';
-
-        $id = $dbTable->insert($item);
-
-        if ($id === null) {
-            return Exception('Unable to post into databse, not sure why');
-        }
-
-        $item['id'] = $id;
-
-        return $item;
+        // creation is handled by put because there are no properties, shouldn't
+        // be able to get here, how did you get here?!, go now and fix the
+        // permission that someone messed up, go up there and remove allow
+        // for post
+        throw Exception('Unable to post into databse, not sure why');
     }
 }

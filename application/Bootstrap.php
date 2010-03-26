@@ -64,6 +64,7 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
                 'api-entry',
                 'api-entry-owner',
                 'api-entry-selected',
+                'api-entry-private',
                 'api-user',
                 'api-entourage',
                 'api-email',

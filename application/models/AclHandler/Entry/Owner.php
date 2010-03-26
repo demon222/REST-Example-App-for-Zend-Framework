@@ -14,9 +14,6 @@ class Default_Model_AclHandler_Entry_Owner
     );
 
     protected $_staticPermissions = array(
-        'default' => array(
-            'deny' => array('get', 'put', 'delete', 'post'),
-        ),
         'owner' => array(
             'allow' => array('get', 'put', 'delete', 'post'),
         ),
