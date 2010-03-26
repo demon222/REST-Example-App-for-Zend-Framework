@@ -177,6 +177,7 @@ class Default_Model_AclHandler_Entry_Owner
 
         $updated = $dbTable->update($item, array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'owner'));
 
+        // if it didn't exists, could create the resource at that id... but no
         if ($updated <= 0) {
             throw new Rest_Model_NotFoundException();
         }

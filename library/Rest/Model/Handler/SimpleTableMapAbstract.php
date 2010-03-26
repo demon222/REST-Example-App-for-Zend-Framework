@@ -75,6 +75,7 @@ abstract class Rest_Model_Handler_SimpleTableMapAbstract extends Rest_Model_Hand
 
         $updated = $this->_getDbTable()->update($item, array('id = ?' => $id['id']));
 
+        // if it didn't exists, could create the resource at that id... but no
         if ($updated <= 0) {
             throw new Rest_Model_NotFoundException();
         }

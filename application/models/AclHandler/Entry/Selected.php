@@ -171,6 +171,7 @@ class Default_Model_AclHandler_Entry_Selected
 
         $updated = $dbTable->update($item, array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'selected'));
 
+        // if it didn't exists, could create the resource at that id... but no
         if ($updated <= 0) {
             throw new Rest_Model_NotFoundException();
         }
