@@ -210,7 +210,7 @@ class Default_Model_AclHandler_Entry_Owner
         $id = $dbTable->insert($item);
 
         if ($id === null) {
-            return Exception('Unable to post into databse, not sure why');
+            throw Exception('Unable to post into databse, not sure why');
         }
 
         $item['id'] = $id;
