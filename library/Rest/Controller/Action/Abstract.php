@@ -190,6 +190,9 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             $this->getResponse()->setHttpResponseCode(400);
             $this->view->data = $e->getMessage();
             return;
+        } catch (Rest_Model_ConflictException $e) {
+            $this->getResponse()->setHttpResponseCode(409);
+            $this->view->data = $e->getMessage();
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
             // should output 500 errors conditional to APP_ENV being dev

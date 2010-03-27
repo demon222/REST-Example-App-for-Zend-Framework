@@ -14,21 +14,10 @@ class Default_Model_AclHandler_Email
     );
 
     protected $_staticPermissions = array(
-        'default' => array(
-            'deny' => array('get', 'put', 'delete', 'post'),
-        ),
         'owner' => array(
             'allow' => array('get', 'put', 'delete', 'post'),
         )
     );
-
-    /**
-     * @return Rest_Model_Handler_Interface
-     */
-    protected static function _createModelHandler()
-    {
-        return new Default_Model_Handler_Email();
-    }
 
     /**
      * Used mainly for testing property requests, where clauses and the like
@@ -36,7 +25,7 @@ class Default_Model_AclHandler_Email
      */
     public static function getPropertyKeys()
     {
-        return Default_Model_Handler_Email::getPropertyKeys();
+        return array('id', 'user_id', 'email', 'primary');
     }
 
     /**
@@ -108,5 +97,29 @@ class Default_Model_AclHandler_Email
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
 
         return $rowSet;
+    }
+
+    /**
+     * @param array $item
+     */
+    protected function _put_pre_persist(array &$item)
+    {
+        // disable transfering the email to a different user
+        if (isset($item['user_id'])) {
+            unset($item['user_id']);
+        }
+    }
+
+    /**
+     * Get registered Zend_Db_Table instance, lazy load
+     *
+     * @return Zend_Db_Table_Abstract
+     */
+    protected function _getDbTable()
+    {
+        if (null === $this->_dbTable) {
+            $this->_dbTable = new Default_Model_DbTable_Email();
+        }
+        return $this->_dbTable;
     }
 }

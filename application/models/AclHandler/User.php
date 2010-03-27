@@ -23,20 +23,12 @@ class Default_Model_AclHandler_User
     );
 
     /**
-     * @return Rest_Model_Handler_Interface
-     */
-    protected static function _createModelHandler()
-    {
-        return new Default_Model_Handler_User();
-    }
-
-    /**
      * Used mainly for testing property requests, where clauses and the like
      * @return array
      */
     public static function getPropertyKeys()
     {
-        return Default_Model_Handler_User::getPropertyKeys();
+        return array('id', 'username', 'name');
     }
 
     /**
@@ -145,5 +137,18 @@ class Default_Model_AclHandler_User
         // NEED TO CREATE PERMISSION AND ROLE FOR THE NEW USER
 
         return $item;
+    }
+
+    /**
+     * Get registered Zend_Db_Table instance, lazy load
+     *
+     * @return Zend_Db_Table_Abstract
+     */
+    protected function _getDbTable()
+    {
+        if (null === $this->_dbTable) {
+            $this->_dbTable = new Default_Model_DbTable_User();
+        }
+        return $this->_dbTable;
     }
 }

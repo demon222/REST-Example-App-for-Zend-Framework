@@ -28,20 +28,12 @@ class Default_Model_AclHandler_Entry
     );
 
     /**
-     * @return Rest_Model_Handler_Interface
-     */
-    protected static function _createModelHandler()
-    {
-        return new Default_Model_Handler_Entry();
-    }
-
-    /**
      * Used mainly for testing property requests, where clauses and the like
      * @return array
      */
     public static function getPropertyKeys()
     {
-        return Default_Model_Handler_Entry::getPropertyKeys();
+        return array('id', 'comment', 'creator_user_id', 'modified');
     }
 
     /**
@@ -116,21 +108,46 @@ class Default_Model_AclHandler_Entry
     }
 
     /**
-     * @param array $prop
-     * @return array
-     * @throws Zend_Acl_Exception
+     * @param array $item
      */
-    public function post(array $prop)
+    protected function _put_pre_persist(array &$item)
     {
-        if ($this->getAcl() && !$this->isAllowed('post')) {
-            throw new Zend_Acl_Exception('post for ' . $this->getResourceId() . ' is not allowed');
+        $item['modified'] = date('Y-m-d H:i:s');
+
+        // not allowing creator to be changed
+        if (isset($item['creator_user_id'])) {
+            unset($item['creator_user_id']);
         }
-        $prop['creator_user_id'] = $this->getAclContextUser();
+    }
 
-        $item = $this->_getModelHandler()->post($prop);
+    /**
+     * @param array $item
+     */
+    protected function _post_pre_persist(array &$item)
+    {
+        // force the user to be that from the acl context
+        $item['creator_user_id'] = $this->getAclContextUser();
 
-        // NEED TO CREATE PERMISSION AND ROLE FOR THE NEW ENTRY
+        $item['modified'] = date('Y-m-d H:i:s');
 
-        return $item;
+        // make sure that the user is valid
+        $userTable = new Default_Model_DbTable_User();
+        $resultSet = $userTable->find($item['creator_user_id']);
+        if (false === current($resultSet)) {
+            throw new Rest_Model_BadRequestException('creator_user_id does not match with an existing user');
+        }
+    }
+
+    /**
+     * Get registered Zend_Db_Table instance, lazy load
+     *
+     * @return Zend_Db_Table_Abstract
+     */
+    protected function _getDbTable()
+    {
+        if (null === $this->_dbTable) {
+            $this->_dbTable = new Default_Model_DbTable_Entry();
+        }
+        return $this->_dbTable;
     }
 }
