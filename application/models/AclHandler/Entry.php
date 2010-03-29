@@ -33,7 +33,7 @@ class Default_Model_AclHandler_Entry
      */
     public static function getPropertyKeys()
     {
-        return array('id', 'comment', 'creator_user_id', 'modified');
+        return array('id', 'discussion_id', 'comment', 'creator_user_id', 'modified');
     }
 
     /**
@@ -47,6 +47,14 @@ class Default_Model_AclHandler_Entry
                 'entourageModel' => 'Users',
                 'entourageIdKey' => 'id',
                 'resourceIdKey' => 'creator_user_id',
+                'singleOnly' => true,
+            );
+        }
+        if ('Discussion' == $alias) {
+            return array(
+                'entourageModel' => 'Discussion',
+                'entourageIdKey' => 'id',
+                'resourceIdKey' => 'discussion_id',
                 'singleOnly' => true,
             );
         }
@@ -85,7 +93,7 @@ class Default_Model_AclHandler_Entry
 
         $sql = ''
             // RESOURCE
-            . ' SELECT id, comment, creator_user_id, modified'
+            . ' SELECT id, discussion_id, comment, creator_user_id, modified'
             . ' FROM entry AS resource'
 
             // ACL
