@@ -315,7 +315,11 @@ if (!$result->isValid()) {
 $ident = $result->getIdentity();
 
 $userTable = new Default_Model_DbTable_User();
-Zend_Registry::set('userId', $userTable->fetchRow(array('username = ?' => $ident['username']))->id);
+$user = $userTable->fetchRow(array('username = ?' => $ident['username']));
+if (null === $user) {
+    throw new Exception('User ' . $ident['username'] . ' is not in the database');
+}
+Zend_Registry::set('userId', $user->id);
     }
 
     public function postDispatch()
@@ -355,6 +359,7 @@ Zend_Registry::set('userId', $userTable->fetchRow(array('username = ?' => $ident
                 // mirror some values in the actual data to ease debugging
                 '_status-code' => $this->getResponse()->getHttpResponseCode(),
                 '_request-uri' => $this->getRequest()->getRequestUri(),
+                '_identity' => Zend_Registry::isRegistered('userId') ? Zend_Registry::get('userId') : null,
             ),
         ));
 
