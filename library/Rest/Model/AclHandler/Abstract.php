@@ -21,6 +21,22 @@ abstract class Rest_Model_AclHandler_Abstract
     protected $_aclContextUser;
 
     /**
+     * @param string $name
+     * @return Rest_Model_AclHandler_Abstract
+     */
+    protected function _createAclHandler($name)
+    {
+        $resourceName = 'Default_Model_AclHandler_' . $name;
+
+        // in PHP 5.3 should be able to remove the @ error supressor
+        if (!@class_exists($resourceName)) {
+            throw new Rest_Model_BadRequestException('resource "' . $name . '" does not exist');
+        }
+
+        return new $resourceName($this->getAcl(), $this->getAclContextUser());
+    }
+
+    /**
      * @param array|Zend_Acl $options
      */
     function __construct($acl = null, $username = null)
