@@ -4,6 +4,12 @@ Entry, default, get, allow
 Entry, default, post, allow
 */
 
+/* initial Community and Discussion */
+INSERT INTO community (id, title) VALUES (420, 'Something To Talk About');
+INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (456, 'Community', 420, 'member');
+INSERT INTO discussion (id, community_id, title) VALUES (361, 420, 'Average Internet Discourse');
+INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (456, 'Discussion', 361, 'member');
+
 /* Dan posts */
 INSERT INTO user (id, username, primary_email_id) VALUES (384, 'Dan', 384);
 INSERT INTO resource_role (user_id, resource, resource_id, role) VALUES (384, 'User', 384, 'owner');

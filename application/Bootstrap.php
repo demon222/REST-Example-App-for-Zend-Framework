@@ -61,13 +61,20 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         $front = $this->getResource('FrontController');
         $restControllers = array(
             'default' => array(
+                'api-community',
+
+                'api-discussion',
+
                 'api-entry',
                 'api-entry-owner',
                 'api-entry-selected',
                 'api-entry-private',
+
                 'api-user',
-                'api-entourage',
+
                 'api-email',
+
+                'api-entourage',
             )
         );
         $restRoute = new Zend_Rest_Route($front, array(), $restControllers);

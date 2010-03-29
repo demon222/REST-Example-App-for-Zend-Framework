@@ -44,7 +44,7 @@ class Default_Model_AclHandler_Entry
     {
         if ('Creator' == $alias) {
             return array(
-                'entourageModel' => 'User',
+                'entourageModel' => 'Users',
                 'entourageIdKey' => 'id',
                 'resourceIdKey' => 'creator_user_id',
                 'singleOnly' => true,

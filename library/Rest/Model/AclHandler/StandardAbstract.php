@@ -4,11 +4,15 @@ require_once('Rest/Model/AclHandler/Abstract.php');
 abstract class Rest_Model_AclHandler_StandardAbstract
     extends Rest_Model_AclHandler_Abstract
 {
-
     /**
      * @var PDO
      */
     protected $_dbHandler;
+
+    /**
+     * @var objects that
+     */
+    protected $_permissionDependency = array();
 
     /**
      * @param array $id
@@ -22,10 +26,14 @@ abstract class Rest_Model_AclHandler_StandardAbstract
             return $entourageHandler->get($id, array($this, $params['entourage']));
         }
 
-        // will throw Zend_Acl_Exception is not allowed
+        // will throw Zend_Acl_Exception if not allowed
         $this->_assertAllowed('get', $id);
 
-        return $this->_get($id);
+        $item = $this->_get($id);
+
+        $this->_assertDependencyAllowed('get', $item);
+
+        return $item;
     }
 
     /**
@@ -42,8 +50,10 @@ abstract class Rest_Model_AclHandler_StandardAbstract
      */
     public function put(array $id, array $prop = null)
     {
-        // will throw Zend_Acl_Exception is not allowed
+        // will throw Zend_Acl_Exception if not allowed
         $this->_assertAllowed('put', $id);
+
+        $this->_assertDependencyAllowed('put', $id);
 
         return $this->_put($id, $prop);
     }
@@ -61,8 +71,10 @@ abstract class Rest_Model_AclHandler_StandardAbstract
      */
     public function delete(array $id)
     {
-        // will throw Zend_Acl_Exception is not allowed
+        // will throw Zend_Acl_Exception if not allowed
         $this->_assertAllowed('delete', $id);
+
+        $this->_assertDependencyAllowed('delete', $id);
 
         $this->_delete($id);
     }
@@ -79,8 +91,10 @@ abstract class Rest_Model_AclHandler_StandardAbstract
      */
     public function post(array $prop)
     {
-        // will throw Zend_Acl_Exception is not allowed
+        // will throw Zend_Acl_Exception if not allowed
         $this->_assertAllowed('post');
+
+        $this->_assertDependencyAllowed('post', $prop);
 
         return $this->_post($prop);
     }
@@ -112,12 +126,100 @@ abstract class Rest_Model_AclHandler_StandardAbstract
     }
 
     /**
+     * @param array $items
+     * @param string $throwOrFitler
+     * @thows Zend_Acl_Exception
+     */
+    protected function _assertDependencyAllowed($method, array $item)
+    {
+        if (0 == count($this->_permissionDependency)) {
+            // no depencies, done
+            return;
+        }
+
+        foreach ($this->_permissionDependency as $modelName => $identityMapping) {
+            $parentResourceHandler = $this->_createAclHandler($modelName);
+
+            $parentId = array();
+            foreach ($identityMapping as $partialParentId => $partialResourceId) {
+                if (!isset($item[$partialResourceId])) {
+                    // might be that id was passed for dependency check, get full item
+                    $item = $this->get($item);
+                }
+                if (!isset($item[$partialResourceId])) {
+                    // stil having troubles, the wrong resource id was specified
+                    throw new Exception($partialResourceId . ' is not a valid property to pull from for a parent dependency to ' . $modelName);
+                }
+                $parentId[$partialParentId] = $item[$partialResourceId];
+            }
+
+            try {
+                $parentResourceHandler->get($parentId);
+            } catch (Zend_Acl_Exception $e) {
+                // catch the Acl exception and emit one with this resource's
+                // method and id. Don't want to emit details from a lower
+                // level than the user requested
+                throw new Zend_Acl_Exception($method . ' for ' . $this->getResourceId() . ' is not allowed');
+            }
+        }
+    }
+
+    /**
+     * @param array $items
+     * @param string $throwOrFitler
+     * @thows Zend_Acl_Exception
+     */
+    protected function _filterDependenciesNotAllowed(array &$items)
+    {
+        if (0 == count($this->_permissionDependency)) {
+            // no depencies, done
+            return;
+        }
+
+        foreach ($this->_permissionDependency as $modelName => $identityMapping) {
+
+            $parentResourceHandler = $this->_createAclHandler($modelName);
+
+            $cache = array();
+
+            $filtered = array();
+            foreach ($items  as $i => $item) {
+                $parentId = array();
+                foreach ($identityMapping as $partialParentId => $partialResourceId) {
+                    $parentId[$partialParentId] = $item[$partialResourceId];
+                }
+
+                // going to check cache before calling the parent resource get
+                // and doing all the db work that comes with that
+                $cacheKey = implode(',', $parentId);
+
+                if (isset($cache[$cacheKey])) {
+                    if ($cache[$cacheKey]) {
+                        $filtered[$i] = true;
+                    }
+                    continue;
+                }
+
+                $cache[$cacheKey] = false;
+                try {
+                    $parentResourceHandler->get($parentId);
+                } catch (Zend_Acl_Exception $e) {
+                    $filtered[$i] = true;
+                    $cache[$cacheKey] = true;
+                }
+            }
+
+            $items = array_diff_key($items, $filtered);
+        }
+    }
+
+    /**
      * Loops through the roles to check for one that is allowed for the method.
      *
      * @param string $method, same as what Zend_Acl referers to as 'privilege' but 'method' used for REST context
      * @return boolean
      */
-    public function isAllowed($privilege, array $roleResourceId = null, $resourceId = null)
+    public function isAllowed($privilege, array $roleResourceId = null, array $resourceId = null)
     {
         // for regular resources the $roleResourceId can be specified and
         // it is used for the resource as well. For permission type resources
@@ -246,7 +348,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
         $staticPermissionsSql = '';
         foreach ($this->_staticPermissions as $role => $permissionSet) {
             foreach($permissionSet as $permission => $privilegeSet) {
-                if (!in_array('get', $privilegeSet)) {
+                if (!is_array($privilegeSet) || (!in_array('get', $privilegeSet) && 0 != count($privilegeSet))) {
                     continue;
                 }
                 $staticPermissionsSql .= 'UNION SELECT NULL, "' . $role . '", "' . $permission . '"' . $nl;

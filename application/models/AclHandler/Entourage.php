@@ -89,18 +89,8 @@ class Default_Model_AclHandler_Entourage
         $data = array();
 
         foreach($params as $name => $resourceParam) {
-            $resourceName = 'Default_Model_AclHandler_' . $name;
 
-            // need to supress warnings that class_exists produces if the class
-            // doesn't exist. Incredibly stupid design that this function
-            // produces warning when being used as designed. Not sure if these
-            // supressed warnings are showing up in some log. Stupid, stupid.
-            // try/catch attempts around it don't help.
-            if (!@class_exists($resourceName)) {
-                throw new Rest_Model_BadRequestException('resource "' . $name . '" does not exist');
-            }
-
-            $resourceHandler = new $resourceName($this->getAcl(), $this->getAclContextUser());
+            $resourceHandler = $this->_createAclHandler($name);
 
             $entourageSetParam = isset($resourceParam['entourage']) ? $resourceParam['entourage'] : null;
 
@@ -135,14 +125,7 @@ class Default_Model_AclHandler_Entourage
 
         if (!($resourceHandler instanceof Rest_Model_AclHandler_Interface)) {
             // create the full resource name
-            $resourceName = 'Default_Model_AclHandler_' . $resourceHandler;
-
-            // see angry comment above about the stupidity of this function
-            if (!@class_exists($resourceName)) {
-                throw new Rest_Model_BadRequestException('resource "' . $resourceHandler . '" does not exist');
-            }
-
-            $resourceHandler = new $resourceName($this->getAcl(), $this->getAclContextUser());
+            $resourceHandler = $this->_createAclHandler($resourceHandler);
         }
 
         // get the resource
@@ -270,15 +253,7 @@ class Default_Model_AclHandler_Entourage
             $singleOnly = isset($entourageParam['singleOnly']) && $entourageParam['singleOnly'] ? $entourageParam['singleOnly'] : false;
             unset($entourageParam['singleOnly']); // wont be passed into entourage getList
 
-            $entourageResource = 'Default_Model_AclHandler_' . $entourageModel;
-
-            // see angry comment above about the stupidity of this function
-            if (!@class_exists($entourageResource)) {
-                throw new Rest_Model_BadRequestException($entourageModel . ' resource for entourage alias "' . $name . '" does not exist');
-            }
-
-            // create a new resource handler object
-            $entourageHandler = new $entourageResource($this->getAcl(), $this->getAclContextUser());
+            $entourageHandler = $this->_createAclHandler($entourageModel);
 
             // get only the entourage resources needed for the resource
             $resourceJoinIdList = Util_Array::arrayFromKeyValuesOfSet($resourceIdKey, $resourceList);
