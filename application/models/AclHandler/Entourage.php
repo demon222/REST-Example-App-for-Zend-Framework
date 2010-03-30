@@ -8,10 +8,6 @@ require_once('Util/Array.php');
 class Default_Model_AclHandler_Entourage
     extends Rest_Model_AclHandler_Abstract
 {
-    /**
-     * @var Default_Model_Handler_Entourage
-     */
-    protected $_modelHandler;
 
     /**
      * @var PDO
@@ -194,17 +190,6 @@ class Default_Model_AclHandler_Entourage
             $this->_dbHandler = new PDO('sqlite:' . $config['resources']['db']['params']['dbname']);
         }
         return $this->_dbHandler;
-    }
-
-    /**
-     * @return Default_Model_Handler_Entry
-     */
-    protected function _getModelHandler()
-    {
-        if ($this->_modelHandler === null) {
-            $this->_modelHandler = new Default_Model_Handler_Entry();
-        }
-        return $this->_modelHandler;
     }
 
     /**

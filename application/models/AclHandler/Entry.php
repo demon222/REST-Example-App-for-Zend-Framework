@@ -27,6 +27,10 @@ class Default_Model_AclHandler_Entry
         ),
     );
 
+    protected $_permissionDependency = array(
+        'Discussion' => array('id' => 'discussion_id')
+    );
+
     /**
      * Used mainly for testing property requests, where clauses and the like
      * @return array
@@ -121,6 +125,8 @@ class Default_Model_AclHandler_Entry
         $query = $this->_getDbHandler()->prepare($sql);
         $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->_filterDependenciesNotAllowed($rowSet);
 
         return $rowSet;
     }

@@ -97,6 +97,8 @@ class Default_Model_AclHandler_Community
         $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
 
+        $this->_filterDependenciesNotAllowed($rowSet);
+
         return $rowSet;
     }
 
