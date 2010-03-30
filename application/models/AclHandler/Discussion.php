@@ -3,28 +3,27 @@ require_once('Rest/Model/AclHandler/SimpleTableMapAbstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
 require_once('Util/Sql.php');
 
-class Default_Model_AclHandler_Entry
+class Default_Model_AclHandler_Discussion
     extends Rest_Model_AclHandler_SimpleTableMapAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
 
     protected $_roles = array(
-        'member',
         'owner',
+        'member',
     );
 
     protected $_staticPermissions = array(
-        'default' => array(
-            'allow' => array('get', 'post'),
-            'deny' => array('put', 'delete'),
-        ),
-        'member' => array(
-            'allow' => array('get'),
-        ),
         'owner' => array(
             'allow' => array('get', 'put', 'delete'),
-            'deny' => array('post'),
         ),
+        'member' => array(
+            'allow' => array('get', 'post'),
+        ),
+    );
+
+    protected $_permissionDependency = array(
+        'Community' => array('id' => 'community_id')
     );
 
     /**
@@ -33,7 +32,7 @@ class Default_Model_AclHandler_Entry
      */
     public static function getPropertyKeys()
     {
-        return array('id', 'discussion_id', 'comment', 'creator_user_id', 'modified');
+        return array('id', 'community_id', 'title', 'comment');
     }
 
     /**
@@ -42,30 +41,28 @@ class Default_Model_AclHandler_Entry
      */
     public function expandEntourageAlias($alias)
     {
-        if ('Creator' == $alias) {
+        if ('Community' == $alias) {
             return array(
-                'entourageModel' => 'Users',
+                'entourageModel' => 'Community',
                 'entourageIdKey' => 'id',
-                'resourceIdKey' => 'creator_user_id',
+                'resourceIdKey' => 'community_id',
                 'singleOnly' => true,
             );
         }
-        if ('Discussion' == $alias) {
+        if ('Entries' == $alias) {
             return array(
-                'entourageModel' => 'Discussion',
-                'entourageIdKey' => 'id',
-                'resourceIdKey' => 'discussion_id',
-                'singleOnly' => true,
+                'entourageModel' => 'Entry',
+                'entourageIdKey' => 'discussion_id',
+                'resourceIdKey' => 'id',
+                'singleOnly' => false,
             );
         }
-        if ('DiscussionWithCommunity' == $alias) {
+        if ('RecentEntry' == $alias) {
             return array(
-                'entourageName' => 'Discussion',
-                'entourageModel' => 'Discussion',
-                'entourageIdKey' => 'id',
-                'resourceIdKey' => 'discussion_id',
+                'entourageModel' => 'Entry',
+                'entourageIdKey' => 'discussion_id',
+                'resourceIdKey' => 'id',
                 'singleOnly' => true,
-                'entourage' => 'Community',
             );
         }
         return null;
@@ -81,21 +78,21 @@ class Default_Model_AclHandler_Entry
 
         if (isset($params['entourage'])) {
             $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('Entry' => $params));
-            return $data['Entry'];
+            $data = $entourageHandler->getList(array('Discussion' => $params));
+            return $data['Discussion'];
         }
 
         if (isset($params['where'])) {
             // use default properties to search against if none are provided
             if (!is_array($params['where'])) {
-                $params['where'] = array('comment creator_user_id' => $params['where']);
+                $params['where'] = array('title id' => $params['where']);
             }
         } else {
             $params['where'] = array();
         }
 
         if (!isset($params['sort']) || !is_array($params['sort'])) {
-            $params['sort'] = array('modified');
+            $params['sort'] = array('title');
         }
 
         $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
@@ -103,8 +100,8 @@ class Default_Model_AclHandler_Entry
 
         $sql = ''
             // RESOURCE
-            . ' SELECT id, discussion_id, comment, creator_user_id, modified'
-            . ' FROM entry AS resource'
+            . ' SELECT resource.id AS id, community_id, title, comment'
+            . ' FROM discussion AS resource'
 
             // ACL
             . $this->_getGenericAclListJoins()
@@ -117,7 +114,6 @@ class Default_Model_AclHandler_Entry
             . ' ORDER BY ' . implode(', ', $sortList)
 
             . '';
-
         $query = $this->_getDbHandler()->prepare($sql);
         $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
         $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -126,33 +122,21 @@ class Default_Model_AclHandler_Entry
     }
 
     /**
-     * @param array $item
+     * @param array $id
      */
-    protected function _put_pre_persist(array &$item)
+    protected function _delete_pre_persist(array &$id)
     {
-        $item['modified'] = date('Y-m-d H:i:s');
-
-        // not allowing creator to be changed
-        if (isset($item['creator_user_id'])) {
-            unset($item['creator_user_id']);
+        // check for dependents
+        $entriesHandler = new Default_Model_AclHandler_Entry();
+        $children = $entriesHandler->getList(array('where' => array('community_id' => $id['id'])));
+        if ($childer) {
+// ******************
+// TODO, NOT DONE YET
+// ******************
         }
-    }
 
-    /**
-     * @param array $item
-     */
-    protected function _post_pre_persist(array &$item)
-    {
-        // force the user to be that from the acl context
-        $item['creator_user_id'] = $this->getAclContextUser();
-
-        $item['modified'] = date('Y-m-d H:i:s');
-
-        // make sure that the user is valid
-        $userTable = new Default_Model_DbTable_User();
-        $resultSet = $userTable->find($item['creator_user_id']);
-        if (false === current($resultSet)) {
-            throw new Rest_Model_BadRequestException('creator_user_id does not match with an existing user');
+        if (true) {
+            throw new Rest_Model_ConflictException('');
         }
     }
 
@@ -164,7 +148,7 @@ class Default_Model_AclHandler_Entry
     protected function _getDbTable()
     {
         if (null === $this->_dbTable) {
-            $this->_dbTable = new Default_Model_DbTable_Entry();
+            $this->_dbTable = new Default_Model_DbTable_Discussion();
         }
         return $this->_dbTable;
     }

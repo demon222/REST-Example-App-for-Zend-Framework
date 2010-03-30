@@ -22,7 +22,9 @@ class Default_Model_AclHandler_Entourage
     {
         $acl = $this->getAcl();
 
-        $acl->addResource($this);
+        if (!$acl->has($this)) {
+            $acl->addResource($this);
+        }
 
         if (!$acl->hasRole('default')) {
             $acl->addRole('default');
@@ -70,6 +72,17 @@ class Default_Model_AclHandler_Entourage
      *                   'entourageIdKey' => 'id',
      *                   'resourceIdKey' => 'creator_user_id',
      *                   'singleOnly' => true,
+     *               ),
+     *           ),
+     *       ),
+     *       'DiscussionWithCommunity' => array(
+     *           'entourage' => array(
+     *               'entourageName' => 'Discussion',
+     *               'entourageModel' => 'Discussion',
+     *               'entourageIdKey' => 'id',
+     *               'resourceIdKey' => 'discussion_id',
+     *               'singleOnly' => true,
+     *               'entourage' => 'Community',
      *               ),
      *           ),
      *       ),
@@ -248,6 +261,10 @@ class Default_Model_AclHandler_Entourage
             $entourageModel = $entourageParam['entourageModel'];
             unset($entourageParam['entourageModel']); // wont be passed into entourage getList
 
+            // use entourage name if specified otherwise use the alias name
+            $entourageName = isset($entourageParam['entourageName']) ? $entourageParam['entourageName'] : $name;
+            unset($entourageParam['entourageName']); // wont be passed into entourage getList
+
             // if specified only return the first match for entourages that match, can make for a
             // cleaner api for some use cases
             $singleOnly = isset($entourageParam['singleOnly']) && $entourageParam['singleOnly'] ? $entourageParam['singleOnly'] : false;
@@ -278,15 +295,14 @@ class Default_Model_AclHandler_Entourage
 
                 if ($singleOnly) {
                     $first = current($joinKeySet);
-                    $resource[$name] = $first !== false ? $entourageList[$first] : null;
+                    $resource[$entourageName] = $first !== false ? $entourageList[$first] : null;
                 } else {
-                    $resource[$name] = array();
+                    $resource[$entourageName] = array();
                     foreach ($joinKeySet as $joinKey) {
-                        $resource[$name][] = $entourageList[$joinKey];
+                        $resource[$entourageName][] = $entourageList[$joinKey];
                     }
                 }
             }
         }
     }
-
 }
