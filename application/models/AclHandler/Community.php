@@ -42,7 +42,6 @@ class Default_Model_AclHandler_Community
                 'entourageModel' => 'Discussion',
                 'entourageIdKey' => 'community_id',
                 'resourceIdKey' => 'id',
-                'singleOnly' => true,
             );
         }
         return null;
