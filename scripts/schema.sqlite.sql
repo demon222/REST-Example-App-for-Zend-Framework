@@ -5,13 +5,16 @@ CREATE TABLE user (
     primary_email_id INTEGER,
     pic VARCAHR(2083)
 );
+CREATE INDEX user_id ON user (id);
+CREATE INDEX user_username ON user (username);
 
 CREATE TABLE email (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     email VARCHAR(254) NOT NULL
 );
-CREATE INDEX user_id ON user (id);
+CREATE INDEX email_id ON email (id);
+CREATE INDEX email_user_id ON email (user_id);
 
 CREATE TABLE community (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -27,6 +30,7 @@ CREATE TABLE discussion (
     comment TEXT
 );
 CREATE INDEX discussion_id ON discussion (id);
+CREATE INDEX discussion_community_id ON discussion (community_id);
 
 CREATE TABLE entry (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -36,6 +40,7 @@ CREATE TABLE entry (
     modified DATETIME NOT NULL
 );
 CREATE INDEX entry_id ON entry (id);
+CREATE INDEX entry_discussion_id ON entry (discussion_id);
 
 CREATE TABLE resource_role (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -45,6 +50,9 @@ CREATE TABLE resource_role (
     role VARCHAR(20) NOT NULL
 );
 CREATE INDEX resource_role_id ON resource_role (id);
+CREATE INDEX resource_role_user_id ON resource_role (user_id);
+CREATE INDEX resource_role_resource ON resource_role (resource);
+CREATE INDEX resource_role_resource_id ON resource_role (resource_id);
 
 CREATE TABLE permission (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -55,3 +63,5 @@ CREATE TABLE permission (
     permission VARCHAR(10) NOT NULL
 );
 CREATE INDEX permission_id ON permission (id);
+CREATE INDEX permission_resource ON permission (resource);
+CREATE INDEX permission_resource_id ON permission (resource_id);
