@@ -7,7 +7,6 @@ class Default_Model_AclHandler_Entry
     extends Rest_Model_AclHandler_SimpleTableMapAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
-
     protected $_roles = array(
         'member',
         'owner',
@@ -48,7 +47,7 @@ class Default_Model_AclHandler_Entry
     {
         if ('Creator' == $alias) {
             return array(
-                'entourageModel' => 'Users',
+                'entourageModel' => 'User',
                 'entourageIdKey' => 'id',
                 'resourceIdKey' => 'creator_user_id',
                 'singleOnly' => true,
@@ -75,61 +74,16 @@ class Default_Model_AclHandler_Entry
         return null;
     }
 
-    /**
-     * @param array $params
-     * @return array
-     */
-    public function getList(array $params = null)
-    {
-        $params = is_array($params) ? $params : array();
+    protected $_resourceName = 'Entry';
 
-        if (isset($params['entourage'])) {
-            $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('Entry' => $params));
-            return $data['Entry'];
-        }
+    protected $_defaultListWhere = array('comment', 'creator_user_id');
 
-        if (isset($params['where'])) {
-            // use default properties to search against if none are provided
-            if (!is_array($params['where'])) {
-                $params['where'] = array('comment creator_user_id' => $params['where']);
-            }
-        } else {
-            $params['where'] = array();
-        }
+    protected $_defaultListSort = array('modified');
 
-        if (!isset($params['sort']) || !is_array($params['sort'])) {
-            $params['sort'] = array('modified');
-        }
-
-        $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
-        $sortList = Util_Sql::generateSqlSort($params['sort'], $this->getPropertyKeys());
-
-        $sql = ''
-            // RESOURCE
-            . ' SELECT id, discussion_id, comment, creator_user_id, modified'
-            . ' FROM entry AS resource'
-
-            // ACL
-            . $this->_getGenericAclListJoins()
-
-            // ACL
-            . ' WHERE ' . $this->_getGenericAclListWheres()
-
-            // RESOURCE
-            . ' AND ' . implode(' AND ', array_merge($whereAndSet['sql'], array('1 = 1')))
-            . ' ORDER BY ' . implode(', ', $sortList)
-
-            . '';
-
-        $query = $this->_getDbHandler()->prepare($sql);
-        $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
-        $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
-
-        $this->_filterDependenciesNotAllowed($rowSet);
-
-        return $rowSet;
-    }
+    protected $_getListResourceSqlFragment = '
+        SELECT id, discussion_id, comment, creator_user_id, modified
+        FROM entry AS resource
+        ';
 
     /**
      * @param array $item

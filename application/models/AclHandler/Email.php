@@ -45,61 +45,17 @@ class Default_Model_AclHandler_Email
         return null;
     }
 
-    /**
-     * @param array $params
-     * @return array
-     */
-    public function getList(array $params = null)
-    {
-        $params = is_array($params) ? $params : array();
+    protected $_resourceName = 'Email';
 
-        if (isset($params['entourage'])) {
-            $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('Email' => $params));
-            return $data['Email'];
-        }
+    protected $_defaultListWhere = array('email', 'user_id');
 
-        if (isset($params['where'])) {
-            // use default properties to search against if none are provided
-            if (!is_array($params['where'])) {
-                $params['where'] = array('email user_id' => $params['where']);
-            }
-        } else {
-            $params['where'] = array();
-        }
+    protected $_defaultListSort = array('user_id', 'primary asc', 'email');
 
-        if (!isset($params['sort']) || !is_array($params['sort'])) {
-            $params['sort'] = array('user_id', 'primary asc', 'email');
-        }
-
-        $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
-        $sortList = Util_Sql::generateSqlSort($params['sort'], $this->getPropertyKeys());
-
-        $sql = ''
-            // RESOURCE
-            . ' SELECT resource.id AS id, user_id, email, (resource.id = primary_email_id) AS "primary"'
-            . ' FROM email AS resource'
-            . ' INNER JOIN user ON user.id = user_id'
-
-            // ACL
-            . $this->_getGenericAclListJoins()
-
-            // ACL
-            . ' WHERE ' . $this->_getGenericAclListWheres()
-
-            // RESOURCE
-            . ' AND ' . implode(' AND ', array_merge($whereAndSet['sql'], array('1 = 1')))
-            . ' ORDER BY ' . implode(', ', $sortList)
-
-            . '';
-        $query = $this->_getDbHandler()->prepare($sql);
-        $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
-        $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
-
-        $this->_filterDependenciesNotAllowed($rowSet);
-
-        return $rowSet;
-    }
+    protected $_getListResourceSqlFragment = '
+        SELECT resource.id AS id, user_id, email, (resource.id = primary_email_id) AS "primary"
+        FROM email AS resource
+        INNER JOIN user ON user.id = user_id
+        ';
 
     /**
      * @param array $item

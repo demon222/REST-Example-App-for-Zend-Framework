@@ -72,61 +72,18 @@ class Default_Model_AclHandler_Entry_Private
         return null;
     }
 
-    /**
-     * @param array $params
-     * @return array
-     */
-    public function getList(array $params = null)
-    {
-        $params = is_array($params) ? $params : array();
+    protected $_resourceName = 'Entry_Private';
 
-        if (isset($params['entourage'])) {
-            $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('Entry_Private' => $params));
-            return $data['Entry_Private'];
-        }
+    protected $_defaultListWhere = array('entry_id');
 
-        if (isset($params['where'])) {
-            // use default properties to search against if none are provided
-            if (!is_array($params['where'])) {
-                $params['where'] = array('entry_id' => $params['where']);
-            }
-        } else {
-            $params['where'] = array();
-        }
+    protected $_defaultListSort = array('entry_id');
 
-        if (!isset($params['sort']) || !is_array($params['sort'])) {
-            $params['sort'] = array('entry_id');
-        }
-
-        $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
-        $sortList = Util_Sql::generateSqlSort($params['sort'], $this->getPropertyKeys());
-
-        $sql = ''
-            // RESOURCE
-            . ' SELECT resource.id AS entry_id'
-            . ' FROM entry AS resource'
-            . ' INNER JOIN permission AS p1 ON p1.resource_id = resource.id AND p1.resource = "Entry" AND p1.role = "default" AND p1.privilege = "get" AND p1.permission = "deny"'
-            . ' INNER JOIN permission AS p2 ON p2.resource_id = resource.id AND p2.resource = "Entry" AND p2.role = "member" AND p2.privilege = "get" AND p2.permission = "allow"'
-
-            // ACL
-            . $this->_getGenericAclListJoins()
-
-            // ACL
-            . ' WHERE ' . $this->_getGenericAclListWheres()
-
-            // RESOURCE
-            . ' AND ' . implode(' AND ', array_merge($whereAndSet['sql'], array('1 = 1')))
-            . ' ORDER BY ' . implode(', ', $sortList)
-
-            . '';
-
-        $query = $this->_getDbHandler()->prepare($sql);
-        $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
-        $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
-
-        return $rowSet;
-    }
+    protected $_getListResourceSqlFragment = '
+        SELECT resource.id AS entry_id
+        FROM entry AS resource
+        INNER JOIN permission AS p1 ON p1.resource_id = resource.id AND p1.resource = "Entry" AND p1.role = "default" AND p1.privilege = "get" AND p1.permission = "deny"
+        INNER JOIN permission AS p2 ON p2.resource_id = resource.id AND p2.resource = "Entry" AND p2.role = "member" AND p2.privilege = "get" AND p2.permission = "allow"
+        ';
 
     public function _get(array $id, array $params = null)
     {

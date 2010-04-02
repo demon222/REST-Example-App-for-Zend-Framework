@@ -14,6 +14,9 @@ class Default_Model_AclHandler_Community
     );
 
     protected $_staticPermissions = array(
+        'default' => array(
+            'allow' => array('get'),
+        ),
         'owner' => array(
             'allow' => array('get', 'put', 'delete', 'post'),
         ),
@@ -41,66 +44,22 @@ class Default_Model_AclHandler_Community
             return array(
                 'entourageModel' => 'Discussion',
                 'entourageIdKey' => 'community_id',
-                'resourceIdKey' => 'id',
+                'resourceIdKey' => 'title',
             );
         }
         return null;
     }
 
-    /**
-     * @param array $params
-     * @return array
-     */
-    public function getList(array $params = null)
-    {
-        $params = is_array($params) ? $params : array();
+    protected $_resourceName = 'Community';
 
-        if (isset($params['entourage'])) {
-            $entourageHandler = new Default_Model_AclHandler_Entourage($this->getAcl(), $this->getAclContextUser());
-            $data = $entourageHandler->getList(array('Community' => $params));
-            return $data['Community'];
-        }
+    protected $_defaultListWhere = array('title', 'id');
 
-        if (isset($params['where'])) {
-            // use default properties to search against if none are provided
-            if (!is_array($params['where'])) {
-                $params['where'] = array('title id' => $params['where']);
-            }
-        } else {
-            $params['where'] = array();
-        }
+    protected $_defaultListSort = array('modified');
 
-        if (!isset($params['sort']) || !is_array($params['sort'])) {
-            $params['sort'] = array('title');
-        }
-
-        $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
-        $sortList = Util_Sql::generateSqlSort($params['sort'], $this->getPropertyKeys());
-
-        $sql = ''
-            // RESOURCE
-            . ' SELECT resource.id AS id, title, pic'
-            . ' FROM community AS resource'
-
-            // ACL
-            . $this->_getGenericAclListJoins()
-
-            // ACL
-            . ' WHERE ' . $this->_getGenericAclListWheres()
-
-            // RESOURCE
-            . ' AND ' . implode(' AND ', array_merge($whereAndSet['sql'], array('1 = 1')))
-            . ' ORDER BY ' . implode(', ', $sortList)
-
-            . '';
-        $query = $this->_getDbHandler()->prepare($sql);
-        $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
-        $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
-
-        $this->_filterDependenciesNotAllowed($rowSet);
-
-        return $rowSet;
-    }
+    protected $_getListResourceSqlFragment = '
+        SELECT resource.id AS id, title, pic
+        FROM community AS resource
+        ';
 
     /**
      * @param array $id
