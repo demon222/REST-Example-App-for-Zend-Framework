@@ -66,7 +66,7 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
             $params['sort'] = $this->_defaultListSort;
         }
 
-        if (!isset($params['limit']) || !is_array($params['limit'])) {
+        if (!isset($params['limit']) || 0 >= ((integer) $params['limit'])) {
             $params['limit'] = $this->_listMaxLength;
         }
 
