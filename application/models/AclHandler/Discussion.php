@@ -15,7 +15,7 @@ class Default_Model_AclHandler_Discussion
 
     protected $_staticPermissions = array(
         'default' => array(
-            'allow' => array('get'),
+//            'allow' => array('get'),
         ),
         'owner' => array(
             'allow' => array('get', 'put', 'delete'),
