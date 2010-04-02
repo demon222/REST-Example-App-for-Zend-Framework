@@ -41,6 +41,7 @@ CREATE TABLE entry (
 );
 CREATE INDEX entry_id ON entry (id);
 CREATE INDEX entry_discussion_id ON entry (discussion_id);
+CREATE INDEX entry_modified ON entry (modified);
 
 CREATE TABLE resource_role (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
