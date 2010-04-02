@@ -66,9 +66,10 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
             $params['sort'] = $this->_defaultListSort;
         }
 
-        if (!isset($params['limit']) || 0 >= ((integer) $params['limit'])) {
+        if (!isset($params['limit']) || 0 >= $params['limit'] || $this->_listMaxLength < $params['limit']) {
             $params['limit'] = $this->_listMaxLength;
         }
+        $params['limit'] = (integer) $params['limit'];
 
         // this is an optimization. Imposes a slight overhead performance hit,
         // but for queries where their is very restrictive dependency and a
@@ -85,11 +86,17 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
                     }
 
                     $parentResourceHandler = $this->_createAclHandler($depResource);
-                    $list = Util_Array::arrayFromKeyValuesOfSet($depId, $parentResourceHandler->getList());
+                    $list = Util_Array::arrayFromKeyValuesOfSet($depId, $parentResourceHandler->getList(array('limit' => $this->_listMaxLength)));
 
                     if (0 == count($list)) {
                         // none of the dependencies, done
                         return array();
+                    }
+
+                    if ($this->_listMaxLength == count($list)) {
+                        // optimization isn't optimal in this situation abort
+                        // for dependency association
+                        continue;
                     }
 
                     $params['where'][$resourceId] = $list;
