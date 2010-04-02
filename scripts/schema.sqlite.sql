@@ -22,6 +22,7 @@ CREATE TABLE community (
     pic VARCHAR(2083)
 );
 CREATE INDEX community_id ON community (id);
+CREATE INDEX community_title ON community (title);
 
 CREATE TABLE discussion (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -31,6 +32,7 @@ CREATE TABLE discussion (
 );
 CREATE INDEX discussion_id ON discussion (id);
 CREATE INDEX discussion_community_id ON discussion (community_id);
+CREATE INDEX discussion_title ON discussion (title);
 
 CREATE TABLE entry (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
