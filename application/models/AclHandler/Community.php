@@ -54,7 +54,7 @@ class Default_Model_AclHandler_Community
 
     protected $_defaultListWhere = array('title', 'id');
 
-    protected $_defaultListSort = array('modified');
+    protected $_defaultListSort = array('title');
 
     protected $_getListResourceSqlFragment = '
         SELECT resource.id AS id, title, pic
