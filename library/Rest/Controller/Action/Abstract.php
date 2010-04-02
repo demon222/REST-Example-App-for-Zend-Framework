@@ -27,6 +27,11 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
      */
     abstract protected static function _createValidateObject();
 
+    /**
+     * @var float
+     */
+    protected $_startTime;
+
     /*
      * For backwards compatibility (prior to PHP 5.3) '$this->' is being used
      * for references to the above methods but 'static::' would be proper.
@@ -277,6 +282,9 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
     public function preDispatch()
     {
+
+$this->_startTime = microtime(true);
+
 $config = array(
     'accept_schemes' => 'basic digest',
     'realm'          => 'Guestbook API',
@@ -357,9 +365,10 @@ Zend_Registry::set('userId', $user->id);
             'content' => $data,
             'meta' => array(
                 // mirror some values in the actual data to ease debugging
-                '_status-code' => $this->getResponse()->getHttpResponseCode(),
-                '_request-uri' => $this->getRequest()->getRequestUri(),
-                '_identity' => Zend_Registry::isRegistered('userId') ? Zend_Registry::get('userId') : null,
+                'status-code' => $this->getResponse()->getHttpResponseCode(),
+                'request-uri' => $this->getRequest()->getRequestUri(),
+                'identity' => Zend_Registry::isRegistered('userId') ? Zend_Registry::get('userId') : null,
+                'duration' => microtime(true) - $this->_startTime,
             ),
         ));
 
