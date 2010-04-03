@@ -158,7 +158,7 @@ class Default_Model_AclHandler_Entourage
      */
     public function put(array $id, array $prop = null)
     {
-        throw new Rest_Model_MethodNotAllowedException(array('get'));
+        throw new Rest_Model_MethodNotAllowedException('put', array('get'));
     }
 
     /**
@@ -167,7 +167,7 @@ class Default_Model_AclHandler_Entourage
      */
     public function delete(array $id)
     {
-        throw new Rest_Model_MethodNotAllowedException(array('get'));
+        throw new Rest_Model_MethodNotAllowedException('delete', array('get'));
     }
 
     /**
@@ -177,7 +177,7 @@ class Default_Model_AclHandler_Entourage
      */
     public function post(array $prop)
     {
-        throw new Rest_Model_MethodNotAllowedException(array('get'));
+        throw new Rest_Model_MethodNotAllowedException('post', array('get'));
     }
 
     /**

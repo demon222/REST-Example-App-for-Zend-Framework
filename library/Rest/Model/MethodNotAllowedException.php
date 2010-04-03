@@ -8,9 +8,15 @@ class Rest_Model_MethodNotAllowedException extends Zend_Exception
     protected $_allowedMethods = array();
 
     /**
+     * @var string
+     */
+    protected $_invalidMethod;
+
+    /**
+     * @param string $invalidMethod
      * @param array $allowedMethods
      */
-    public function __construct(array $allowedMethods = null)
+    public function __construct($invalidMethod, array $allowedMethods = null)
     {
         if (null !== $allowedMethods) {
             $this->setAllowedMethods($allowedMethods);
@@ -18,7 +24,31 @@ class Rest_Model_MethodNotAllowedException extends Zend_Exception
     }
 
     /**
-     * return array of strings
+     * @return string
+     */
+    public function getMessage()
+    {
+        return $this->getInvalidMethod() . ' is not an accepted method. Try ' . implode(', ', $this->getAllowedMethods());
+    }
+
+    /**
+     * @return string
+     */
+    public function getInvalidMethod()
+    {
+        return $this->_invalidMethod;
+    }
+
+    /**
+     * @param string $invalidMethod
+     */
+    public function setInvalidMethod($invalidMethod)
+    {
+        $this->_invalidMethod = $invalidMethod;
+    }
+
+    /**
+     * @return array of strings
      */
     public function getAllowedMethods()
     {
