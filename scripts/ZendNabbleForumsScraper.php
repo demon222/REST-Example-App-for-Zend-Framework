@@ -77,8 +77,6 @@ class Scraper
             $html->clear();
         } while (true);
 
-//        $siblingPageUrl = $html->find('.page a', -1)->href;
-//        $html->clear();
         do {
             $this->reportHttpActivity($siblingPageUrl);
             $html = file_get_html($siblingPageUrl);
@@ -286,7 +284,7 @@ class Scraper
 
     public function reportHttpActivity($url)
     {
-//        usleep(1000000);
+        usleep(1000000);
         echo $url . PHP_EOL;
     }
 }
