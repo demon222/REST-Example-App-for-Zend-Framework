@@ -15,9 +15,9 @@
  *
  * @category   Zend
  * @package    Zend_Console_Getopt
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Getopt.php 16971 2009-07-22 18:05:45Z mikaelkael $
+ * @version    $Id: Getopt.php 20096 2010-01-06 02:05:09Z bkarwin $
  */
 
 /**
@@ -80,7 +80,7 @@
  *
  * @category   Zend
  * @package    Zend_Console_Getopt
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    Release: @package_version@
  * @since      Class available since Release 0.6.0
@@ -344,10 +344,16 @@ class Zend_Console_Getopt
      * These are appended to those defined when the constructor was called.
      *
      * @param  array $argv
+     * @throws Zend_Console_Getopt_Exception When not given an array as parameter
      * @return Zend_Console_Getopt Provides a fluent interface
      */
     public function addArguments($argv)
     {
+        if(!is_array($argv)) {
+            require_once 'Zend/Console/Getopt/Exception.php';
+            throw new Zend_Console_Getopt_Exception(
+                "Parameter #1 to addArguments should be an array");
+        }
         $this->_argv = array_merge($this->_argv, $argv);
         $this->_parsed = false;
         return $this;
@@ -358,10 +364,16 @@ class Zend_Console_Getopt
      * These replace any currently defined.
      *
      * @param  array $argv
+     * @throws Zend_Console_Getopt_Exception When not given an array as parameter
      * @return Zend_Console_Getopt Provides a fluent interface
      */
     public function setArguments($argv)
     {
+        if(!is_array($argv)) {
+            require_once 'Zend/Console/Getopt/Exception.php';
+            throw new Zend_Console_Getopt_Exception(
+                "Parameter #1 to setArguments should be an array");
+        }
         $this->_argv = $argv;
         $this->_parsed = false;
         return $this;

@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Cache
  * @subpackage Zend_Cache_Backend
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: TwoLevels.php 17741 2009-08-22 02:58:33Z yoshida@zend.co.jp $
+ * @version    $Id: TwoLevels.php 20096 2010-01-06 02:05:09Z bkarwin $
  */
 
 
@@ -35,7 +35,7 @@ require_once 'Zend/Cache/Backend.php';
 /**
  * @package    Zend_Cache
  * @subpackage Zend_Cache_Backend
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -95,21 +95,21 @@ class Zend_Cache_Backend_TwoLevels extends Zend_Cache_Backend implements Zend_Ca
      *
      * @var Zend_Cache_Backend
      */
-    private $_slowBackend;
+    protected $_slowBackend;
 
     /**
      * Fast Backend
      *
      * @var Zend_Cache_Backend
      */
-    private $_fastBackend;
+    protected $_fastBackend;
 
     /**
      * Cache for the fast backend filling percentage
      *
      * @var int
      */
-    private $_fastBackendFillingPercentage = null;
+    protected $_fastBackendFillingPercentage = null;
 
     /**
      * Constructor

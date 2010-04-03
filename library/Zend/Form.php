@@ -14,7 +14,7 @@
  *
  * @category   Zend
  * @package    Zend_Form
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -26,9 +26,9 @@ require_once 'Zend/Validate/Interface.php';
  *
  * @category   Zend
  * @package    Zend_Form
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Form.php 18272 2009-09-18 19:03:49Z matthew $
+ * @version    $Id: Form.php 21704 2010-03-31 16:32:29Z matthew $
  */
 class Zend_Form implements Iterator, Countable, Zend_Validate_Interface
 {
@@ -1220,19 +1220,22 @@ class Zend_Form implements Iterator, Countable, Zend_Validate_Interface
      * Set default values for elements
      *
      * Sets values for all elements specified in the array of $defaults.
-     * 
+     *
      * @param  array $defaults
      * @return Zend_Form
      */
     public function setDefaults(array $defaults)
     {
+        if ($this->isArray()) {
+            $defaults = $this->_dissolveArrayValue($defaults, $this->getElementsBelongTo());
+        }
         foreach ($this->getElements() as $name => $element) {
             if (array_key_exists($name, $defaults)) {
                 $this->setDefault($name, $defaults[$name]);
             }
         }
         foreach ($this->getSubForms() as $name => $form) {
-            if (array_key_exists($name, $defaults)) {
+            if (!$form->isArray() && array_key_exists($name, $defaults)) {
                 $form->setDefaults($defaults[$name]);
             } else {
                 $form->setDefaults($defaults);
@@ -1309,6 +1312,51 @@ class Zend_Form implements Iterator, Countable, Zend_Validate_Interface
         }
 
         if (!$suppressArrayNotation && $this->isArray()) {
+            $values = $this->_attachToArray($values, $this->getElementsBelongTo());
+        }
+
+        return $values;
+    }
+
+    /**
+     * Returns only the valid values from the given form input.
+     *
+     * For models that can be saved in a partially valid state, for example when following the builder,
+     * prototype or state patterns it is particularly interessting to retrieve all the current valid
+     * values to persist them.
+     *
+     * @param  array $data
+     * @param  bool $suppressArrayNotation
+     * @return array
+     */
+    public function getValidValues($data, $suppressArrayNotation = false)
+    {
+        if ($this->isArray()) {
+            $data = $this->_dissolveArrayValue($data, $this->getElementsBelongTo());
+        }
+        $values = array();
+        foreach ($this->getElements() as $key => $element) {
+            if (isset($data[$key])) {
+                if($element->isValid($data[$key], $data)) {
+                    $values[$key] = $element->getValue();
+                }
+            }
+        }
+        foreach ($this->getSubForms() as $key => $form) {
+            if (isset($data[$key]) && !$form->isArray()) {
+                $tmp = $form->getValidValues($data[$key]);
+                if (!empty($tmp)) {
+                    $values[$key] = $tmp;
+                }
+            } else {
+                $tmp = $form->getValidValues($data, true);
+                if (!empty($tmp)) {
+                    $fValues = $this->_attachToArray($tmp, $form->getElementsBelongTo());
+                    $values = array_merge($values, $fValues);
+                }
+            }
+        }
+        if (!$suppressArrayNotation && $this->isArray() && !empty($values)) {
             $values = $this->_attachToArray($values, $this->getElementsBelongTo());
         }
 
@@ -2002,7 +2050,9 @@ class Zend_Form implements Iterator, Countable, Zend_Validate_Interface
         }
 
         foreach ($this->getElements() as $key => $element) {
-            $element->setTranslator($translator);
+            if (null !== $translator && !$element->hasTranslator()) {
+                $element->setTranslator($translator);
+            }
             if (!isset($data[$key])) {
                 $valid = $element->isValid(null, $data) && $valid;
             } else {
@@ -2010,8 +2060,10 @@ class Zend_Form implements Iterator, Countable, Zend_Validate_Interface
             }
         }
         foreach ($this->getSubForms() as $key => $form) {
-            $form->setTranslator($translator);
-            if (isset($data[$key])) {
+            if (null !== $translator && !$form->hasTranslator()) {
+                $form->setTranslator($translator);
+            }
+            if (isset($data[$key]) && !$form->isArray()) {
                 $valid = $form->isValid($data[$key]) && $valid;
             } else {
                 $valid = $form->isValid($data) && $valid;
@@ -2044,29 +2096,23 @@ class Zend_Form implements Iterator, Countable, Zend_Validate_Interface
 
         $translator        = $this->getTranslator();
         $valid             = true;
-        $validatedSubForms = array();
 
-        foreach ($data as $key => $value) {
-            if (null !== ($element = $this->getElement($key))) {
-                if (null !== $translator) {
+        foreach ($this->getElements() as $key => $element) {
+            if (isset($data[$key])) {
+                if (null !== $translator && !$element->hasTranslator()) {
                     $element->setTranslator($translator);
                 }
-                $valid = $element->isValid($value, $data) && $valid;
-            } elseif (null !== ($subForm = $this->getSubForm($key))) {
-                if (null !== $translator) {
-                    $subForm->setTranslator($translator);
-                }
-                $valid = $subForm->isValidPartial($data[$key]) && $valid;
-                $validatedSubForms[] = $key;
+                $valid = $element->isValid($data[$key], $data) && $valid;
             }
         }
-        foreach ($this->getSubForms() as $key => $subForm) {
-            if (!in_array($key, $validatedSubForms)) {
-                if (null !== $translator) {
-                    $subForm->setTranslator($translator);
-                }
-
-                $valid = $subForm->isValidPartial($data) && $valid;
+        foreach ($this->getSubForms() as $key => $form) {
+            if (null !== $translator && !$form->hasTranslator()) {
+                $form->setTranslator($translator);
+            }
+            if (isset($data[$key]) && !$form->isArray()) {
+                $valid = $form->isValidPartial($data[$key]) && $valid;
+            } else {
+                $valid = $form->isValidPartial($data) && $valid;
             }
         }
 
@@ -2710,6 +2756,16 @@ class Zend_Form implements Iterator, Countable, Zend_Validate_Interface
 
         return $this->_translator;
     }
+    
+    /**
+     * Does this form have its own specific translator?
+     * 
+     * @return bool
+     */
+    public function hasTranslator()
+    {
+        return (bool)$this->_translator;
+    }    
 
     /**
      * Get global default translator object

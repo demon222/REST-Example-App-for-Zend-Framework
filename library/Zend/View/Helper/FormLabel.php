@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: FormLabel.php 18547 2009-10-15 15:51:24Z matthew $
+ * @version    $Id: FormLabel.php 20096 2010-01-06 02:05:09Z bkarwin $
  */
 
 /** Zend_View_Helper_FormElement **/
@@ -29,7 +29,7 @@ require_once 'Zend/View/Helper/FormElement.php';
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_View_Helper_FormLabel extends Zend_View_Helper_FormElement
@@ -57,6 +57,9 @@ class Zend_View_Helper_FormLabel extends Zend_View_Helper_FormElement
         $for   = (empty($attribs['disableFor']) || !$attribs['disableFor'])
                ? ' for="' . $this->view->escape($id) . '"'
                : '';
+        if (array_key_exists('disableFor', $attribs)) {
+            unset($attribs['disableFor']);
+        }
 
         // enabled; display label
         $xhtml = '<label'

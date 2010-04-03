@@ -15,17 +15,29 @@
  * @category   Zend
  * @package    Zend_Test
  * @subpackage PHPUnit
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Truncate.php 18470 2009-10-03 10:10:54Z beberlei $
+ * @version    $Id: Truncate.php 20096 2010-01-06 02:05:09Z bkarwin $
  */
 
+/**
+ * @see PHPUnit_Extensions_Database_Operation_IDatabaseOperation
+ */
 require_once "PHPUnit/Extensions/Database/Operation/IDatabaseOperation.php";
 
+/**
+ * @see PHPUnit_Extensions_Database_DB_IDatabaseConnection
+ */
 require_once "PHPUnit/Extensions/Database/DB/IDatabaseConnection.php";
 
+/**
+ * @see PHPUnit_Extensions_Database_DataSet_IDataSet
+ */
 require_once "PHPUnit/Extensions/Database/DataSet/IDataSet.php";
 
+/**
+ * @see PHPUnit_Extensions_Database_Operation_Exception
+ */
 require_once "PHPUnit/Extensions/Database/Operation/Exception.php";
 
 /**
@@ -40,7 +52,7 @@ require_once "Zend/Test/PHPUnit/Db/Connection.php";
  * @category   Zend
  * @package    Zend_Test
  * @subpackage PHPUnit
- * @copyright  Copyright (c) 2005-2009 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Test_PHPUnit_Db_Operation_Truncate implements PHPUnit_Extensions_Database_Operation_IDatabaseOperation
@@ -70,7 +82,7 @@ class Zend_Test_PHPUnit_Db_Operation_Truncate implements PHPUnit_Extensions_Data
 
     /**
      * Truncate a given table.
-     * 
+     *
      * @param Zend_Db_Adapter_Abstract $db
      * @param string $tableName
      * @return void
@@ -81,16 +93,20 @@ class Zend_Test_PHPUnit_Db_Operation_Truncate implements PHPUnit_Extensions_Data
         if($db instanceof Zend_Db_Adapter_Pdo_Sqlite) {
             $db->query('DELETE FROM '.$tableName);
         } else if($db instanceof Zend_Db_Adapter_Db2) {
-            if(strstr(PHP_OS, "WIN")) {
+            /*if(strstr(PHP_OS, "WIN")) {
                 $file = tempnam(sys_get_temp_dir(), "zendtestdbibm_");
                 file_put_contents($file, "");
                 $db->query('IMPORT FROM '.$file.' OF DEL REPLACE INTO '.$tableName);
                 unlink($file);
             } else {
                 $db->query('IMPORT FROM /dev/null OF DEL REPLACE INTO '.$tableName);
-            }
+            }*/
+            require_once "Zend/Exception.php";
+            throw Zend_Exception("IBM Db2 TRUNCATE not supported.");
         } else if($this->_isMssqlOrOracle($db)) {
             $db->query('TRUNCATE TABLE '.$tableName);
+        } else if($db instanceof Zend_Db_Adapter_Pdo_Pgsql) {
+            $db->query('TRUNCATE '.$tableName.' CASCADE');
         } else {
             $db->query('TRUNCATE '.$tableName);
         }
@@ -98,7 +114,7 @@ class Zend_Test_PHPUnit_Db_Operation_Truncate implements PHPUnit_Extensions_Data
 
     /**
      * Detect if an adapter is for Mssql or Oracle Databases.
-     * 
+     *
      * @param  Zend_Db_Adapter_Abstract $db
      * @return bool
      */

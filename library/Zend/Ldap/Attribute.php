@@ -14,9 +14,9 @@
  *
  * @category   Zend
  * @package    Zend_Ldap
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Attribute.php 17831 2009-08-26 15:24:30Z sgehrig $
+ * @version    $Id: Attribute.php 21532 2010-03-17 12:18:23Z sgehrig $
  */
 
 /**
@@ -24,7 +24,7 @@
  *
  * @category   Zend
  * @package    Zend_Ldap
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Ldap_Attribute
@@ -382,10 +382,13 @@ class Zend_Ldap_Attribute
         if (is_array($values)) {
             for ($i = 0; $i<count($values); $i++) {
                 $newVal = self::_valueFromLdapDateTime($values[$i]);
-                if (!is_null($newVal)) $values[$i] = $newVal;
+                if ($newVal !== null) $values[$i] = $newVal;
             }
         }
-        else $values = self::_valueFromLdapDateTime($values);
+        else {
+			$newVal = self::_valueFromLdapDateTime($values);
+			if ($newVal !== null) $values = $newVal;
+		}
         return $values;
     }
 
