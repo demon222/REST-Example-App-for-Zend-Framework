@@ -52,8 +52,11 @@ class Scraper
             $html = file_get_html($siblingPageUrl);
 
             $entryDate = $html->find('.main-row', 0)->find('.avatar-table script text', -1)->plaintext;
-            $entryDate = preg_replace('/[^0-9]*([0-9]*)[^0-9]*/', '\\1', $entryDate);
-            $entryDate = date('Y-m-d H:i:s', ((integer) $entryDate / 1000));
+            // Nabble hold the date in a timestamp of milliseconds. Because
+            // this number is exceeding MAX_INT I'm cutting off the last 3
+            // digits and only having a precision of seconds.
+            $entryDate = preg_replace('/[^0-9]*([0-9]*)[0-9]{3}[^0-9]*/', '\\1', $entryDate);
+            $entryDate = date('Y-m-d H:i:s', (integer) $entryDate);
 
             if ($this->_lastCheck > $entryDate) {
                 break;
@@ -81,8 +84,8 @@ class Scraper
             $html = file_get_html($siblingPageUrl);
 
             $entryDate = $html->find('.main-row', 0)->find('.avatar-table script text', -1)->plaintext;
-            $entryDate = preg_replace('/[^0-9]*([0-9]*)[^0-9]*/', '\\1', $entryDate);
-            $entryDate = date('Y-m-d H:i:s', ((integer) $entryDate / 1000));
+            $entryDate = preg_replace('/[^0-9]*([0-9]*)[0-9]{3}[^0-9]*/', '\\1', $entryDate);
+            $entryDate = date('Y-m-d H:i:s', (integer) $entryDate);
 
             echo $entryDate . PHP_EOL;
             if ($this->_lastCheck <= $entryDate) {
@@ -119,8 +122,8 @@ class Scraper
             $discussionTitle = trim($dlTag->plaintext);
             $discussionUrl = $dlTag->href;
             $entryDate = $dTag->find('.avatar-table script text', -1)->plaintext;
-            $entryDate = preg_replace('/[^0-9]*([0-9]*)[^0-9]*/', '\\1', $entryDate);
-            $entryDate = date('Y-m-d H:i:s', ((integer) $entryDate / 1000));
+            $entryDate = preg_replace('/[^0-9]*([0-9]*)[0-9]{3}[^0-9]*/', '\\1', $entryDate);
+            $entryDate = date('Y-m-d H:i:s', (integer) $entryDate);
             $communityTitle = trim($dTag->find('a text', -1)->plaintext);
             $userUsername = trim($dTag->find('td[style=width:100%;padding-left:.3em;border:none] text', -1)->plaintext);
 
@@ -186,8 +189,8 @@ class Scraper
         foreach ($html->find('.ul-threaded .classic-table') as $entry) {
             $userUsername = trim($entry->find('.column-left .author-link a text', 0)->plaintext);
             $entryDate = $entry->find('.post-date script text', 0)->plaintext;
-            $entryDate = preg_replace('/[^0-9]*([0-9]*)[^0-9]*/', '\\1', $entryDate);
-            $entryDate = date('Y-m-d H:i:s', ((integer) $entryDate / 1000));
+            $entryDate = preg_replace('/[^0-9]*([0-9]*)[0-9]{3}[^0-9]*/', '\\1', $entryDate);
+            $entryDate = date('Y-m-d H:i:s', (integer) $entryDate);
             $entryComment = $entry->find('.message-text', 0)->innertext();
             $entryComment = trim(preg_replace('/<script.*?<\\/script>/s', '', $entryComment));
 
