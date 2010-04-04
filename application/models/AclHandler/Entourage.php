@@ -210,6 +210,10 @@ class Default_Model_AclHandler_Entourage
             $entourageSetParam = array($entourageSetParam);
         }
 
+        if (empty($resourceList)) {
+            return;
+        }
+
         foreach ($entourageSetParam as $name => $entourageParam) {
             // get the entourage set and attach the values to the matching
             // items in the resource list
