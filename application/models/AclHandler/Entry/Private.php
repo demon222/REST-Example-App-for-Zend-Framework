@@ -1,10 +1,10 @@
 <?php
-require_once('Rest/Model/AclHandler/StandardAbstract.php');
+require_once('Rest/Model/AclHandler/SimpleTableMapAbstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
 require_once('Util/Sql.php');
 
 class Default_Model_AclHandler_Entry_Private
-    extends Rest_Model_AclHandler_StandardAbstract
+    extends Rest_Model_AclHandler_SimpleTableMapAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
     // a key part of this private model is that it has two components: the
@@ -87,7 +87,9 @@ class Default_Model_AclHandler_Entry_Private
 
     public function _get(array $id, array $params = null)
     {
-        $dbTable = new Default_Model_DbTable_Permission();
+        $this->_assertValidId($id);
+
+        $dbTable = $this->_getDbTable();
 
         $result = $dbTable->find(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'default', 'privilege = ?' => 'get', 'permission = ?' => 'deny'));
         if (0 == count($result)) {
@@ -99,16 +101,14 @@ class Default_Model_AclHandler_Entry_Private
             throw new Rest_Model_NotFoundException();
         }
 
-        // 1 to 1, same names
-        $keys = $this->getPropertyKeys();
-        $map = array_combine($keys, $keys);
-
-        return Util_Array::mapIntersectingKeys($id, $map);
+        return $id;
     }
 
     public function _put(array $id, array $prop = null)
     {
-        $dbTable = new Default_Model_DbTable_Permission();
+        $this->_assertValidId($id);
+
+        $dbTable = $this->_getDbTable();
 
         $dbTable->getDefaultAdapter()->beginTransaction();
 
@@ -127,7 +127,9 @@ class Default_Model_AclHandler_Entry_Private
 
     public function _delete(array $id)
     {
-        $dbTable = new Default_Model_DbTable_Permission();
+        $this->_assertValidId($id);
+
+        $dbTable = $this->_getDbTable();
 
         $dbTable->getDefaultAdapter()->beginTransaction();
 
@@ -151,5 +153,18 @@ class Default_Model_AclHandler_Entry_Private
         // permission that someone messed up, go up there and remove allow
         // for post
         throw Exception('Unable to post into databse, not sure why');
+    }
+
+    /**
+     * Get registered Zend_Db_Table instance, lazy load
+     *
+     * @return Zend_Db_Table_Abstract
+     */
+    protected function _getDbTable()
+    {
+        if (null === $this->_dbTable) {
+            $this->_dbTable = new Default_Model_DbTable_Permission();
+        }
+        return $this->_dbTable;
     }
 }

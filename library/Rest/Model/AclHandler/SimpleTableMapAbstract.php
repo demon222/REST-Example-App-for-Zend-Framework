@@ -156,18 +156,37 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
      */
     protected function _get(array $id)
     {
-        $result = $this->_getDbTable()->find(array('id = ?' => $id['id']));
+        $this->_assertValidId($id);
+
+        $this->_getPrePersist($id);
+
+        // set up array for db query
+        $queryBy = array();
+        foreach ($id as $idProp => $value) {
+            $queryBy[$idProp . ' = ?'] = $value;
+        }
+
+        $result = $this->_getDbTable()->find($queryBy);
 
         if (0 == count($result)) {
             throw new Rest_Model_NotFoundException();
         }
+        $item = $result->current()->toArray();
 
-        // 1 to 1, same names
-        $keys = $this->getPropertyKeys();
-        $map = array_combine($keys, $keys);
+        $this->_getPostPersist($item);
 
-        return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
+        return $item;
     }
+
+    /**
+     * @param array $item
+     */
+    protected function _getPrePersist(array &$id) {}
+
+    /**
+     * @param array $item
+     */
+    protected function _getPostPersist(array &$item) {}
 
     /**
      * @param array $id
@@ -177,22 +196,28 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
      */
     public function _put(array $id, array $prop = null)
     {
+        $this->_assertValidId($id);
+
         // if a seperate $prop list is not provided, use the $id list
         if ($prop === null) {
             $prop = $id;
         }
 
-        // could probably implement renaming by having 'id' set by $prop but
-        // not going to try to debug that right now
-        // 1 to 1, same names
+        // ensure only values for know fields are coming in and that identity
+        // keys are handled seperately. This disables renaming resources, might
+        // be good, not sure yet
         $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
-        $map = array_combine($keys, $keys);
+        $item = array_intersect_key($prop, array_flip($keys));
 
-        $item = Util_Array::mapIntersectingKeys($prop, $map);
+        $this->_putPrePersist($id, $item);
 
-        $this->_putPrePersist($item);
+        // set up array for db query
+        $queryBy = array();
+        foreach ($id as $idProp => $value) {
+            $queryBy[$idProp . ' = ?'] = $value;
+        }
 
-        $updated = $this->_getDbTable()->update($item, array('id = ?' => $id['id']));
+        $updated = $this->_getDbTable()->update($item, $queryBy);
 
         // if it didn't exists, could create the resource at that id... but no
         if ($updated <= 0) {
@@ -207,12 +232,12 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
     /**
      * @param array $item
      */
-    protected function _putPrePersist(array &$item) {}
+    protected function _putPrePersist(array &$id, array &$item) {}
 
     /**
      * @param array $item
      */
-    protected function _putPostPersist(array $item) {}
+    protected function _putPostPersist(array &$item) {}
 
     /**
      * @param array $id
@@ -220,9 +245,17 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
      */
     public function _delete(array $id)
     {
+        $this->_assertValidId($id);
+
         $this->_deletePrePersist($id);
 
-        $deleted = $this->_getDbTable()->delete(array('id = ?' => $id['id']));
+        // set up array for db query
+        $queryBy = array();
+        foreach ($id as $idProp => $value) {
+            $queryBy[$idProp . ' = ?'] = $value;
+        }
+
+        $deleted = $this->_getDbTable()->delete($queryBy);
 
         $this->_deletePostPersist($id);
 
@@ -247,12 +280,12 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
      */
     public function _post(array $prop)
     {
+        // ensure only values for know fields are coming in and that identity
+        // keys are assigned by any autoincrement in db.
         $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
-        $map = array_combine($keys, $keys);
+        $item = array_intersect_key($prop, array_flip($keys));
 
-        $item = Util_Array::mapIntersectingKeys($prop, $map);
-
-        $this->_post_pre_persist($item);
+        $this->_postPrePersist($item);
 
         $id = $this->_getDbTable()->insert($item);
 
@@ -260,9 +293,18 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
             return Exception('Unable to post into databse, not sure why');
         }
 
-        $item['id'] = $id;
+        // mash the id of the posted item into the item data
+        // the id will come back as a single value or an array, correct for that
+        if (!is_array($id)) {
+            // assumes that if a single value then 'id' is the correct property
+            $id = array('id' => $id);
+        }
+        // ok, mashing time
+        foreach ($id as $key => $value) {
+            $item[$key] = $value;
+        }
 
-        $this->_post_post_persist($item);
+        $this->_postPostPersist($item);
 
         return $item;
     }
@@ -275,7 +317,7 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
     /**
      * @param array $item
      */
-    protected function _postPostPersist(array $item) {}
+    protected function _postPostPersist(array &$item) {}
 
     /**
      * Get registered Zend_Db_Table instance, lazy load
@@ -283,6 +325,19 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
      * @return Zend_Db_Table_Abstract
      */
     abstract protected function _getDbTable();
+
+    /**
+     * @param array id
+     * @throws Exception
+     */
+    protected function _assertValidId(array $id)
+    {
+        if (count($this->getIdentityKeys()) != count($id)
+            || 0 < count(array_diff($this->getIdentityKeys(), array_keys($id)))
+        ) {
+            throw new Exception('invalid id property(ies) provided');
+        }
+    }
 
     /**
      * @return string

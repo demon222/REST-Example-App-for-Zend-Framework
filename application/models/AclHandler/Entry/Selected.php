@@ -1,10 +1,10 @@
 <?php
-require_once('Rest/Model/AclHandler/StandardAbstract.php');
+require_once('Rest/Model/AclHandler/SimpleTableMapAbstract.php');
 require_once('Rest/Model/EntourageImplementer/Interface.php');
 require_once('Util/Sql.php');
 
 class Default_Model_AclHandler_Entry_Selected
-    extends Rest_Model_AclHandler_StandardAbstract
+    extends Rest_Model_AclHandler_SimpleTableMapAbstract
     implements Rest_Model_EntourageImplementer_Interface
 {
 
@@ -89,81 +89,64 @@ class Default_Model_AclHandler_Entry_Selected
         INNER JOIN resource_role AS rr ON rr.resource_id = resource.id AND rr.role = "selected" AND rr.resource = "Entry"
         ';
 
-    public function _get(array $id, array $params = null)
+    protected function _getPrePersist(array &$id)
     {
-        $dbTable = new Default_Model_DbTable_ResourceRole();
-
-        $result = $dbTable->find(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'selected'));
-
-        if (0 == count($result)) {
-            throw new Rest_Model_NotFoundException();
-        }
-
-        // 1 to 1, same names
-        $keys = $this->getPropertyKeys();
-        $map = array_combine($keys, $keys);
-
-        return Util_Array::mapIntersectingKeys($result->current()->toArray(), $map);
+        $id['resource = ?'] = 'Entry';
+        $id['role = ?'] = 'selected';
     }
 
-    public function _put(array $id, array $prop = null)
+    protected function _getPostPersist(array &$item)
     {
-        $dbTable = new Default_Model_DbTable_ResourceRole();
-
-        // if a seperate $prop list is not provided, use the $id list
-        if ($prop === null) {
-            $prop = $id;
-        }
-
-        // could probably implement renaming by having 'id' set by $prop but
-        // not going to try to debug that right now
-        // 1 to 1, same names
-        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
-        $map = array_combine($keys, $keys);
-
-        $item = Util_Array::mapIntersectingKeys($prop, $map);
-
-        $updated = $dbTable->update($item, array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'selected'));
-
-        // if it didn't exists, could create the resource at that id... but no
-        if ($updated <= 0) {
-            throw new Rest_Model_NotFoundException();
-        }
-
-        return $item;
+        // map between internal and external property names
+        $item['entry_id'] = $item['resource_id'];
+        unset($item['resource_id']);
     }
 
-    public function _delete(array $id)
+    protected function _putPrePersist(array &$id, array &$item)
     {
-        $dbTable = new Default_Model_DbTable_ResourceRole();
+        $id['resource = ?'] = 'Entry';
+        $id['role = ?'] = 'selected';
 
-        $deleted = $dbTable->delete(array('id = ?' => $id['id'], 'resource = ?' => 'Entry', 'role = ?' => 'selected'));
-
-        if ($deleted == 0) {
-            throw new Rest_Model_NotFoundException();
-        }
+        // map between external and internal property names
+        $item['resource_id'] = $item['entry_id'];
+        unset($item['entry_id']);
     }
 
-    public function _post(array $prop)
+    protected function _putPostPersist(array &$item)
     {
-        $dbTable = new Default_Model_DbTable_ResourceRole();
+        // map between internal and external property names
+        $item['entry_id'] = $item['resource_id'];
+        unset($item['resource_id']);
+    }
 
-        $keys = array_diff($this->getPropertyKeys(), $this->getIdentityKeys());
-        $map = array_combine($keys, $keys);
+    protected function _deletePrePersist(array &$id)
+    {
+        $id['resource = ?'] = 'Entry';
+        $id['role = ?'] = 'selected';
+    }
 
-        $item = Util_Array::mapIntersectingKeys($prop, $map);
-
+    protected function _postPrePersist(array &$item)
+    {
         $item['resource'] = 'Entry';
         $item['role'] = 'selected';
 
-        $id = $dbTable->insert($item);
+        // map between external and internal property names
+        $item['resource_id'] = $item['entry_id'];
+        unset($item['entry_id']);
+    }
 
-        if ($id === null) {
-            throw Exception('Unable to post into databse, not sure why');
+    protected function _postPostPersist(array &$item)
+    {
+        // map between internal and external property names
+        $item['entry_id'] = $item['resource_id'];
+        unset($item['resource_id']);
+    }
+
+    protected function _getDbTable()
+    {
+        if (null === $this->_dbTable) {
+            $this->_dbTable = new Default_Model_DbTable_ResourceRole();
         }
-
-        $item['id'] = $id;
-
-        return $item;
+        return $this->_dbTable;
     }
 }
