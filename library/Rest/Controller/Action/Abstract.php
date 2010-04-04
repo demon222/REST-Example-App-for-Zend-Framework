@@ -49,6 +49,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         } catch (Rest_Model_MethodNotAllowedException $e) {
             $this->getResponse()->setHttpResponseCode(405);
             $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            $this->view->data = $e->getMessage();
             return;
         } catch (Rest_Model_BadRequestException $e) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -78,9 +79,8 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         try {
             $item = $handler->get($ids, $params);
         } catch (Zend_Acl_Exception $e) {
-            // acl check failed
-            $this->getResponse()->setHttpResponseCode(401);
-            $this->view->data = $e->getMessage();
+            // if a user doesn't have access the resource is secret, 404
+            $this->getResponse()->setHttpResponseCode(404);
             return;
         } catch (Rest_Model_NotFoundException $e) {
             $this->getResponse()->setHttpResponseCode(404);
@@ -88,6 +88,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         } catch (Rest_Model_MethodNotAllowedException $e) {
             $this->getResponse()->setHttpResponseCode(405);
             $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            $this->view->data = $e->getMessage();
             return;
         } catch (Rest_Model_BadRequestException $e) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -145,13 +146,21 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         try {
             $item = $handler->put($ids, $input);
         } catch (Zend_Acl_Exception $e) {
-            // acl check failed
+            // acl check failed, should return 404 to keep it secret unless
+            // user has access to it through 'get'
+            try {
+                $handler->get($ids);
+            } catch(Exception $e) {
+                $this->getResponse()->setHttpResponseCode(404);
+                return;
+            }
             $this->getResponse()->setHttpResponseCode(401);
             $this->view->data = $e->getMessage();
             return;
         } catch (Rest_Model_MethodNotAllowedException $e) {
             $this->getResponse()->setHttpResponseCode(405);
             $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            $this->view->data = $e->getMessage();
             return;
         } catch (Rest_Model_NotFoundException $e) {
             $this->getResponse()->setHttpResponseCode(404);
@@ -180,7 +189,14 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         try {
             $handler->delete($ids);
         } catch (Zend_Acl_Exception $e) {
-            // acl check failed
+            // acl check failed, should return 404 to keep it secret unless
+            // user has access to it through 'get'
+            try {
+                $handler->get($ids);
+            } catch(Exception $e) {
+                $this->getResponse()->setHttpResponseCode(404);
+                return;
+            }
             $this->getResponse()->setHttpResponseCode(401);
             $this->view->data = $e->getMessage();
             return;
@@ -190,6 +206,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         } catch (Rest_Model_MethodNotAllowedException $e) {
             $this->getResponse()->setHttpResponseCode(405);
             $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            $this->view->data = $e->getMessage();
             return;
         } catch (Rest_Model_BadRequestException $e) {
             $this->getResponse()->setHttpResponseCode(400);
@@ -211,22 +228,6 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         // meta information is passed back in the content (for convience, with
         // this library) 204 is not appropriate
         $this->getResponse()->setHttpResponseCode(200);
-    }
-
-    protected function _getIdsOfRequest($handler)
-    {
-
-        $idKeys = $handler->getIdentityKeys();
-        $ids = array();
-        foreach ($idKeys as $key) {
-            $value = $this->getRequest()->getParam($key);
-            if (null === $value) {
-                $this->getResponse()->setHttpResponseCode(400);
-                $this->view->data = $key . ' is required and was not provided in the request';
-            }
-            $ids[$key] = $value;
-        }
-        return $ids;
     }
 
     public function postAction()
@@ -265,6 +266,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         } catch (Rest_Model_MethodNotAllowedException $e) {
             $this->getResponse()->setHttpResponseCode(405);
             $this->getResponse()->setHeader('Allow', implode(', ', $e->getAllowedMethods()));
+            $this->view->data = $e->getMessage();
             return;
         } catch (Exception $e) {
             $this->getResponse()->setHttpResponseCode(500);
@@ -278,6 +280,22 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
             ->setHeader('Location', $this->view->url(array('action' => 'get', 'id' => $item['id'])));
 
         $this->view->data = $item;
+    }
+
+    protected function _getIdsOfRequest($handler)
+    {
+
+        $idKeys = $handler->getIdentityKeys();
+        $ids = array();
+        foreach ($idKeys as $key) {
+            $value = $this->getRequest()->getParam($key);
+            if (null === $value) {
+                $this->getResponse()->setHttpResponseCode(400);
+                $this->view->data = $key . ' is required and was not provided in the request';
+            }
+            $ids[$key] = $value;
+        }
+        return $ids;
     }
 
     public function preDispatch()
