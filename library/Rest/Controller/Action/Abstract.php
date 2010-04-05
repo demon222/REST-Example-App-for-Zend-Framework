@@ -300,52 +300,56 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
     public function preDispatch()
     {
+        $this->_startTime = microtime(true);
 
-$this->_startTime = microtime(true);
+        // log in procedure
 
-$config = array(
-    'accept_schemes' => 'basic digest',
-    'realm'          => 'Guestbook API',
-    'digest_domains' => '/',
-    'nonce_timeout'  => 3600,
-);
+{
+    $config = array(
+        'accept_schemes' => 'basic digest',
+        'realm'          => 'Guestbook API',
+        'digest_domains' => '/',
+        'nonce_timeout'  => 3600,
+    );
 
-$authAdapter = new Zend_Auth_Adapter_Http($config);
+    $authAdapter = new Zend_Auth_Adapter_Http($config);
 
-$basicResolver = new Zend_Auth_Adapter_Http_Resolver_File();
-$basicResolver->setFile(APPLICATION_PATH . '/configs/basicAuth.txt');
+    $basicResolver = new Zend_Auth_Adapter_Http_Resolver_File();
+    $basicResolver->setFile(APPLICATION_PATH . '/configs/basicAuth.txt');
 
-$digestResolver = new Zend_Auth_Adapter_Http_Resolver_File();
-$digestResolver->setFile(APPLICATION_PATH . '/configs/digestAuth.txt');
+    $digestResolver = new Zend_Auth_Adapter_Http_Resolver_File();
+    $digestResolver->setFile(APPLICATION_PATH . '/configs/digestAuth.txt');
 
-$authAdapter->setBasicResolver($basicResolver);
-$authAdapter->setDigestResolver($digestResolver);
+    $authAdapter->setBasicResolver($basicResolver);
+    $authAdapter->setDigestResolver($digestResolver);
 
-$authAdapter->setRequest($this->getRequest());
-$authAdapter->setResponse($this->getResponse());
+    $authAdapter->setRequest($this->getRequest());
+    $authAdapter->setResponse($this->getResponse());
 
-$result = Zend_Auth::getInstance()->authenticate($authAdapter);
+    $result = Zend_Auth::getInstance()->authenticate($authAdapter);
 
-if (!$result->isValid()) {
-    // Bad userame/password, or canceled password prompt
+    if (!$result->isValid()) {
+        // Bad userame/password, or canceled password prompt
 
-    // Authentication failed; print the reasons why
-    $this->getResponse()->setHttpResponseCode(401);
-    $this->view->data = $result->getMessages();
+        // Authentication failed; print the reasons why
+        $this->getResponse()->setHttpResponseCode(401);
+        $this->view->data = $result->getMessages();
 
-    // cancel the action but post dispatch will be executed
-    $this->setCancelAction(true);
-    return;
+        // cancel the action but post dispatch will be executed
+        $this->setCancelAction(true);
+        return;
+    }
+
+    $ident = $result->getIdentity();
+
+    $userTable = new Default_Model_DbTable_User();
+    $user = $userTable->fetchRow(array('username = ?' => $ident['username']));
+    if (null === $user) {
+        throw new Exception('User ' . $ident['username'] . ' is not in the database');
+    }
 }
 
-$ident = $result->getIdentity();
-
-$userTable = new Default_Model_DbTable_User();
-$user = $userTable->fetchRow(array('username = ?' => $ident['username']));
-if (null === $user) {
-    throw new Exception('User ' . $ident['username'] . ' is not in the database');
-}
-Zend_Registry::set('userId', $user->id);
+        Zend_Registry::set('userId', array('id' => $user->id));
     }
 
     public function postDispatch()

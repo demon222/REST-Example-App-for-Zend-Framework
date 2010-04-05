@@ -39,14 +39,12 @@ abstract class Rest_Model_AclHandler_Abstract
     /**
      * @param array|Zend_Acl $options
      */
-    function __construct($acl = null, $username = null)
+    function __construct($acl = null, $userId = null)
     {
         if ($acl instanceof Zend_Acl) {
             $this->setAcl($acl);
         }
-        if (is_string($username)) {
-            $this->setAclContextUser($username);
-        }
+        $this->setAclContextUser($userId);
     }
 
     /**

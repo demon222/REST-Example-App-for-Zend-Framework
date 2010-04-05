@@ -388,8 +388,11 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
      */
     protected function _getGenericAclListParams()
     {
+        // try various things to get the id out of the context user 'object'
+        $user = $this->getAclContextUser();
+
         return array(
-            ':userId' => $this->getAclContextUser(),
+            ':userId' => $user['id'],
             ':generalResource' => $this->getResourceId(),
             ':generalRoleResource' => $this->getRoleResourceId(),
         );

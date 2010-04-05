@@ -228,7 +228,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
             $resourceId = $roleResourceId;
         }
 
-        $userId = $this->getAclContextUser();
+        $user = $this->getAclContextUser();
 
         $roleResourceGeneral = $this->getRoleResourceId();
 
@@ -241,7 +241,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
                 . '';
             $query = $this->_getDbHandler()->query($sql);
             $query->execute(array(
-                ':userId' => $userId,
+                ':userId' => $user['id'],
                 ':roleResourceGeneral' => $roleResourceGeneral,
             ));
         } else {
@@ -255,7 +255,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
                     . '';
                 $query = $this->_getDbHandler()->query($sql);
                 $query->execute(array(
-                    ':userId' => $userId,
+                    ':userId' => $user['id'],
                     ':roleResourceGeneral' => $roleResourceGeneral,
                     ':resourceId' => $resourceId['id'],
                 ));
@@ -275,7 +275,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
                     . '';
                 $query = $this->_getDbHandler()->query($sql);
                 $query->execute(array(
-                    ':userId' => $userId,
+                    ':userId' => $user['id'],
                     ':roleResourceGeneral' => $roleResourceGeneral,
                     ':roleResourceSpecific' => $roleResourceSpecific,
                 ));
