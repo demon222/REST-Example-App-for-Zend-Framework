@@ -35,7 +35,7 @@ var tests = {
     set:[
         {
             description: 'user resource list contains [id, name, username]',
-            resourceUrlPart: 'api-user',
+            resourceUrlPart: 'api/user',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'name', 'username'];
 
@@ -60,7 +60,7 @@ var tests = {
         },
         {
             description: 'entry resource list contains [id, comment, creator_user_id, modified]',
-            resourceUrlPart: 'api-entry/',
+            resourceUrlPart: 'api/entry/',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'comment', 'creator_user_id', 'modified'];
 
@@ -85,7 +85,7 @@ var tests = {
         },
         {
             description: 'email resource list contains [id, user_id, email, primary]',
-            resourceUrlPart: 'api-email/',
+            resourceUrlPart: 'api/email/',
             expectedResponseTest: function(response) {
                 assertKeys = ['id', 'user_id', 'email', 'primary'];
 
@@ -110,14 +110,14 @@ var tests = {
         },
         {
             description: 'entourage called from resource list (entry resource, entourage Creator alias)',
-            resourceUrlPart: 'api-entry/?entourage=Creator',
+            resourceUrlPart: 'api/entry/?entourage=Creator',
             expectedResponseTest: function(response) {
                 return typeof response.content[0].Creator != 'undefined';
             }
         },
         {
             description: 'multiple entourages called from resource list (entry resource, entourage Creator)',
-            resourceUrlPart: 'api-user/?entourage[]=Email&entourage[]=Entry',
+            resourceUrlPart: 'api/user/?entourage[]=Email&entourage[]=Entry',
             expectedResponseTest: function(response) {
                 return true
                     && (typeof response.content[0].Email != 'undefined')
@@ -126,7 +126,7 @@ var tests = {
         },
         {
             description: 'get of an specific resource with entourage (entry 823, entourage Creator)',
-            resourceUrlPart: 'api-entry/823?entourage[]=Creator',
+            resourceUrlPart: 'api/entry/823?entourage[]=Creator',
             expectedResponseTest: function(response) {
                 return true
                     && (response.content.id == 823)
@@ -135,7 +135,7 @@ var tests = {
         },
         {
             description: 'get resources with specific creator, using JSON query param (creator 384)',
-            resourceUrlPart: 'api-entry/?{"where":{"creator_user_id":384}}',
+            resourceUrlPart: 'api/entry/?{"where":{"creator_user_id":384}}',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
                     return false;
@@ -151,7 +151,7 @@ var tests = {
         },
         {
             description: 'get resources with specific creator, using PHP encoded query param (creator 384)',
-            resourceUrlPart: 'api-entry/?where%5Bcreator_user_id%5D=384',
+            resourceUrlPart: 'api/entry/?where%5Bcreator_user_id%5D=384',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
                     return false;
@@ -167,7 +167,7 @@ var tests = {
         },
         {
             description: 'get resources with multiple specific creators, using JSON query param (creator 384, 456)',
-            resourceUrlPart: 'api-entry/?{"where":{"creator_user_id":[384,456]}}',
+            resourceUrlPart: 'api/entry/?{"where":{"creator_user_id":[384,456]}}',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
                     return false;
@@ -183,7 +183,7 @@ var tests = {
         },
         {
             description: 'have permission to get an entry as the owner (entry 123, user Alex)',
-            resourceUrlPart: 'api-entry/123',
+            resourceUrlPart: 'api/entry/123',
             credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
                 return (response.meta && response.meta._status_code != 401);
@@ -191,7 +191,7 @@ var tests = {
         },
         {
             description: 'shouldn\'t have permission to get an entry (entry 123, user Ed)',
-            resourceUrlPart: 'api-entry/123',
+            resourceUrlPart: 'api/entry/123',
             credentials: 'Dan:Dan',
             expectedResponseTest: function(response) {
                 return (response.meta && response.meta['_status-code'] == 401);
@@ -199,7 +199,7 @@ var tests = {
         },
         {
             description: 'only results matching filter (entry where creator_user_id 456)',
-            resourceUrlPart: 'api-entry/?{"where":{"creator_user_id":456}}',
+            resourceUrlPart: 'api/entry/?{"where":{"creator_user_id":456}}',
             credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
@@ -216,7 +216,7 @@ var tests = {
         },
         {
             description: 'list the entry-owners of an entry (entry 123)',
-            resourceUrlPart: 'api-entry-owner/?{"where":{"entry_id":123, "user_id":456}}',
+            resourceUrlPart: 'api/entry-owner/?{"where":{"entry_id":123, "user_id":456}}',
             credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
@@ -236,7 +236,7 @@ var tests = {
         },
         {
             description: 'get a specific entry-owner (entry-owner 10)',
-            resourceUrlPart: 'api-entry-owner/10',
+            resourceUrlPart: 'api/entry-owner/10',
             credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
                 item = response.content;
@@ -249,7 +249,7 @@ var tests = {
         },
         {
             description: 'owner of entry can see entry-selected (Alex with entry-selected 12, for Carl on entry 123)',
-            resourceUrlPart: 'api-entry-selected/',
+            resourceUrlPart: 'api/entry-selected/',
             credentials: 'Alex:Alex',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {
@@ -269,7 +269,7 @@ var tests = {
         },
         {
             description: 'selected user for entry can\'t see the permission (Carl with entry-selected 12)',
-            resourceUrlPart: 'api-entry-selected/',
+            resourceUrlPart: 'api/entry-selected/',
             credentials: 'Carl:Carl',
             expectedResponseTest: function(response) {
                 if (!$.isArray(response.content)) {

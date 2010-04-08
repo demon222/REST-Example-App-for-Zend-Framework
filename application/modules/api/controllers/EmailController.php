@@ -3,7 +3,7 @@
 require_once('Rest/Controller/Action/Abstract.php');
 require_once('Rest/Serializer.php');
 
-class ApiEmailController extends Rest_Controller_Action_Abstract
+class Api_EmailController extends Rest_Controller_Action_Abstract
 {
     protected static function _createModelHandler()
     {

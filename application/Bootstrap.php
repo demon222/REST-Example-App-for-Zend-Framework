@@ -59,26 +59,8 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         
         // set the whole app as using REST routing
         $front = $this->getResource('FrontController');
-        $restControllers = array(
-            'default' => array(
-                'api-community',
+        $restRoute = new Zend_Rest_Route($front, array(), array('api'));
 
-                'api-discussion',
-
-                'api-entry',
-                'api-entry-owner',
-                'api-entry-selected',
-                'api-entry-private',
-
-                'api-user',
-
-                'api-email',
-
-                'api-entourage',
-            )
-        );
-        $restRoute = new Zend_Rest_Route($front, array(), $restControllers);
-        
         $front->getRouter()->addRoute('rest', $restRoute);
     }
     
