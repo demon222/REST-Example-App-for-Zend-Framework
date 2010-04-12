@@ -83,11 +83,14 @@ class Default_Model_AclHandler_Entry_Owner
 
     protected $_defaultListSort = array('entry_id');
 
-    protected $_getListResourceSqlFragment = '
-        SELECT rr.id, rr.resource_id AS entry_id, rr.user_id
-        FROM entry AS resource
-        INNER JOIN resource_role AS rr ON rr.resource_id = resource.id AND rr.role = "owner" AND rr.resource = "Entry"
-        ';
+    protected function _getListResourceSqlFragment()
+    {
+        return ''
+            . ' SELECT rr.id, rr.resource_id AS entry_id, rr.user_id'
+            . ' FROM entry AS resource'
+            . ' INNER JOIN resource_role AS rr ON rr.resource_id = resource.id AND rr.role = "owner" AND rr.resource = "Entry"'
+            . '';
+    }
 
     protected function _getPrePersist(array &$id)
     {

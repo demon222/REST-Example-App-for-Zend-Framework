@@ -51,11 +51,14 @@ class Default_Model_AclHandler_Email
 
     protected $_defaultListSort = array('user_id', 'primary asc', 'email');
 
-    protected $_getListResourceSqlFragment = '
-        SELECT resource.id AS id, user_id, email, (resource.id = primary_email_id) AS "primary"
-        FROM email AS resource
-        INNER JOIN user ON user.id = user_id
-        ';
+    protected function _getListResourceSqlFragment()
+    {
+        return ''
+            . ' SELECT resource.id AS id, user_id, email, (resource.id = primary_email_id) AS "primary"'
+            . ' FROM email AS resource'
+            . ' INNER JOIN user ON user.id = user_id'
+            . '';
+    }
 
     /**
      * @param array $item

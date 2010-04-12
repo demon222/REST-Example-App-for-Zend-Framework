@@ -80,10 +80,13 @@ class Default_Model_AclHandler_Entry
 
     protected $_defaultListSort = array('modified');
 
-    protected $_getListResourceSqlFragment = '
-        SELECT id, discussion_id, comment, creator_user_id, modified
-        FROM entry AS resource
-        ';
+    protected function _getListResourceSqlFragment()
+    {
+        return ''
+            . ' SELECT id, discussion_id, comment, creator_user_id, modified'
+            . ' FROM entry AS resource'
+            . '';
+    }
 
     /**
      * @param array $item

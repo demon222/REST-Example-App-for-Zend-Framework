@@ -56,10 +56,13 @@ class Default_Model_AclHandler_Community
 
     protected $_defaultListSort = array('title');
 
-    protected $_getListResourceSqlFragment = '
-        SELECT resource.id AS id, title, pic
-        FROM community AS resource
-        ';
+    protected function _getListResourceSqlFragment()
+    {
+        return ''
+            . ' SELECT resource.id AS id, title, pic'
+            . ' FROM community AS resource'
+            . '';
+    }
 
     /**
      * @param array $id

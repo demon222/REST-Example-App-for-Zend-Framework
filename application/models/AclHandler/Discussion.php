@@ -57,7 +57,6 @@ class Default_Model_AclHandler_Discussion
                 'entourageModel' => 'Entry',
                 'entourageIdKey' => 'discussion_id',
                 'resourceIdKey' => 'id',
-                'singleOnly' => false,
             );
         }
         if ('RecentEntry' == $alias) {
@@ -65,6 +64,7 @@ class Default_Model_AclHandler_Discussion
                 'entourageModel' => 'Entry',
                 'entourageIdKey' => 'discussion_id',
                 'resourceIdKey' => 'id',
+                'sort' => 'modified DESC',
                 'singleOnly' => true,
             );
         }
@@ -77,10 +77,13 @@ class Default_Model_AclHandler_Discussion
 
     protected $_defaultListSort = array('title');
 
-    protected $_getListResourceSqlFragment = '
-        SELECT resource.id AS id, community_id, title, comment
-        FROM discussion AS resource
-        ';
+    protected function _getListResourceSqlFragment()
+    {
+        return ''
+            . ' SELECT resource.id AS id, community_id, title, comment'
+            . ' FROM discussion AS resource'
+            . '';
+    }
 
     /**
      * @param array $id

@@ -78,12 +78,15 @@ class Default_Model_AclHandler_Entry_Private
 
     protected $_defaultListSort = array('entry_id');
 
-    protected $_getListResourceSqlFragment = '
-        SELECT resource.id AS entry_id
-        FROM entry AS resource
-        INNER JOIN permission AS p1 ON p1.resource_id = resource.id AND p1.resource = "Entry" AND p1.role = "default" AND p1.privilege = "get" AND p1.permission = "deny"
-        INNER JOIN permission AS p2 ON p2.resource_id = resource.id AND p2.resource = "Entry" AND p2.role = "member" AND p2.privilege = "get" AND p2.permission = "allow"
-        ';
+    protected function _getListResourceSqlFragment()
+    {
+        return ''
+            . ' SELECT resource.id AS entry_id'
+            . ' FROM entry AS resource'
+            . ' INNER JOIN permission AS p1 ON p1.resource_id = resource.id AND p1.resource = "Entry" AND p1.role = "default" AND p1.privilege = "get" AND p1.permission = "deny"'
+            . ' INNER JOIN permission AS p2 ON p2.resource_id = resource.id AND p2.resource = "Entry" AND p2.role = "member" AND p2.privilege = "get" AND p2.permission = "allow"'
+            . '';
+    }
 
     public function _get(array $id, array $params = null)
     {

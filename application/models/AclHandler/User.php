@@ -71,12 +71,15 @@ class Default_Model_AclHandler_User
 
     protected $_defaultListWhere = array('comment', 'creator_user_id');
 
-    protected $_defaultListSort = array('name');
+    protected $_defaultListSort = array('name ASC', 'username ASC');
 
-    protected $_getListResourceSqlFragment = '
-        SELECT id, username, name
-        FROM user AS resource
-        ';
+    protected function _getListResourceSqlFragment()
+    {
+        return ''
+            . ' SELECT id, username, name'
+            . ' FROM user AS resource'
+            . '';
+    }
 
     /**
      * @param array $prop
