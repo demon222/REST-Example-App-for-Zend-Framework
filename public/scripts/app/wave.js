@@ -1,16 +1,20 @@
+$('body').css({'overflow': 'hidden', 'margin': 0, 'padding': 0, 'background': '#D9DDE0', 'background-repeat': 'repeat-x', 'min-height': '400px'});
 /** @example_title Wave layout
     @example_order 1000 */
 document.body.style.backgroundImage = 'url(' + uki.theme.imageSrc('body') + ')';
 var ContactsRender = {
     template: uki.theme.template('contacts-render'),
     render: function(data, rect, i) {
-        return uki.extend(this.template, [undefined, uki.theme.imageSrc('unknown'), undefined, data[0] || data[1]]).join('');
+        return uki.extend(this.template, [
+            undefined, uki.theme.imageSrc('unknown'),
+            undefined, data.username
+        ]).join('');
     },
     setSelected: function(container, data, state, focus) {
         container.style.backgroundColor = state && focus ? '#E0E8A4' : state ? '#CCC' : '';
     }
 };
-var WaveRender = uki.extend({}, ContactsRender, {
+var WaveRender = {
     template: uki.theme.template('wave-render'),
     render: function(data, rect, i) {
         return uki.extend(this.template, [
@@ -19,8 +23,11 @@ var WaveRender = uki.extend({}, ContactsRender, {
             undefined, data.title,
             undefined, data.RecentEntry_modified
         ]).join('');
+    },
+    setSelected: function(container, data, state, focus) {
+        container.style.backgroundColor = state && focus ? '#E0E8A4' : state ? '#CCC' : '';
     }
-});
+};
  
 function toolbarButton (label, offset) {
     var html = uki.extend(uki.theme.template('toolbar-button', {height: 24, size: new uki.geometry.Size(16, 16)}), [label, undefined, 'url('+uki.theme.imageSrc('icons-sprite')+') ' + offset]);
