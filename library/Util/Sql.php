@@ -80,11 +80,11 @@ class Util_Sql
             if (!in_array($prop, $validPropertyKeys)) {
                 throw new Rest_Model_BadRequestException($prop . ' is not a valid sort property [' . implode(', ', $validPropertyKeys) . ']');
             }
-            if ($direction != '' && $direction != 'asc' && $direction != 'desc') {
-                throw new Rest_Model_BadRequestException($direction . ' is not a valid sort direction [asc, desc]');
+            if ($direction != '' && strtoupper($direction != 'ASC') && strtoupper($direction != 'DESC')) {
+                throw new Rest_Model_BadRequestException($direction . ' is not a valid sort direction [ASC, DESC]');
             }
             if ($direction === null) {
-                $direction = 'asc';
+                $direction = 'ASC';
             }
             $resultList[] = '"' . $prop . '" ' . strtoupper($direction);
         }
