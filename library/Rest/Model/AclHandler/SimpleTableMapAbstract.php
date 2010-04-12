@@ -66,10 +66,32 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
             $params['sort'] = $this->_defaultListSort;
         }
 
-        if (!isset($params['limit']) || 0 >= $params['limit'] || $this->_listMaxLength < $params['limit']) {
-            $params['limit'] = $this->_listMaxLength;
+        // expected that: 0 < limit <= _listMaxLength
+        {
+            if (!isset($params['limit']) || 0 >= $params['limit'] || $this->_listMaxLength < $params['limit']) {
+                $params['limit'] = $this->_listMaxLength;
+            }
+            $params['limit'] = (integer) $params['limit'];
         }
-        $params['limit'] = (integer) $params['limit'];
+
+        // properties is expected to be an array of string property keys or a
+        // string of space separated property keys
+        //
+        // array('id', 'discussion_id', 'comment', 'modified')
+        //   - or -
+        // 'id discussion_id comment modified'
+        {
+            if (!isset($params['properties'])) {
+                $params['properties'] = $this->getPropertyKeys();
+            }
+            if (!is_array($params['properties'])) {
+                $params['properties'] = explode(' ', $params['properties']);
+            }
+            $validatedProps = array_intersect($this->getPropertyKeys(), $params['properties']);
+            if (count($validatedProps) != count($params['properties'])) {
+                throw new Rest_Model_BadRequestException('[' . implode(', ', array_diff($params['properties'], $validatedProps)) . '] are not valid properties for ' . $this->_resourceName);
+            }
+        }
 
         // this is an optimization. Imposes a slight overhead performance hit,
         // but for queries where their is very restrictive dependency and a
@@ -114,7 +136,7 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
         $offset = 0;
         do {
             // RESOURCE
-            $sql = $this->_getListResourceSqlFragment;
+            $sql = $this->_getListResourceSqlFragment();
 
             $sql .= ''
                 // ACL
@@ -145,6 +167,13 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
 
             $offset += $dbLimit;
         } while ($countCumulativeFiltered < $limit && $countUnfiltered == $dbLimit);
+
+        // ensure that only the desired properties are returned
+        if (!empty($cumulativeRowSet) && count($params['properties']) != count($cumulativeRowSet[0])) {
+            foreach ($cumulativeRowSet as &$row) {
+                $row = array_intersect_key($row, array_flip($params['properties']));
+            }
+        }
 
         return array_slice($cumulativeRowSet, 0, $limit);
     }
