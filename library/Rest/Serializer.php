@@ -12,6 +12,7 @@ class Rest_Serializer
     const URL_ENCODE = 'application/x-www-form-urlencoded';
     const URL_JSON_ENCODE = 'url-json-encode';
     const FULL_URL_UNKNOWN = 'full-url-unknown';
+    const JSON_READABLE = 'json-readble';
 
     /**
      * Is checked against to determine type, see identifyType method.
@@ -27,6 +28,7 @@ class Rest_Serializer
         'JAVASCRIPT' => self::JAVASCRIPT,
         'URL_ENCODE' => self::URL_ENCODE,
         'ANYTHING' => self::ANYTHING,
+        'JSON_READABLE' => self::JSON_READABLE,
     );
 
     /**
@@ -171,6 +173,10 @@ class Rest_Serializer
     {
         if ($type == self::JSON || $type == self::JAVASCRIPT || $type == self::ANYTHING) {
             return Zend_Json::encode($array);
+        }
+
+        if ($type == self::JSON_READABLE) {
+            return Zend_Json::prettyPrint(Zend_Json::encode($array), array("indent" => "  "));
         }
 
         if ($type == self::XML) {
