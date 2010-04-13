@@ -1,5 +1,7 @@
 <?php
 require_once('Rest/Model/AclHandler/Abstract.php');
+require_once('Rest/Model/UnauthorizedException.php');
+require_once('Rest/Model/NotFoundException.php');
 
 abstract class Rest_Model_AclHandler_StandardAbstract
     extends Rest_Model_AclHandler_Abstract
@@ -17,7 +19,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
     /**
      * @param array $id
      * @return array
-     * @throws Zend_Acl_Exception
+     * @throws Rest_Model_Exception
      */
     public function get(array $id, array $params = null)
     {
@@ -26,8 +28,14 @@ abstract class Rest_Model_AclHandler_StandardAbstract
             return $entourageHandler->get($id, array($this, $params['entourage']));
         }
 
-        // will throw Zend_Acl_Exception if not allowed
-        $this->_assertAllowed('get', $id);
+        try {
+
+            $this->_assertAllowed('get', $id);
+
+        } catch (Rest_Model_UnauthorizedException $e) {
+            // resources are secret if not Acl approved, say it doesn't exist
+            throw new Rest_Model_NotFoundException();
+        }
 
         $item = $this->_get($id);
 
@@ -46,12 +54,25 @@ abstract class Rest_Model_AclHandler_StandardAbstract
      * @param array $id
      * @param array $prop
      * @return array
-     * @throws Zend_Acl_Exception
+     * @throws Rest_Model_Exception
      */
     public function put(array $id, array $prop = null)
     {
-        // will throw Zend_Acl_Exception if not allowed
-        $this->_assertAllowed('put', $id);
+        try {
+
+            $this->_assertAllowed('put', $id);
+
+        } catch (Rest_Model_UnauthorizedException $e) {
+            // acl check failed, user can't user this method but if they can
+            // access the resource by get then it isn't secret, just permissions
+            try {
+                $this->get($id);
+            } catch (Exception $e) {
+                throw new Rest_Model_NotFoundException();
+            }
+            // will throw Rest_Model_UnauthorizedException if not allowed
+            throw $e;
+        }
 
         $this->_assertDependencyAllowed('put', $id);
 
@@ -67,12 +88,25 @@ abstract class Rest_Model_AclHandler_StandardAbstract
 
     /**
      * @param array $id
-     * @throws Zend_Acl_Exception
+     * @throws Rest_Model_Exception
      */
     public function delete(array $id)
     {
-        // will throw Zend_Acl_Exception if not allowed
-        $this->_assertAllowed('delete', $id);
+        try {
+
+            $this->_assertAllowed('delete', $id);
+
+        } catch (Rest_Model_UnauthorizedException $e) {
+            // acl check failed, user can't user this method but if they can
+            // access the resource by get then it isn't secret, just permissions
+            try {
+                $this->get($id);
+            } catch (Exception $e) {
+                throw new Rest_Model_NotFoundException();
+            }
+            // will throw Rest_Model_UnauthorizedException if not allowed
+            throw $e;
+        }
 
         $this->_assertDependencyAllowed('delete', $id);
 
@@ -87,11 +121,11 @@ abstract class Rest_Model_AclHandler_StandardAbstract
     /**
      * @param array $prop
      * @return array
-     * @throws Zend_Acl_Exception
+     * @throws Rest_Model_Exception
      */
     public function post(array $prop)
     {
-        // will throw Zend_Acl_Exception if not allowed
+        // will throw Rest_Model_UnauthorizedException if not allowed
         $this->_assertAllowed('post');
 
         $this->_assertDependencyAllowed('post', $prop);
@@ -108,7 +142,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
     /**
      * @param string $method
      * @param array $id
-     * @throws Zend_Acl_Exception
+     * @throws Rest_Model_Exception
      */
     protected function _assertAllowed($method, $id = null)
     {
@@ -122,13 +156,13 @@ abstract class Rest_Model_AclHandler_StandardAbstract
             return;
         }
         // oh no, the user isn't allowed, say so
-        throw new Zend_Acl_Exception($method . ' for ' . $this->getResourceId() . ' is not allowed');
+        throw new Rest_Model_UnauthorizedException($method . ' for ' . $this->getResourceId() . ' is not allowed');
     }
 
     /**
      * @param array $items
      * @param string $throwOrFitler
-     * @thows Zend_Acl_Exception
+     * @thows Rest_Model_Exception
      */
     protected function _assertDependencyAllowed($method, array $item)
     {
@@ -155,11 +189,11 @@ abstract class Rest_Model_AclHandler_StandardAbstract
 
             try {
                 $parentResourceHandler->get($parentId);
-            } catch (Zend_Acl_Exception $e) {
-                // catch the Acl exception and emit one with this resource's
-                // method and id. Don't want to emit details from a lower
-                // level than the user requested
-                throw new Zend_Acl_Exception($method . ' for ' . $this->getResourceId() . ' is not allowed');
+            } catch (Rest_Model_NotFoundException $e) {
+                // if the resource doesn't exist for 'get' request throw that
+                // access to this resource is unauthorized (because of
+                // dependency check failure)
+                throw new Rest_Model_UnauthorizedException($method . ' for ' . $this->getResourceId() . ' is not allowed');
             }
         }
     }
@@ -167,7 +201,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
     /**
      * @param array $items
      * @param string $throwOrFitler
-     * @thows Zend_Acl_Exception
+     * @thows Rest_Model_Exception
      */
     protected function _filterDependenciesNotAllowed(array &$items)
     {
@@ -203,7 +237,7 @@ abstract class Rest_Model_AclHandler_StandardAbstract
                 $cache[$cacheKey] = false;
                 try {
                     $parentResourceHandler->get($parentId);
-                } catch (Zend_Acl_Exception $e) {
+                } catch (Rest_Model_NotFoundException $e) {
                     $filtered[$i] = true;
                     $cache[$cacheKey] = true;
                 }

@@ -1,5 +1,7 @@
 <?php
 require_once('Rest/Serializer.php');
+require_once('Rest/Model/Exception.php');
+require_once('Rest/Model/UnauthorizedException.php');
 require_once('Rest/Model/NotFoundException.php');
 require_once('Rest/Model/MethodNotAllowedException.php');
 require_once('Rest/Model/BadRequestException.php');
@@ -78,10 +80,6 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
         // load the model
         try {
             $item = $handler->get($ids, $params);
-        } catch (Zend_Acl_Exception $e) {
-            // if a user doesn't have access the resource is secret, 404
-            $this->getResponse()->setHttpResponseCode(404);
-            return;
         } catch (Rest_Model_NotFoundException $e) {
             $this->getResponse()->setHttpResponseCode(404);
             return;
@@ -145,15 +143,9 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
         try {
             $item = $handler->put($ids, $input);
-        } catch (Zend_Acl_Exception $e) {
-            // acl check failed, should return 404 to keep it secret unless
-            // user has access to it through 'get'
-            try {
-                $handler->get($ids);
-            } catch(Exception $e) {
-                $this->getResponse()->setHttpResponseCode(404);
-                return;
-            }
+        } catch (Rest_Model_UnauthorizedException $e) {
+            // if the resource Acl fails for this method but works for get
+            // ie. user knows it exists but can't to do 'method'
             $this->getResponse()->setHttpResponseCode(401);
             $this->view->data = $e->getMessage();
             return;
@@ -188,15 +180,9 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
         try {
             $handler->delete($ids);
-        } catch (Zend_Acl_Exception $e) {
-            // acl check failed, should return 404 to keep it secret unless
-            // user has access to it through 'get'
-            try {
-                $handler->get($ids);
-            } catch(Exception $e) {
-                $this->getResponse()->setHttpResponseCode(404);
-                return;
-            }
+        } catch (Rest_Model_UnauthorizedException $e) {
+            // if the resource Acl fails for this method but works for get
+            // ie. user knows it exists but can't to do 'method'
             $this->getResponse()->setHttpResponseCode(401);
             $this->view->data = $e->getMessage();
             return;
@@ -258,7 +244,7 @@ abstract class Rest_Controller_Action_Abstract extends ZendPatch_Controller_Acti
 
         try {
             $item = $handler->post($input);
-        } catch (Zend_Acl_Exception $e) {
+        } catch (Rest_Model_UnauthorizedException $e) {
             // acl check failed
             $this->getResponse()->setHttpResponseCode(401);
             $this->view->data = $e->getMessage();

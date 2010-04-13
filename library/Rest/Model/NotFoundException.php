@@ -1,5 +1,7 @@
 <?php
 
-class Rest_Model_NotFoundException extends Zend_Exception
+require_once('Rest/Model/Exception.php');
+
+class Rest_Model_NotFoundException extends Rest_Model_Exception
 {
 }
