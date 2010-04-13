@@ -228,7 +228,7 @@
                     T, '" />', T, '</div>'
                 ];
             },
-            'wave-render': function() {
+            'discussion-render': function() {
                 return [
                     '<div style="height:35px;text-align:left;font-size:13px;line-height:16px;margin:2px 0;position:relative;border-bottom:1px solid #EEE;color:#333">' +
                     '<img style="position:absolute;left:7px;top:2px;border:1px solid #CCC;width:27px;height:27px;" src="',T ,'" />' +

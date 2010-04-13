@@ -1,0 +1,23 @@
+body {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    background: #D9DDE0;
+    background-repeat: repeat-x;
+    min-height: 400px
+}
+
+#entries .item {
+    margin: 10px;
+    overflow: auto;
+}
+
+#entries .item + .item {
+    border-top: 1px solid grey;
+    padding-top: 10px;
+}
+
+#entries .item .meta {
+    color: grey;
+    float: right;
+}

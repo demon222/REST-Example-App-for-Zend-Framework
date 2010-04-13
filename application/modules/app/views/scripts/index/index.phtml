@@ -1,15 +1,14 @@
-    <script src='/scripts/app/uki-theamless.js'></script>
-    <div id='message' style='display:none'>
+    <div id='entries' style='display:none'>
 <?php foreach ($this->entries as $entry): ?>
-        <div style='border-bottom: 1px solid grey; margin: 10px; padding-bottom: 10px; overflow: auto'>
+        <div class='item'>
 <?php echo $entry['comment'] ?>
-        <div style='color: grey; float: right;'><?php echo $this->escape($entry['Creator']['username']) ?> - <?php echo $entry['modified'] ?></div>
+            <div class='meta'><?php echo $this->escape($entry['Creator']['username']) ?> - <?php echo $entry['modified'] ?></div>
         </div>
 <?php endforeach ?>
     </div>
     <script>
         var contacts = <?php echo Zend_Json::encode($this->users) ?>;
-        var waves = <?php echo Zend_Json::encode($this->discussions) ?>;
+        var discussions = <?php echo Zend_Json::encode($this->discussions) ?>;
 
         function flatten(obj) {
             var propSet = [];
@@ -26,9 +25,9 @@
             return propSet;
         }
 
-        for (var i in waves) {
-            waves[i] = flatten(waves[i]);
+        for (var i in discussions) {
+            discussions[i] = flatten(discussions[i]);
         }
     </script>
-    <script src='/scripts/app/wave-theme.js'></script>
-    <script src='/scripts/app/wave.js'></script>
+    <script src='/app/js/wave-theme.js'></script>
+    <script src='/app/js/wave.js'></script>
