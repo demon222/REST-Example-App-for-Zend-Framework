@@ -1,33 +1,37 @@
-    <div id='entries' style='display:none'>
+<div id='entries' style='display:none'>
 <?php foreach ($this->entries as $entry): ?>
-        <div class='item'>
+    <div class='item'>
 <?php echo $entry['comment'] ?>
-            <div class='meta'><?php echo $this->escape($entry['Creator']['username']) ?> - <?php echo $entry['modified'] ?></div>
-        </div>
-<?php endforeach ?>
+        <div class='meta'><?php echo $this->escape($entry['Creator']['username']) ?> - <?php echo $entry['modified'] ?></div>
     </div>
-    <script>
-        var contacts = <?php echo Zend_Json::encode($this->users) ?>;
-        var discussions = <?php echo Zend_Json::encode($this->discussions) ?>;
-
-        function flatten(obj) {
-            var propSet = [];
-            for (var i in obj) {
-                if ('object' == typeof obj[i] && null != obj[i]) {
-                    var subPropSet = flatten(obj[i]);
-                    for (var si in subPropSet) {
-                        propSet[i + '_' + si] = subPropSet[si];
-                    }
-                } else {
-                    propSet[i] = (obj[i]);
+<?php endforeach ?>
+</div>
+<script>
+    function flatten(obj) {
+        var propSet = [];
+        for (var i in obj) {
+            if ('object' == typeof obj[i] && null != obj[i]) {
+                var subPropSet = flatten(obj[i]);
+                for (var si in subPropSet) {
+                    propSet[i + '_' + si] = subPropSet[si];
                 }
+            } else {
+                propSet[i] = (obj[i]);
             }
-            return propSet;
         }
+        return propSet;
+    }
 
-        for (var i in discussions) {
-            discussions[i] = flatten(discussions[i]);
-        }
-    </script>
-    <script src='/app/js/wave-theme.js'></script>
-    <script src='/app/js/wave.js'></script>
+    var contacts = <?php echo Zend_Json::encode($this->users) ?>;
+    var discussions = <?php echo Zend_Json::encode($this->discussions) ?>;
+    for (var i in discussions) {
+        discussions[i] = flatten(discussions[i]);
+    }
+    var discussion = <?php echo Zend_Json::encode($this->discussion) ?>;
+    var communities = <?php echo Zend_Json::encode($this->communities) ?>;
+    for (var i in communities) {
+        communities[i] = flatten(communities[i]);
+    }
+</script>
+<script src='/app/js/wave-theme.js'></script>
+<script src='/app/js/wave.js'></script>

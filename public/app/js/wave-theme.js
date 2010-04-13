@@ -222,23 +222,33 @@
             }
         },
         templates: {
-            'contacts-render': function() {
+            'contactsRender': function() {
                 return [
-                    '<div style="height:28px;text-align:left;font-size:12px;margin:4px 0 4px 39px;position:relative"><img style="position:absolute;left:-33px;top:-2px;border:1px solid #CCC;width:27px;height:27px;" src="',
-                    T, '" />', T, '</div>'
+                    '<div class="contacts-row">' +
+                    '<img class="user-pic" src="',T,'" /><div class="user-name" title="',T,'">',T,'</div>' +
+                    '</div>'
                 ];
             },
-            'discussion-render': function() {
+            'communitiesRowRender': function() {
                 return [
-                    '<div style="height:35px;text-align:left;font-size:13px;line-height:16px;margin:2px 0;position:relative;border-bottom:1px solid #EEE;color:#333">' +
-                    '<img style="position:absolute;left:7px;top:2px;border:1px solid #CCC;width:27px;height:27px;" src="',T ,'" />' +
-                    '<div style="margin:0 116px 0 104px;height:32px;overflow:hidden;">',T,' &ndash; <span style="color:#999">',T,'</span></div>' + 
-                    '<div style="position:absolute;right:0;width:88px;top:0;">',T,'</div></div>'
+                    '<div class="communities-row">' +
+                    '<img class="user-pic" src="',T,'" />' +
+                    '<div class="title">',T,'</div>' +
+                    '</div>'
                 ];
             },
-            'toolbar-button': function(params) {
+            'discussionsRowRender': function() {
                 return [
-                    T, '<div style="background:',T,';width:', params.size.width, 'px;height:', params.size.height,
+                    '<div class="discussions-row">' +
+                    '<img class="user-pic" src="',T,'" />' +
+                    '<div class="title-and-user-name">',T,' &ndash; <span class="title" title="',T,'">',T,'</span></div>' +
+                    '<div class="modified">',T,'</div>' +
+                    '</div>'
+                ];
+            },
+            'toolbarButton': function(params) {
+                return [
+                    T,'<div style="background:',T,';width:', params.size.width, 'px;height:', params.size.height,
                     'px;position:absolute;top:', (params.height - params.size.height)/2, 'px;left:-',params.size.width + 4,'px"></div>'
                 ];
             }

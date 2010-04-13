@@ -4,7 +4,7 @@ body {
     padding: 0;
     background: #D9DDE0;
     background-repeat: repeat-x;
-    min-height: 400px
+    min-height: 400px;
 }
 
 #entries .item {
@@ -20,4 +20,74 @@ body {
 #entries .item .meta {
     color: grey;
     float: right;
+}
+
+.user-pic {
+    position: absolute;
+    left: 7px;
+    top: 2px;
+    border: 1px solid #CCC;
+    width: 27px;
+    height: 27px;
+}
+
+.contacts-row {
+    height: 28px;
+    text-align: left;
+    font-size: 12px;
+    margin: 2px 0;
+    position: relative;
+}
+
+.contacts-row .user-name {
+    margin: 0 0 0 45px;
+    top: 8px;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.communities-row {
+    height: 35px;
+    text-align: left;
+    font-size: 13px;
+    line-height: 16px;
+    margin: 2px 0;
+    position: relative;
+    border-bottom: 1px solid #EEE;
+    color: #333;
+}
+
+.communities-row .title {
+    margin: 0 0 0 60px;
+    height: 32px;
+    overflow: hidden;
+}
+
+.discussions-row {
+    height: 35px;
+    text-align: left;
+    font-size: 13px;
+    line-height: 16px;
+    margin: 2px 0;
+    position: relative;
+    border-bottom: 1px solid #EEE;
+    color: #333;
+}
+
+.discussions-row .title-and-user-name {
+    margin: 0 100px 0 60px;
+    height: 32px;
+    overflow: hidden;
+}
+
+.discussions-row .title-and-user-name .title {
+    color: #999;
+}
+
+.discussions-row .modified {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 88px;
 }
