@@ -1,14 +1,14 @@
 (function() {
     var defaultCss = 'position:absolute;z-index:100;-moz-user-focus:none;font-family:Arial,Helvetica,sans-serif;',
         T = '';
-    
+
     function u(url) {
         return uki.theme.wave.imagePath + url;
     }
- 
+
     uki.theme.wave = uki.extend({}, uki.theme.Base, {
         imagePath: 'i/',
-        
+
         backgrounds: {
             link: function() {
                 return new uki.background.Css({color:'#003EA8', textDecoration: 'underline', cursor: 'pointer'});
@@ -16,7 +16,7 @@
             thumb: function() {
                 return new uki.background.Css({border: '1px solid #CCC'});
             },
-            
+
             'button-normal': function() {
                 var prefix = "button/normal-";
                 return new uki.background.Sliced9({
@@ -103,8 +103,6 @@
             'toolbar-popup-button-hover': function() {
                 return new uki.background.Css({ textAlign: 'left', fontWeight: 'normal', fontSize: '11px', background: '#4086FF', color: '#FFF' });
             },
-            
-            
             'popup-normal': function() {
                 var prefix = "popup/normal-";
                 return new uki.background.Sliced9({
@@ -114,14 +112,12 @@
                     m: [u(prefix + "m.png"), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGUAAABkCAYAAACfIP5qAAAAmklEQVR42u3RAQ0AAAgDIPf+nbXG56ACWepkqCNFClKkIEUKUqQgBSlSkCIFKVKQghQpSJGCFClIQYoUpEhBihSkIEUKUqQgRQpSkCIFKVKQIgUpSJGCFClIkYIUpEhBihSkSEEKUqQgRQpSpCAFKVKQIgUpUpCCFClIkYIUKUhBihSkSEGKFKQgRQpSpCBFClKkIAUpUpDy1QGga5NE1OzMgwAAAABJRU5ErkJggg=="]
                 }, "12 11 11 11", {inset: '-3 -9 -11 -2'});
             },
-            
             'toolbar-normal': function() {
                 var prefix = "toolbar/normal-";
                 return new uki.background.Sliced9({
                     m: [u(prefix + "m.png"), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAYCAYAAABKtPtEAAAAT0lEQVRYw+3YUREAQAhCQb2xfxC7GEm5IDwi7DB8kN2tME5KsgZ4YR4AADBPmW9g1N0BYA2wuzQAAADYABoAAAAAMII0AAAA7MIhMjPWAB+KnTlLvIreawAAAABJRU5ErkJggg=="]
                 }, "0 0 0 0");
-            },           
-            
+            },
             'search-input': function() {
                 var prefix = "searchField/normal-";
                 return new uki.background.Sliced9({
@@ -136,7 +132,6 @@
                     m: [u(prefix + "m.png"), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAATYAAAAYCAYAAABwbdFbAAAAo0lEQVR42u3XIQ7CABBE0T0VSeEGVHIRfEuQKAQa0zoM96qqrGqyWBwK0c17yb/CJBPnxy4lqVJxfbYpSZWKaZpSkioV8zynJFUqlmVJSapUrOuakrSlfokEKMawAYYNwLABGDYAwwZg2ADDBmDYAAwbgGEDMGyAYQMwbACGDeBvw3Z/n1KSttztdfyqzbiMh5SkLdeP++yGJruhyX5oXFGgng9Zp0b7vJwDoAAAAABJRU5ErkJggg=="]
                 }, "0 14 0 14", {inset: '0 -24 0 -8'});
             },
-                     
             'panel-white': function() {
                 var prefix = "panel/white-";
                 return new uki.background.Sliced9({
@@ -185,7 +180,6 @@
             'toolbar-button-down': function() {
                 return [u("button/toolbar-button-down-m.png"), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAYCAYAAABKtPtEAAAASElEQVRYw+3UAQ0AQQgDQdLzbwQzSPoX0iFZA4Qhu/s1lymfJJnq3nvTnAuwAD/AD0AAAQQQQAABBBBAAAEEEEAAgTYCdzfN/XZrf4Cm0hHTAAAAAElFTkSuQmCC"];
             }
-            
         },
         doms: {
             'splitPane-vertical': function(params) {
@@ -204,7 +198,6 @@
                 if (!handle.style.cursor || window.opera) handle.style.cursor = 'n-resize';
                 return handle;
             },
-            
             'splitPane-horizontal': function(params) {
                 var commonHorizontalStyle = 'cursor:col-resize;cursor:ew-resize;z-index:200;overflow:hidden;',
                     handle = params.handleWidth == 1 ?
@@ -253,7 +246,6 @@
                 ];
             }
         }
-        
     });
     uki.theme.wave.backgrounds['button-hover'] = uki.theme.wave.backgrounds['button-normal'];
     uki.theme.wave.backgrounds['a-button-hover'] = uki.theme.wave.backgrounds['a-button-normal'];
@@ -263,6 +255,6 @@
     uki.theme.wave.backgrounds['link-button-down'] = uki.theme.wave.backgrounds['link-button-hover'] = uki.theme.wave.backgrounds['link-button-normal'];
     uki.theme.wave.backgrounds['toolbar-popup'] = uki.theme.wave.backgrounds['popup-normal'];
     uki.theme.wave.backgrounds['toolbar-popup-button-down'] = uki.theme.wave.backgrounds['toolbar-popup-button-hover'];
-    
+
     uki.theme.register(uki.theme.wave);
 })();
