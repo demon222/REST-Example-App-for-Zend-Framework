@@ -84,29 +84,35 @@ body {
     white-space: normal;
     text-align: left;
     position: relative;
-    margin: 10px 10px 5px 10px;
+    margin: 10px 10px 20px 10px;
 }
 
 .entries-row .meta {
-    background-color: #ccc;
-    color: #fff;
-    overflow: auto;
+    color: grey;
+    padding-top: 20px;
+    border-top: 1px solid gray;
+    overflow: hidden;
+    height: 33px;
+    position: relative;
 }
 
 .entries-row .user-pic {
     float: left;
+    position: relative;
 }
 
 .entries-row .creator {
-    float: left;
-    margin-left: 41px
+    position: relative;
+    margin-left: 14px;
+    display: inline;
 }
 
 .entries-row .modified {
-    color: grey;
+    display: inline;
+    position: relative;
     float: right;
 }
 
 .entries-row .comment {
-    padding-top: 36px;
+    margin-top: 10px;
 }
