@@ -32,6 +32,10 @@
     for (var i in communities) {
         communities[i] = flatten(communities[i]);
     }
+    var entries = <?php echo Zend_Json::encode($this->entries) ?>;
+    for (var i in entries) {
+        entries[i] = flatten(entries[i]);
+    }
 </script>
 <script src='/app/js/wave-theme.js'></script>
 <script src='/app/js/wave.js'></script>

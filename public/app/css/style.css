@@ -3,23 +3,9 @@ body {
     margin: 0;
     padding: 0;
     background: #D9DDE0;
+    background: #D9DDE0;
     background-repeat: repeat-x;
     min-height: 400px;
-}
-
-#entries .item {
-    margin: 10px;
-    overflow: auto;
-}
-
-#entries .item + .item {
-    border-top: 1px solid grey;
-    padding-top: 10px;
-}
-
-#entries .item .meta {
-    color: grey;
-    float: right;
 }
 
 .user-pic {
@@ -90,4 +76,37 @@ body {
     right: 0;
     top: 0;
     width: 88px;
+}
+
+.entries-row {
+    font-size: 13px;
+    line-height: 14px;
+    white-space: normal;
+    text-align: left;
+    position: relative;
+    margin: 10px 10px 5px 10px;
+}
+
+.entries-row .meta {
+    background-color: #ccc;
+    color: #fff;
+    overflow: auto;
+}
+
+.entries-row .user-pic {
+    float: left;
+}
+
+.entries-row .creator {
+    float: left;
+    margin-left: 41px
+}
+
+.entries-row .modified {
+    color: grey;
+    float: right;
+}
+
+.entries-row .comment {
+    padding-top: 36px;
 }

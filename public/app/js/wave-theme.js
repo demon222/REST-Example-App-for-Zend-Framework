@@ -218,24 +218,36 @@
             'contactsRender': function() {
                 return [
                     '<div class="contacts-row">' +
-                    '<img class="user-pic" src="',T,'" /><div class="user-name" title="',T,'">',T,'</div>' +
+                        '<img class="user-pic" src="',T,'" /><div class="user-name" title="',T,'">',T,'</div>' +
                     '</div>'
                 ];
             },
             'communitiesRowRender': function() {
                 return [
                     '<div class="communities-row">' +
-                    '<img class="user-pic" src="',T,'" />' +
-                    '<div class="title">',T,'</div>' +
+                        '<img class="user-pic" src="',T,'" />' +
+                        '<div class="title">',T,'</div>' +
                     '</div>'
                 ];
             },
             'discussionsRowRender': function() {
                 return [
                     '<div class="discussions-row">' +
-                    '<img class="user-pic" src="',T,'" />' +
-                    '<div class="title-and-user-name">',T,' &ndash; <span class="title" title="',T,'">',T,'</span></div>' +
-                    '<div class="modified">',T,'</div>' +
+                        '<img class="user-pic" src="',T,'" />' +
+                        '<div class="title-and-user-name">',T,' &ndash; <span class="title" title="',T,'">',T,'</span></div>' +
+                        '<div class="modified">',T,'</div>' +
+                    '</div>'
+                ];
+            },
+            'entriesRowRender': function() {
+                return [
+                    '<div class="entries-row">' +
+                        '<div class="meta">' +
+                            '<img class="user-pic" src="',T,'" />' +
+                            '<div class="creator">',T,'</div>' +
+                            '<div class="modified">',T,'</div>' +
+                        '</div>' +
+                        '<div class="comment">',T,'</div>' +
                     '</div>'
                 ];
             },

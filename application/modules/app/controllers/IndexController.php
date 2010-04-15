@@ -6,9 +6,12 @@ class App_IndexController extends Zend_Controller_Action
     {
         $acl = Zend_Registry::get('acl');
 
-        $ident = Zend_Auth::getInstance()->getIdentity();
+//        $ident = Zend_Auth::getInstance()->getIdentity();
+//        $userTable = new Default_Model_DbTable_User();
+//        $userRow = $userTable->fetchRow(array('username = ?' => $ident['username']));
+
         $userTable = new Default_Model_DbTable_User();
-        $userRow = $userTable->fetchRow(array('username = ?' => $ident['username']));
+        $userRow = $userTable->fetchRow(array('username = ?' => 'Alex'));
 
         $userId = $userRow ? $userRow->id : null;
         Zend_Registry::set('userId', $userId);
