@@ -102,9 +102,9 @@ body {
 }
 
 .entries-row .creator {
+    display: inline;
     position: relative;
     margin-left: 14px;
-    display: inline;
 }
 
 .entries-row .modified {

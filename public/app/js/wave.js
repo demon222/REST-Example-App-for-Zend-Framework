@@ -40,6 +40,7 @@ var DiscussionsRender = {
     template: uki.theme.template('discussionsRowRender'),
     render: function(data, rect, i) {
         return uki.extend(this.template, [
+            undefined, data.id,
             undefined, uki.theme.imageSrc('unknown'),
             undefined, esc(data.RecentEntry_Creator_username),
             undefined, esc(data.title),
@@ -77,7 +78,7 @@ function panel (label, args) {
     return uki.extend({}, { view: 'Box', name: 'panel', background: 'theme(panel-blue)', rect: '100 100', anchors: 'left top right bottom' }, args);
 }
 
-uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 975 970', minSize: '800 400', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 166, leftMin: 166, rightMin: 600,
+uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 400', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 166, leftMin: 166, rightMin: 600,
     leftChildViews: { view: 'VSplitPane', id: 'splitLeft', rect: '166 970', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 200, bottomMin: 230, topMin: 120,
         topChildViews: panel('Navigation', { rect: '166 200', background: 'theme(panel-white)', childViews: [
             { view: 'ScrollPane', rect: '0 24 166 170', anchors: 'left top right bottom', childViews: [
@@ -102,7 +103,7 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 975 970', minSize: '800 
             ] }
         ] })
     },
-    rightChildViews: { view: 'HSplitPane', id: 'splitRight', rect: '795 970', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 300, leftMin: 300, rightMin: 300,
+    rightChildViews: { view: 'HSplitPane', id: 'splitRight', rect: '789 970', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 300, leftMin: 300, rightMin: 300,
         leftChildViews: { view: 'VSplitPane', id: 'splitLeft', rect: '166 970', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 300, bottomMin: 250, topMin: 150,
             topChildViews: panel('Communities', { rect: '300 300', childViews: [
                 { view: 'Box', rect: '0 23 300 32', background: 'theme(box-lblue)', anchors: 'left top right', childViews: [
@@ -133,15 +134,15 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 975 970', minSize: '800 
                 ] }
             ] } )
         },
-        rightChildViews: panel('Posts', { rect: '470 970', background: 'theme(panel-blue)', childViews: [
-            { view: 'Label', id: 'discussion', rect: '0 23 470 50', anchors: 'left top right', multiline: true, scrollable: true, inset: '2 2', textSelectable: true },
-            { view: 'Toolbar', rect: '0 73 470 24', anchors: 'left top right', background: 'theme(toolbar-normal)', buttons: [
+        rightChildViews: panel('Posts', { rect: '474 970', background: 'theme(panel-blue)', childViews: [
+            { view: 'Label', id: 'discussion', rect: '0 23 474 50', anchors: 'left top right', multiline: true, scrollable: true, inset: '2 2', textSelectable: true },
+            { view: 'Toolbar', rect: '0 73 474 24', anchors: 'left top right', background: 'theme(toolbar-normal)', buttons: [
                 toolbarButton('Reply', '-128px 0'), toolbarButton('Follow', '0 0'), toolbarButton('Unfollow', '-16px 0')
             ] },
-            { view: 'ScrollPane', rect: '0 97 470 813', anchors: 'left top right bottom', childViews: [
-                { view: 'VFlow', id: "entries", rect: '470 813', anchors: 'left top right' }
+            { view: 'ScrollPane', rect: '0 97 474 813', anchors: 'left top right bottom', childViews: [
+                { view: 'VFlow', id: "entries", rect: '474 813', anchors: 'left top right' }
             ] },
-            { view: 'Box', rect: '0 910 470 56', background: 'theme(box-lblue)', anchors: 'left bottom right', childViews: [
+            { view: 'Box', rect: '0 910 474 56', background: 'theme(box-lblue)', anchors: 'left bottom right', childViews: [
                 { view: 'Image', rect: '7 7 27 27', anchors: 'left top', src: uki.theme.imageSrc('unknown'), background: 'theme(thumb)' },
                 { view: 'Button', rect: '58 16 33 24', backgroundPrefix: 'plus-big-button-', anchors: 'left bottom', focusable: false }
             ] }
@@ -164,7 +165,6 @@ for (var i in entries) {
     l.resizeToContents('height');
 }
 uki('#entries').layout();
-
 uki('#entries').bind('resize', function(eventObj) {
     var childViews = eventObj.source.childViews();
     for (var i in childViews) {
@@ -172,8 +172,10 @@ uki('#entries').bind('resize', function(eventObj) {
     }
 });
 
-
 uki('#discussions').data(discussions).parent().layout();
+uki('#discussions').click(function (eventObj) {
+    console.log(eventObj);
+});
 
 uki('#discussion').data(discussion).parent().layout();
 

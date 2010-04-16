@@ -232,11 +232,13 @@
             },
             'discussionsRowRender': function() {
                 return [
-                    '<div class="discussions-row">' +
-                        '<img class="user-pic" src="',T,'" />' +
-                        '<div class="title-and-user-name">',T,' &ndash; <span class="title" title="',T,'">',T,'</span></div>' +
-                        '<div class="modified">',T,'</div>' +
-                    '</div>'
+                    '<a href="/app/index/index/id/',T,'">' +
+                        '<div class="discussions-row">' +
+                            '<img class="user-pic" src="',T,'" />' +
+                            '<div class="title-and-user-name">',T,' &ndash; <span class="title" title="',T,'">',T,'</span></div>' +
+                            '<div class="modified">',T,'</div>' +
+                        '</div>' +
+                    '</a>'
                 ];
             },
             'entriesRowRender': function() {
