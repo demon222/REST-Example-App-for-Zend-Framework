@@ -158,13 +158,27 @@ uki('#splitRight').handlePosition(400).layout();
 
 uki('#contactsList').data(contacts).parent().layout();
 
-for (var i in entries) {
-    uki('#entries').append(
-        l = uki({ view: 'Label', rect: '0 0 470 0', anchors: 'left top right', inset: '0 0', html: EntriesRender.render(entries[i]) })
-    );
-    l.resizeToContents('height');
+function entriesInit(entries) {
+    var ukiObj = uki('#entries');
+
+    // remove any existing content
+    var removes = ukiObj.childViews();
+    for (var i in removes) {
+        ukiObj.removeChild(removes[i]);
+    }
+
+    // load in new content
+    for (var i in entries) {
+        ukiObj.append(
+            l = uki({ view: 'Label', rect: '0 0 470 0', anchors: 'left top right', inset: '0 0', html: EntriesRender.render(entries[i]) })
+        );
+        l.resizeToContents('height');
+    }
+
+    ukiObj.layout();
 }
-uki('#entries').layout();
+
+entriesInit(entries);
 uki('#entries').bind('resize', function(eventObj) {
     var childViews = eventObj.source.childViews();
     for (var i in childViews) {
@@ -174,7 +188,16 @@ uki('#entries').bind('resize', function(eventObj) {
 
 uki('#discussions').data(discussions).parent().layout();
 uki('#discussions').click(function (eventObj) {
-    console.log(eventObj);
+    eventObj.preventDefault();
+    var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .discussions-row)').last().children().first().attr('href').replace(/.*\/id\/(\d+).*?/, '$1');
+
+    $.getJSON('/api/entry', {'where': {'discussion_id': id}, 'entourage': ['Creator']}, function(data, textStatus) {
+        var entries = data.content
+        for (var i in entries) {
+            entries[i] = flatten(entries[i]);
+        }
+        entriesInit(entries);
+    });
 });
 
 uki('#discussion').data(discussion).parent().layout();
