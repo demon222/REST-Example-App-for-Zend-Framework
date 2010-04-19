@@ -59,6 +59,15 @@ class Default_Model_AclHandler_Discussion
                 'resourceIdKey' => 'id',
             );
         }
+        if ('EntriesWithCreator' == $alias) {
+            return array(
+                'entourageName' => 'Entries',
+                'entourageModel' => 'Entry',
+                'entourageIdKey' => 'discussion_id',
+                'resourceIdKey' => 'id',
+                'entourage' => 'Creator'
+            );
+        }
         if ('RecentEntry' == $alias) {
             return array(
                 'entourageModel' => 'Entry',

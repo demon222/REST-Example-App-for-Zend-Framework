@@ -17,7 +17,7 @@ body {
     height: 27px;
 }
 
-.contacts-row {
+.users-row {
     height: 28px;
     text-align: left;
     font-size: 12px;
@@ -25,7 +25,7 @@ body {
     position: relative;
 }
 
-.contacts-row .user-name {
+.users-row .user-name {
     margin: 0 0 0 45px;
     top: 8px;
     position: relative;

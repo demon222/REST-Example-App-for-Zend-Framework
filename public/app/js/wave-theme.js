@@ -215,9 +215,9 @@
             }
         },
         templates: {
-            'contactsRender': function() {
+            'usersRender': function() {
                 return [
-                    '<div class="contacts-row">' +
+                    '<div class="users-row">' +
                         '<img class="user-pic" src="',T,'" /><div class="user-name" title="',T,'">',T,'</div>' +
                     '</div>'
                 ];

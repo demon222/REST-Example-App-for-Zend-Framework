@@ -19,15 +19,12 @@ class App_IndexController extends Zend_Controller_Action
         $discussionId = $this->getRequest()->getParam('id', 0);
 
         $handler = new Default_Model_AclHandler_Entry($acl, $userId);
-        $this->view->entries = $handler->getList(array(
-            'entourage' => 'Creator',
-            'where' => array(
-                'discussion_id' => $discussionId
-            )
-        ));
 
         $handler = new Default_Model_AclHandler_User($acl, $userId);
         $this->view->users = $handler->getList();
+
+        $handler = new Default_Model_AclHandler_Community($acl, $userId);
+        $this->view->communities = $handler->getList();
 
         $handler = new Default_Model_AclHandler_Discussion($acl, $userId);
         $this->view->discussions = $handler->getList(array(
@@ -42,13 +39,11 @@ class App_IndexController extends Zend_Controller_Action
                 )
             )
         ));
-        try {
-            $this->view->discussion = $handler->get(array('id' => $discussionId));
-        } catch(Rest_Model_Exception $e) {
-            $this->view->discussion = null;
-        }
 
-        $handler = new Default_Model_AclHandler_Community($acl, $userId);
-        $this->view->communities = $handler->getList();
+        $this->view->discussion = $handler->getList(array(
+            'entourage' => 'EntriesWithCreator',
+            'where' => array('id' => $discussionId),
+        ));
+        $this->view->discussion = $this->view->discussion ? $this->view->discussion[0] : null;
     }
 }
