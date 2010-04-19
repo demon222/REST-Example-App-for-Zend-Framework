@@ -56,7 +56,12 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
         if (isset($params['where'])) {
             // use default properties to search against if none are provided
             if (!is_array($params['where'])) {
-                $params['where'] = array(implode(' ', $this->_defaultListWhere) => $params['where']);
+                // no where terms specified, use the defaults at the 'or' level
+                $defaultWhereStruct = array();
+                foreach ($this->_defaultListWhere as $whereTerm) {
+                    $defaultWhereStruct[] = array($whereTerm => $params['where']);
+                }
+                $params['where'] = array($defaultWhereStruct);
             }
         } else {
             $params['where'] = array();
@@ -126,7 +131,7 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
             }
         }
 
-        $whereAndSet = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
+        $whereSqlAndParam = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
         $sortList = Util_Sql::generateSqlSort($params['sort'], $this->getPropertyKeys());
 
         $limit = $params['limit'];
@@ -146,7 +151,7 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
                 . ' WHERE ' . $this->_getGenericAclListWheres()
 
                 // RESOURCE
-                . ' AND ' . implode(' AND ', array_merge($whereAndSet['sql'], array('1 = 1')))
+                . ' AND ' . $whereSqlAndParam['sql']
                 . ' ORDER BY ' . implode(', ', $sortList)
                 . ' LIMIT ' . $dbLimit
                 . ' OFFSET ' . $offset
@@ -154,7 +159,7 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
                 . '';
 
             $query = $this->_getDbHandler()->prepare($sql);
-            $query->execute(array_merge($this->_getGenericAclListParams(), $whereAndSet['param']));
+            $query->execute(array_merge($this->_getGenericAclListParams(), $whereSqlAndParam['param']));
             $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);
 
             $countUnfiltered = count($rowSet);

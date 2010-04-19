@@ -18,6 +18,7 @@
     <li><a href="/api/entry/?entourage=Creator">entries with creator user information</a></li>
     <li><a href="/api/user/?entourage=Entry">users with entries of that user attached</a></li>
     <li><a href="/api/user/?entourage[]=Entry&entourage[]=PrimaryEmail">users with entries and primary email attached</a></li>
+    <li><a href="/api/entry/?<?php echo rawurlEncode('{"where":{"~ comment":"will seem","discussion_id":170}}') ?>">test</a></li>
 </ul>
 
 <h3>Demo User Names and Password</h3>

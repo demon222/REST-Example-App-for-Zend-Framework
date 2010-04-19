@@ -20,24 +20,47 @@ class Util_Sql
      */
     public static function generateSqlWheresAndParams($whereStructure, $validPropertyKeys)
     {
-        $andSet = array();
         $params = array();
-
         $i = 0;
-        // top level of where structure define conditions that are anded together
-        foreach ($whereStructure as $conds => $value) {
-            // space_separated_or_conditions
-            $conds = explode(' ', $conds);
+
+        // top level of where structure defines 'and' conditions, nested are
+        // 'or' conditions
+        $andSet = array();
+        foreach ($whereStructure as $andIndex => $andCond) {
+            if (is_string($andIndex)) {
+                // a single cond has been specified, set it up for the general
+                // case. $andIndex corresponds to the term, $andCond to the value
+                $andCond = array($andIndex => $andCond);
+            }
 
             $orSet = array();
-            foreach ($conds as $cond) {
-                // ensure that the condition specified is a valid property
-                if (!in_array($cond, $validPropertyKeys)) {
-                    throw new Rest_Model_BadRequestException($cond . ' is not a valid where property [' . implode(', ', $validPropertyKeys) . ']');
+            foreach ($andCond as $term => $value) {
+//var_dump($term);
+//exit();
+                // suppress error if term lacks a comparison type and then correct
+                @list($comparisonType, $prop) = explode(' ', $term, 2);
+                if (null === $prop) {
+                    $prop = $comparisonType;
+                    // if not specified, '=' is the default comparison type
+                    $comparisonType = '=';
+                }
+
+                // ensure that the comparison type specified is accepted
+                $validComparisonTypes = array('=', '~', '>', '>=', '<', '<=');
+                if (!in_array($comparisonType, $validComparisonTypes)) {
+                    throw new Rest_Model_BadRequestException($comparisonType . ' is not a valid where comparison type [' . implode(', ', $validComparisonTypes) . ']');
+                }
+
+                // ensure that the property specified is a valid property
+                if (!in_array($prop, $validPropertyKeys)) {
+                    throw new Rest_Model_BadRequestException($prop . ' is not a valid where property [' . implode(', ', $validPropertyKeys) . ']');
                 }
 
                 // create SQL for supported values types: array, string or integer
                 if (is_array($value) && !empty($value)) {
+                    if ('=' != $comparisonType) {
+                        throw new Rest_Model_BadRequestException('where condition must have \'=\' comparison type when using matching against an array. ' . $prop . ' ' . $comparisonType . ' ' . implode(',', $value) . ' is not valid.');
+                    }
 
                     $orKeys = array();
                     foreach ($value as $v) {
@@ -49,11 +72,21 @@ class Util_Sql
                             $i++;
                         }
                     }
-                    $orSet[] = '"' . $cond . '" IN (' . implode(', ', $orKeys) . ')';
+                    $orSet[] = '"' . $prop . '" IN (' . implode(', ', $orKeys) . ')';
                 } elseif (is_string($value) || is_int($value)) {
-                    // a simple string or an integer, create 'property = :value_0'
-                    $params[':value_' . $i] = $value;
-                    $orSet[] = '"' . $cond . '" = ' . ':value_' . $i;
+                    // standard way to handle things
+                    $condition = '"' . $prop . '" ' . $comparisonType . ' ' . ':value_' . $i;
+                    $param = $value;
+
+                    // special cases
+                    if ('~' == $comparisonType) {
+                        $condition = '"' . $prop . '" LIKE :value_' . $i;
+                        $param = '%' . $value . '%';
+                    }
+
+                    $orSet[] = $condition;
+                    $params[':value_' . $i] = $param;
+
                     $i++;
                 }
             }
@@ -66,7 +99,10 @@ class Util_Sql
             $andSet[] = implode(' OR ', $orSet);
         }
 
-        return array('sql' => $andSet, 'param' => $params);
+        return array(
+            'sql' => implode(' AND ', array_merge($andSet, array('1 = 1'))),
+            'param' => $params,
+        );
     }
 
     public static function generateSqlSort($sortList, $validPropertyKeys)
