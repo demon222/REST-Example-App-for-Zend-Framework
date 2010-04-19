@@ -73,7 +73,7 @@ class Util_Sql
 
                     if ('=' == $comparisonType) {
                         $condition = '"' . $prop . '" IN (' . implode(', ', $orKeys) . ')';
-                    } elseif ('!=' == $comparisonType) { {
+                    } elseif ('!=' == $comparisonType) {
                         $condition = '"' . $prop . '" NOT IN (' . implode(', ', $orKeys) . ')';
                     }
 
