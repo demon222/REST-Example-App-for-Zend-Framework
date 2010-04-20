@@ -138,8 +138,7 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 
                     { view: 'Button', rect: '271 5 24 18', backgroundPrefix: 'plus-button-', anchors: 'right bottom', focusable: false }
                 ] }
             ] } )
-        },
-        rightChildViews: false //discussionDetailsPanel(discussion)
+        }
     }
 }).attachTo(window, '1000 1000');
 
@@ -158,53 +157,39 @@ function discussionDetailsPanel(data) {
         // TODO: put up some kind of 'loading...' indicator
 
         loadDiscussionDetails(data);
-        data = {'title': 'Loading discussion', 'Entries': []};
+        return;
     }
 
-    var entries = [];
+    var parent = uki('#splitRight')[0];
+
+    var content = ' ';
     for (var i in data.Entries) {
-        entries[i] = flatten(data.Entries[i]);
+        content += EntriesRender.render(flatten(data.Entries[i]));
     }
 
-    // load in new content
-    var entryViews = [];
-    for (var i in entries) {
-        entryViews.push(
-            l = uki({ view: 'Label', rect: '0 0 470 0', anchors: 'left top right', inset: '0 0', html: EntriesRender.render(entries[i]) })
-        );
-//        l.resizeToContents('height');
-    }
+    var height = parent.maxY();
+    var width = parent.maxX() - parent.leftChildViews()[0].maxX() - 150;
 
-    var p = panel(data.title, { rect: '474 970', background: 'theme(panel-blue)', childViews: [
-        { view: 'Label', rect: '0 23 474 50', anchors: 'left top right', multiline: true, scrollable: true, inset: '2 2', textSelectable: true },
-        { view: 'Toolbar', rect: '0 73 474 24', anchors: 'left top right', background: 'theme(toolbar-normal)', buttons: [
+    var resourcePanel = panel(data.title, { rect: width + ' ' + height, background: 'theme(panel-blue)', childViews: [
+        { view: 'Label', rect: '0 23 ' + width + ' 50', anchors: 'left top right', multiline: true, scrollable: true, inset: '2 2', textSelectable: true },
+        { view: 'Toolbar', rect: '0 73 ' + width + ' 24', anchors: 'left top right', background: 'theme(toolbar-normal)', buttons: [
             toolbarButton('Reply', '-128px 0')
         ] },
-        { view: 'ScrollPane', rect: '0 97 474 869', anchors: 'left top right bottom', childViews: [
-            { view: 'VFlow', rect: '474 869', anchors: 'left top right', childViews: entryViews }
+        { view: 'ScrollPane', rect: '0 97 ' + width + ' ' + (height - 101), anchors: 'left top right bottom', childViews: [
+            { view: 'Label', rect: width + ' 0', anchors: 'left top right', html: content }
         ] }
     ] });
 
-/*
-    p.bind('resize', function(eventObj) {
-        var childViews = eventObj.source.childViews();
-// TODO, no longer addressing the entries, need revision
-        for (var i in childViews) {
-            childViews[i].resizeToContents('height');
-        }
+    parent.rightChildViews(resourcePanel);
 
-        eventObj.layout();
-    });
-*/
+    parent.rightChildViews()[0].childViews()[2].childViews()[0].resizeToContents('height');
 
-    return p;
+    parent.rightChildViews()[0].layout();
 }
-
 
 function loadDiscussionDetails(id) {
     $.getJSON('/api/discussion', {'where': {'id': id}, 'entourage': ['EntriesWithCreator']}, function(data, textStatus) {
-        console.log(data.content[0]);
-        uki('#splitRight')[0].rightChildViews(discussionDetailsPanel(data.content[0]));
+        discussionDetailsPanel(data.content[0]);
     });
 }
 
@@ -217,7 +202,5 @@ uki('#discussions').click(function (eventObj) {
     eventObj.preventDefault();
     var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .discussions-row)').last().children().first().attr('href').replace(/.*\/id\/(\d+).*?/, '$1');
 
-    uki('#splitRight')[0].rightChildViews(discussionDetailsPanel(id));
+    discussionDetailsPanel(id);
 });
-
-//uki('#discussion').data(discussion).parent().layout();
