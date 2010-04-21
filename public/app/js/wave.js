@@ -103,7 +103,7 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 
                 { view: 'Button', rect: '140 46 13 13', anchors: 'right top', backgroundPrefix: 'search-button-', focusable: false }
             ] },
             { view: 'ScrollPane', rect: '0 93 166 706', anchors: 'left top right bottom', childViews: [
-                { view: 'List', id: "usersList", rect: '166 0', anchors: 'left top right', minSize: '0 100', textSelectable: false, rowHeight: 34, render: UsersRender }
+                { view: 'List', id: "users_list", rect: '166 0', anchors: 'left top right', minSize: '0 100', textSelectable: false, rowHeight: 34, render: UsersRender }
             ] }
         ] })
     },
@@ -118,7 +118,7 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 
                     toolbarButton('Join', '-112px 0'), toolbarButton('Follow', '0 0'), toolbarButton('Delete', '-96px 0'), toolbarButton('Invite', '0 0')
                 ] },
                 { view: 'ScrollPane', rect: '0 79 300 193', anchors: 'left top right bottom', childViews: [
-                    { view: 'List', id: "communities", rect: '300 0', anchors: 'left top right', background: 'none', textSelectable: false, rowHeight: 38, render: CommunitiesRender }
+                    { view: 'List', id: 'communities_list', rect: '300 0', anchors: 'left top right', background: 'none', textSelectable: false, rowHeight: 38, render: CommunitiesRender }
                 ] },
                 { view: 'Box', rect: '0 272 300 24', background: 'theme(box-lblue-bottom)', anchors: 'left bottom right', childViews: [
                     { view: 'Button', rect: '271 5 24 18', backgroundPrefix: 'plus-button-', anchors: 'right bottom', focusable: false }
@@ -126,14 +126,14 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 
             ] } ),
             bottomChildViews: panel('Discussions', { rect: '300 655', childViews: [
                 { view: 'Box', rect: '0 23 300 32', background: 'theme(box-lblue)', anchors: 'left top right', childViews: [
-                    { view: 'TextField', rect: '14 4 255 24', anchors: 'left top right', style: { fontSize: '12px' }, backgroundPrefix: 'search-', value: '', placeholder: 'Search discussions' },
-                    { view: 'Button', rect: '274 9 13 13', anchors: 'right top', backgroundPrefix: 'search-button-', focusable: false }
+                    { view: 'TextField', id: 'discussions_search', rect: '14 4 255 24', anchors: 'left top right', style: { fontSize: '12px' }, backgroundPrefix: 'search-', value: '', placeholder: 'Search discussions' },
+                    { view: 'Button', id: 'discussions_search_launch', rect: '274 9 13 13', anchors: 'right top', backgroundPrefix: 'search-button-', focusable: false }
                 ] },
                 { view: 'Toolbar', rect: '0 55 300 24', anchors: 'left top right', background: 'theme(toolbar-normal)', buttons: [
                     toolbarButton('Follow', '0 0'), toolbarButton('Delete', '-96px 0'), toolbarButton('Move to', '-112px 0')
                 ] },
                 { view: 'ScrollPane', rect: '0 79 300 548', anchors: 'left top right bottom', childViews: [
-                    { view: 'List', id: "discussions", rect: '300 0', anchors: 'left top right', background: 'none', textSelectable: false, rowHeight: 38, render: DiscussionsRender }
+                    { view: 'List', id: 'discussions_list', rect: '300 0', anchors: 'left top right', background: 'none', textSelectable: false, rowHeight: 38, render: DiscussionsRender }
                 ] },
                 { view: 'Box', rect: '0 627 300 24', background: 'theme(box-lblue-bottom)', anchors: 'left bottom right', childViews: [
                     { view: 'Button', rect: '271 5 24 18', backgroundPrefix: 'plus-button-', anchors: 'right bottom', focusable: false }
@@ -149,6 +149,65 @@ uki('#splitRight').bind('handleMove', function(e) {
 
 uki('#splitRight').handlePosition(400).layout();
 
+
+function renderListDiscussions(param, data) {
+    // if data is just the id of the discussion to implement, call
+    if (null !== param) {
+        // TODO: show existing localstorage of discussion
+        // TODO: put up some kind of 'loading...' indicator
+
+        loadDiscussions(param);
+        return;
+    }
+
+    var resources = [];
+    for (var i in data) {
+        resources[i] = flatten(data[i]);
+    }
+
+    uki('#discussions_list').data(resources).parent().layout();
+}
+
+function loadDiscussions(param) {
+    param = null === param ? {} : param;
+    param.filter = null === param.filter ? {} : param.filter;
+
+    var queryParam = {
+        'entourage': {
+            'RecentEntry': {
+                'entourageModel': 'Entry',
+                'entourageIdKey': 'discussion_id',
+                'resourceIdKey': 'id',
+                'singleOnly': true,
+                'properties': 'id discussion_id modified creator_user_id',
+                'entourage': 'Creator'
+            }
+        },
+        'where': []
+    }
+
+    if (param.filter.community_id) {
+        if ($.isArray(param.filter.community_id)) {
+            // standardize to array base
+            param.filter.community_id = [param.filter.community_id];
+        }
+
+        queryParam.where.push({'community_id': param.filter.community_id});
+    }
+
+    if (param.filter.id) {
+        if ($.isArray(param.filter.id)) {
+            // standardize to array base
+            param.filter.id = [param.filter.id];
+        }
+
+        queryParam.where.push({'id': param.filter.discussion_id});
+    }
+
+    $.getJSON('/api/discussion', queryParam, function(data, textStatus) {
+        renderListDiscussions(null, data.content);
+    });
+}
 
 function renderDiscussionDetailsPanel(param, data) {
     // if data is just the id of the discussion to implement, call
@@ -193,80 +252,18 @@ function loadDiscussionDetails(id) {
     });
 }
 
-function renderListDiscussions(param, data) {
-    // if data is just the id of the discussion to implement, call
-    if (null !== param) {
-        // TODO: show existing localstorage of discussion
-        // TODO: put up some kind of 'loading...' indicator
-
-        loadDiscussions(param);
-        return;
-    }
-
-    var resources = [];
-    for (var i in data) {
-        resources[i] = flatten(data[i]);
-    }
-
-    uki('#discussions').data(resources).parent().layout();
-
-    var view = uki('#discussions');
-    console.log(view);
-}
-
-function loadDiscussions(param) {
-    param = null === param ? {} : param;
-    param.filter = null === param.filter ? {} : param.filter;
-
-    var queryParam = {
-        'entourage': {
-            'RecentEntry': {
-                'entourageModel': 'Entry',
-                'entourageIdKey': 'discussion_id',
-                'resourceIdKey': 'id',
-                'singleOnly': true,
-                'properties': 'id discussion_id modified creator_user_id',
-                'entourage': 'Creator'
-            }
-        },
-        'where': []
-    }
-
-    if (param.filter.community_id) {
-        if ($.isArray(param.filter.community_id)) {
-            // standardize to array base
-            param.filter.community_id = [param.filter.community_id];
-        }
-
-        queryParam.where.push({'community_id': param.filter.community_id});
-    }
-
-    if (param.filter.id) {
-        if ($.isArray(param.filter.id)) {
-            // standardize to array base
-            param.filter.id = [param.filter.id];
-        }
-
-        queryParam.where.push({'id': param.filter.discussion_id});
-    }
-
-    $.getJSON('/api/discussion', queryParam, function(data, textStatus) {
-        renderListDiscussions(null, data.content);
-    });
-}
-
 uki('#usersList').data(users).parent().layout();
 
-uki('#communities').data(communities).parent().layout();
-uki('#communities').click(function (eventObj) {
+uki('#communities_list').data(communities).parent().layout();
+uki('#communities_list').click(function (eventObj) {
     eventObj.preventDefault();
     var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .communities-row)').last().children().first().attr('href').replace(/.*\/community_id\/(\d+).*?/, '$1');
 
     renderListDiscussions({'filter': {'community_id': id}});
 });
 
-uki('#discussions').data(discussions).parent().layout();
-uki('#discussions').click(function (eventObj) {
+uki('#discussions_list').data(discussions).parent().layout();
+uki('#discussions_list').click(function (eventObj) {
     eventObj.preventDefault();
     var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .discussions-row)').last().children().first().attr('href').replace(/.*\/discussion_id\/(\d+).*?/, '$1');
 
