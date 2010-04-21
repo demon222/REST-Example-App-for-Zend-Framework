@@ -16,7 +16,8 @@ class App_IndexController extends Zend_Controller_Action
         $userId = $userRow ? $userRow->id : null;
         Zend_Registry::set('userId', $userId);
 
-        $discussionId = $this->getRequest()->getParam('id', 0);
+//        $discussionId = $this->getRequest()->getParam('discussion_id', 0);
+//        $communityId = $this->getRequest()->getParam('community_id', 0);
 
         $handler = new Default_Model_AclHandler_Entry($acl, $userId);
 
@@ -40,10 +41,12 @@ class App_IndexController extends Zend_Controller_Action
             )
         ));
 
+/*
         $this->view->discussion = $handler->getList(array(
             'entourage' => 'EntriesWithCreator',
             'where' => array('id' => $discussionId),
         ));
         $this->view->discussion = $this->view->discussion ? $this->view->discussion[0] : null;
+ */
     }
 }

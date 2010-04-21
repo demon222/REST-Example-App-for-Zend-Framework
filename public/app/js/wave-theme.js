@@ -224,15 +224,17 @@
             },
             'communitiesRowRender': function() {
                 return [
-                    '<div class="communities-row">' +
-                        '<img class="user-pic" src="',T,'" />' +
-                        '<div class="title">',T,'</div>' +
-                    '</div>'
+                    '<a href="/app/index/index/community_id/',T,'">' +
+                        '<div class="communities-row">' +
+                            '<img class="user-pic" src="',T,'" />' +
+                            '<div class="title">',T,'</div>' +
+                        '</div>' +
+                    '</a>'
                 ];
             },
             'discussionsRowRender': function() {
                 return [
-                    '<a href="/app/index/index/id/',T,'">' +
+                    '<a href="/app/index/index/discussion_id/',T,'">' +
                         '<div class="discussions-row">' +
                             '<img class="user-pic" src="',T,'" />' +
                             '<div class="title-and-user-name">',T,' &ndash; <span class="title" title="',T,'">',T,'</span></div>' +

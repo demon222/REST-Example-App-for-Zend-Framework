@@ -28,6 +28,7 @@ var CommunitiesRender = {
     template: uki.theme.template('communitiesRowRender'),
     render: function(data, rect, i) {
         return uki.extend(this.template, [
+            undefined, esc(data.id),
             undefined, uki.theme.imageSrc('unknown'),
             undefined, esc(data.title)
         ]).join('');
@@ -149,14 +150,13 @@ uki('#splitRight').bind('handleMove', function(e) {
 uki('#splitRight').handlePosition(400).layout();
 
 
-function discussionDetailsPanel(data) {
+function renderDiscussionDetailsPanel(param, data) {
     // if data is just the id of the discussion to implement, call
-    if ('number' == typeof data || 'string' == typeof data) {
+    if (null !== param) {
         // TODO: show existing localstorage of discussion
-
         // TODO: put up some kind of 'loading...' indicator
 
-        loadDiscussionDetails(data);
+        loadDiscussionDetails(param);
         return;
     }
 
@@ -189,18 +189,86 @@ function discussionDetailsPanel(data) {
 
 function loadDiscussionDetails(id) {
     $.getJSON('/api/discussion', {'where': {'id': id}, 'entourage': ['EntriesWithCreator']}, function(data, textStatus) {
-        discussionDetailsPanel(data.content[0]);
+        renderDiscussionDetailsPanel(null, data.content[0]);
+    });
+}
+
+function renderListDiscussions(param, data) {
+    // if data is just the id of the discussion to implement, call
+    if (null !== param) {
+        // TODO: show existing localstorage of discussion
+        // TODO: put up some kind of 'loading...' indicator
+
+        loadDiscussions(param);
+        return;
+    }
+
+    var resources = [];
+    for (var i in data) {
+        resources[i] = flatten(data[i]);
+    }
+
+    uki('#discussions').data(resources).parent().layout();
+
+    var view = uki('#discussions');
+    console.log(view);
+}
+
+function loadDiscussions(param) {
+    param = null === param ? {} : param;
+    param.filter = null === param.filter ? {} : param.filter;
+
+    var queryParam = {
+        'entourage': {
+            'RecentEntry': {
+                'entourageModel': 'Entry',
+                'entourageIdKey': 'discussion_id',
+                'resourceIdKey': 'id',
+                'singleOnly': true,
+                'properties': 'id discussion_id modified creator_user_id',
+                'entourage': 'Creator'
+            }
+        },
+        'where': []
+    }
+
+    if (param.filter.community_id) {
+        if ($.isArray(param.filter.community_id)) {
+            // standardize to array base
+            param.filter.community_id = [param.filter.community_id];
+        }
+
+        queryParam.where.push({'community_id': param.filter.community_id});
+    }
+
+    if (param.filter.id) {
+        if ($.isArray(param.filter.id)) {
+            // standardize to array base
+            param.filter.id = [param.filter.id];
+        }
+
+        queryParam.where.push({'id': param.filter.discussion_id});
+    }
+
+    $.getJSON('/api/discussion', queryParam, function(data, textStatus) {
+        renderListDiscussions(null, data.content);
     });
 }
 
 uki('#usersList').data(users).parent().layout();
 
 uki('#communities').data(communities).parent().layout();
+uki('#communities').click(function (eventObj) {
+    eventObj.preventDefault();
+    var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .communities-row)').last().children().first().attr('href').replace(/.*\/community_id\/(\d+).*?/, '$1');
+
+    renderListDiscussions({'filter': {'community_id': id}});
+});
 
 uki('#discussions').data(discussions).parent().layout();
 uki('#discussions').click(function (eventObj) {
     eventObj.preventDefault();
-    var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .discussions-row)').last().children().first().attr('href').replace(/.*\/id\/(\d+).*?/, '$1');
+    var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .discussions-row)').last().children().first().attr('href').replace(/.*\/discussion_id\/(\d+).*?/, '$1');
 
-    discussionDetailsPanel(id);
+    renderDiscussionDetailsPanel(id);
 });
