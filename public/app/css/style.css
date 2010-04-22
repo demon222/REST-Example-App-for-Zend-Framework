@@ -8,6 +8,10 @@ body {
     min-height: 400px;
 }
 
+a {
+    text-decoration: none;
+}
+
 .user-pic {
     position: absolute;
     left: 7px;
@@ -78,6 +82,10 @@ body {
     width: 88px;
 }
 
+.entries-row + .entries-row {
+    border-top: 1px solid gray;
+}
+
 .entries-row {
     font-size: 13px;
     line-height: 14px;
@@ -90,7 +98,6 @@ body {
 .entries-row .meta {
     color: grey;
     padding-top: 20px;
-    border-top: 1px solid gray;
     overflow: hidden;
     height: 33px;
     position: relative;

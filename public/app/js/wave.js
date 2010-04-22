@@ -73,8 +73,8 @@ function toolbarButton (label, iconOffset) {
     return { html: html.join(''), inset: '0 8 0 28', style: { fontWeight: 'normal', fontSize: '11px', textAlign: 'left', color: '' } };
 }
 
-function menuButton (label, iconOffset, rect) {
-    return uki.extend(toolbarButton(label, iconOffset), { view: 'Button', style: { textAlign: 'left', fontSize: '13px', fontWeight: 'normal', color: '' }, rect: rect, backgroundPrefix: 'link-button-', focusable: 'false', anchors: 'left top right', inset: '0 8 0 30', focusable: false });
+function menuButton (label, iconOffset, rect, id) {
+    return uki.extend(toolbarButton(label, iconOffset), { view: 'Button', id: id, style: { textAlign: 'left', fontSize: '13px', fontWeight: 'normal', color: '' }, rect: rect, backgroundPrefix: 'link-button-', focusable: 'false', anchors: 'left top right', inset: '0 8 0 30', focusable: false });
 }
 
 function panel (labelText, args) {
@@ -87,11 +87,11 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 
         topChildViews: panel('Navigation', { rect: '166 152', background: 'theme(panel-white)', childViews: [
             { view: 'ScrollPane', rect: '0 24 166 122', anchors: 'left top right bottom', childViews: [
                 { view: 'VFlow', rect: '0 0 166 120', anchors: 'left top right', childViews: [
-                    menuButton('All', '-160px 0', '166 24'),
-                    menuButton('My Interests', '-176px 0', '166 24'),
-                    menuButton('By me', '-192px 0', '166 24'),
-                    menuButton('Settings', '-240px 0', '166 24'),
-                    menuButton('Log Out', null, '166 24')
+                    menuButton('All', '-160px 0', '166 24', 'nav-all'),
+                    menuButton('My Interests', '-176px 0', '166 24', 'nav-interests'),
+                    menuButton('By me', '-192px 0', '166 24', 'nav-by_me'),
+                    menuButton('Settings', '-240px 0', '166 24', 'nav-settings'),
+                    menuButton('Log Out', null, '166 24', 'nav-log_out')
                 ] }
             ] }
         ]}),
@@ -103,12 +103,12 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 
                 { view: 'Button', rect: '140 46 13 13', anchors: 'right top', backgroundPrefix: 'search-button-', focusable: false }
             ] },
             { view: 'ScrollPane', rect: '0 93 166 706', anchors: 'left top right bottom', childViews: [
-                { view: 'List', id: "users_list", rect: '166 0', anchors: 'left top right', minSize: '0 100', textSelectable: false, rowHeight: 34, render: UsersRender }
+                { view: 'List', id: "users-list", rect: '166 0', anchors: 'left top right', minSize: '0 100', textSelectable: false, rowHeight: 34, render: UsersRender }
             ] }
         ] })
     },
     rightChildViews: { view: 'HSplitPane', id: 'splitRight', rect: '789 970', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 300, leftMin: 300, rightMin: 300,
-        leftChildViews: { view: 'VSplitPane', rect: '166 970', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 300, bottomMin: 250, topMin: 150,
+        leftChildViews: { view: 'VSplitPane', rect: '166 970', anchors: 'left top right bottom', handleWidth: 15, handlePosition: 300, bottomMin: 300, topMin: 152,
             topChildViews: panel('Communities', { rect: '300 300', childViews: [
                 { view: 'Box', rect: '0 23 300 32', background: 'theme(box-lblue)', anchors: 'left top right', childViews: [
                     { view: 'TextField', rect: '15 4 255 24', anchors: 'left top right', style: { fontSize: '12px' }, backgroundPrefix: 'search-', value: '', placeholder: 'Search communities' },
@@ -118,7 +118,7 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 
                     toolbarButton('Join', '-112px 0'), toolbarButton('Follow', '0 0'), toolbarButton('Delete', '-96px 0'), toolbarButton('Invite', '0 0')
                 ] },
                 { view: 'ScrollPane', rect: '0 79 300 193', anchors: 'left top right bottom', childViews: [
-                    { view: 'List', id: 'communities_list', rect: '300 0', anchors: 'left top right', background: 'none', textSelectable: false, rowHeight: 38, render: CommunitiesRender }
+                    { view: 'List', id: 'communities-list', rect: '300 0', anchors: 'left top right', background: 'none', textSelectable: false, rowHeight: 38, render: CommunitiesRender }
                 ] },
                 { view: 'Box', rect: '0 272 300 24', background: 'theme(box-lblue-bottom)', anchors: 'left bottom right', childViews: [
                     { view: 'Button', rect: '271 5 24 18', backgroundPrefix: 'plus-button-', anchors: 'right bottom', focusable: false }
@@ -126,14 +126,14 @@ uki({ view: 'HSplitPane', id: 'splitMain', rect: '15 15 970 970', minSize: '800 
             ] } ),
             bottomChildViews: panel('Discussions', { rect: '300 655', childViews: [
                 { view: 'Box', rect: '0 23 300 32', background: 'theme(box-lblue)', anchors: 'left top right', childViews: [
-                    { view: 'TextField', id: 'discussions_search', rect: '14 4 255 24', anchors: 'left top right', style: { fontSize: '12px' }, backgroundPrefix: 'search-', value: '', placeholder: 'Search discussions' },
-                    { view: 'Button', id: 'discussions_search_launch', rect: '274 9 13 13', anchors: 'right top', backgroundPrefix: 'search-button-', focusable: false }
+                    { view: 'TextField', id: 'discussions-search', rect: '14 4 255 24', anchors: 'left top right', style: { fontSize: '12px' }, backgroundPrefix: 'search-', value: '', placeholder: 'Search discussions' },
+                    { view: 'Button', id: 'discussions-search_launch', rect: '274 9 13 13', anchors: 'right top', backgroundPrefix: 'search-button-', focusable: false }
                 ] },
                 { view: 'Toolbar', rect: '0 55 300 24', anchors: 'left top right', background: 'theme(toolbar-normal)', buttons: [
                     toolbarButton('Follow', '0 0'), toolbarButton('Delete', '-96px 0'), toolbarButton('Move to', '-112px 0')
                 ] },
                 { view: 'ScrollPane', rect: '0 79 300 548', anchors: 'left top right bottom', childViews: [
-                    { view: 'List', id: 'discussions_list', rect: '300 0', anchors: 'left top right', background: 'none', textSelectable: false, rowHeight: 38, render: DiscussionsRender }
+                    { view: 'List', id: 'discussions-list', rect: '300 0', anchors: 'left top right', background: 'none', textSelectable: false, rowHeight: 38, render: DiscussionsRender }
                 ] },
                 { view: 'Box', rect: '0 627 300 24', background: 'theme(box-lblue-bottom)', anchors: 'left bottom right', childViews: [
                     { view: 'Button', rect: '271 5 24 18', backgroundPrefix: 'plus-button-', anchors: 'right bottom', focusable: false }
@@ -150,7 +150,7 @@ uki('#splitRight').bind('handleMove', function(e) {
 uki('#splitRight').handlePosition(400).layout();
 
 
-function renderListDiscussions(param, data) {
+function renderListDiscussions(param, data, timeId) {
     // if data is just the id of the discussion to implement, call
     if (null !== param) {
         // TODO: show existing localstorage of discussion
@@ -162,15 +162,28 @@ function renderListDiscussions(param, data) {
 
     var resources = [];
     for (var i in data) {
+        if (null === data[i].RecentEntry) {
+            data[i].RecentEntry = { Creator: { username: '___'}, modified: '___'};
+        }
         resources[i] = flatten(data[i]);
     }
 
-    uki('#discussions_list').data(resources).parent().layout();
+    var existingTimeId;
+
+    if (timeId && existingTimeId == timeId) {
+        console.log(uki('#discussions-list').data());
+        console.log(data);
+        uki('#discussions-list').data().concat(data);
+
+        // sort through the results would probably be good, but not for now
+    }
+
+    uki('#discussions-list').data(resources).parent().layout();
 }
 
 function loadDiscussions(param) {
-    param = null === param ? {} : param;
-    param.filter = null === param.filter ? {} : param.filter;
+    param = param ? param : {};
+    param.filter = param.filter ? param.filter : {};
 
     var queryParam = {
         'entourage': {
@@ -202,6 +215,21 @@ function loadDiscussions(param) {
         }
 
         queryParam.where.push({'id': param.filter.discussion_id});
+    }
+
+    if (param.filter.search) {
+        param.filter.search = String(param.filter.search)
+            .replace(/[ \t\r\n]+/g, ' ') // normalize string
+            .replace(/^[ ](.*?)[ ]$/, '$1') // trim
+            .split(' '); // to array of terms
+
+        for (var i in param.filter.search) {
+            queryParam.where.push({'~= title': param.filter.search[i], 'id': param.filter.search[i]});
+        }
+
+        //$.getJSON('/api/entry', {where: [[{'~ comment': search}, {'~ modified': search}]]}, function(data, textStatus) {
+//    var uniqueId = Number(new Date().getTime());
+//    renderListDiscussions(null, data.content, uniqueId);
     }
 
     $.getJSON('/api/discussion', queryParam, function(data, textStatus) {
@@ -252,18 +280,62 @@ function loadDiscussionDetails(id) {
     });
 }
 
+uki('#nav-all').click(function (eventObj) {
+    eventObj.preventDefault();
+
+    resetCommunitiesListState();
+});
+
 uki('#usersList').data(users).parent().layout();
 
-uki('#communities_list').data(communities).parent().layout();
-uki('#communities_list').click(function (eventObj) {
+
+function resetCommunitiesListState() {
+    uki('#communities-list').selectedIndex(-1);
+
+    resetDiscussionsListState();
+}
+
+uki('#communities-list').data(communities).parent().layout();
+uki('#communities-list').click(function (eventObj) {
     eventObj.preventDefault();
     var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .communities-row)').last().children().first().attr('href').replace(/.*\/community_id\/(\d+).*?/, '$1');
 
-    renderListDiscussions({'filter': {'community_id': id}});
+    resetDiscussionsListState();
 });
 
-uki('#discussions_list').data(discussions).parent().layout();
-uki('#discussions_list').click(function (eventObj) {
+function resetDiscussionsListState() {
+    refreshList = ('undefined' == typeof refreshList) ? true : refreshList;
+
+    uki('#discussions-list').selectedIndex(-1);
+    uki('#discussions-search').value('');
+
+    updateDiscussionsList();
+}
+
+function updateDiscussionsList() {
+    var cId = [];
+    var cList = uki('#communities-list');
+    var cIndex = cList.selectedIndex();
+    if (-1 < cIndex) {
+        cId = cList.data()[cIndex].id;
+    }
+
+    renderListDiscussions({'filter': {'community_id': cId, 'search': uki('#discussions-search').value()}});
+}
+
+uki('#discussions-search').keypress(function (eventObj) {
+    if (13 != eventObj.keyCode) {
+        return;
+    }
+
+    updateDiscussionsList();
+});
+uki('#discussions-search_launch').click(function (eventObj) {
+    updateDiscussionsList();
+});
+
+uki('#discussions-list').data(discussions).parent().layout();
+uki('#discussions-list').click(function (eventObj) {
     eventObj.preventDefault();
     var id = $(eventObj.target).parents().andSelf().filter('div:has(a > .discussions-row)').last().children().first().attr('href').replace(/.*\/discussion_id\/(\d+).*?/, '$1');
 
