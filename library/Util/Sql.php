@@ -51,7 +51,7 @@ class Util_Sql
                     }
 
                     // ensure that the comparison type specified is accepted
-                    $validComparisonTypes = array('=', '~', '>', '>=', '<', '<=', '!=');
+                    $validComparisonTypes = array('=', '~', '~=', '>', '>=', '<', '<=', '!=');
                     if (!in_array($comparisonType, $validComparisonTypes)) {
                         throw new Rest_Model_BadRequestException($comparisonType . ' is not a valid where comparison type [' . implode(', ', $validComparisonTypes) . ']');
                     }
@@ -94,6 +94,11 @@ class Util_Sql
                         if ('~' == $comparisonType) {
                             $condition = '"' . $prop . '" LIKE :value_' . $i;
                             $param = '%' . $value . '%';
+                        }
+
+                        if ('~=' == $comparisonType) {
+                            $condition = '(\' \' || "' . $prop . '" || \' \') LIKE :value_' . $i;
+                            $param = '% ' . $value . ' %';
                         }
 
                         $orSet[] = $condition;
