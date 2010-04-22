@@ -33,6 +33,11 @@ class Util_Sql
                 $andCond = array($andIndex => $andCond);
             }
 
+            if (!is_array($andCond)) {
+                // just move on if the input isn't useful
+                continue;
+            }
+
             $orSet = array();
             foreach ($andCond as $orIndex => $orCond) {
 
