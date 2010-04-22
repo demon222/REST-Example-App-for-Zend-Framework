@@ -34,65 +34,73 @@ class Util_Sql
             }
 
             $orSet = array();
-            foreach ($andCond as $term => $value) {
-                // suppress error if term lacks a comparison type and then correct
-                @list($comparisonType, $prop) = explode(' ', $term, 2);
-                if (null === $prop) {
-                    $prop = $comparisonType;
-                    // if not specified, '=' is the default comparison type
-                    $comparisonType = '=';
+            foreach ($andCond as $orIndex => $orCond) {
+
+                if (is_string($orIndex)) {
+                    // standardize to multiple or cond form
+                    $orCond = array($orIndex => $orCond);
                 }
 
-                // ensure that the comparison type specified is accepted
-                $validComparisonTypes = array('=', '~', '>', '>=', '<', '<=', '!=');
-                if (!in_array($comparisonType, $validComparisonTypes)) {
-                    throw new Rest_Model_BadRequestException($comparisonType . ' is not a valid where comparison type [' . implode(', ', $validComparisonTypes) . ']');
-                }
-
-                // ensure that the property specified is a valid property
-                if (!in_array($prop, $validPropertyKeys)) {
-                    throw new Rest_Model_BadRequestException($prop . ' is not a valid where property [' . implode(', ', $validPropertyKeys) . ']');
-                }
-
-                // create SQL for supported values types: array, string or integer
-                if (is_array($value) && !empty($value)) {
-                    if (!in_array($comparisonType, array('!=', '='))) {
-                        throw new Rest_Model_BadRequestException('where condition must have \'=\' or \'!=\' comparison type when using matching against an array. ' . $prop . ' ' . $comparisonType . ' ' . implode(',', $value) . ' is not valid.');
+                foreach ($orCond as $term => $value) {
+                    // suppress error if term lacks a comparison type and then correct
+                    @list($comparisonType, $prop) = explode(' ', $term, 2);
+                    if (null === $prop) {
+                        $prop = $comparisonType;
+                        // if not specified, '=' is the default comparison type
+                        $comparisonType = '=';
                     }
 
-                    $orKeys = array();
-                    foreach ($value as $v) {
-                        // if array of strings or integers, creates a
-                        // 'property IN (:value_0, :value_1, ...)' type of thing
-                        if (is_string($v) || is_int($v)) {
-                            $orKeys[] = ':value_' . $i;
-                            $params[':value_' . $i] = $v;
-                            $i++;
+                    // ensure that the comparison type specified is accepted
+                    $validComparisonTypes = array('=', '~', '>', '>=', '<', '<=', '!=');
+                    if (!in_array($comparisonType, $validComparisonTypes)) {
+                        throw new Rest_Model_BadRequestException($comparisonType . ' is not a valid where comparison type [' . implode(', ', $validComparisonTypes) . ']');
+                    }
+
+                    // ensure that the property specified is a valid property
+                    if (!in_array($prop, $validPropertyKeys)) {
+                        throw new Rest_Model_BadRequestException($prop . ' is not a valid where property [' . implode(', ', $validPropertyKeys) . ']');
+                    }
+
+                    // create SQL for supported values types: array, string or integer
+                    if (is_array($value) && !empty($value)) {
+                        if (!in_array($comparisonType, array('!=', '='))) {
+                            throw new Rest_Model_BadRequestException('where condition must have \'=\' or \'!=\' comparison type when using matching against an array. ' . $prop . ' ' . $comparisonType . ' ' . implode(',', $value) . ' is not valid.');
                         }
+
+                        $orKeys = array();
+                        foreach ($value as $v) {
+                            // if array of strings or integers, creates a
+                            // 'property IN (:value_0, :value_1, ...)' type of thing
+                            if (is_string($v) || is_int($v)) {
+                                $orKeys[] = ':value_' . $i;
+                                $params[':value_' . $i] = $v;
+                                $i++;
+                            }
+                        }
+
+                        if ('=' == $comparisonType) {
+                            $condition = '"' . $prop . '" IN (' . implode(', ', $orKeys) . ')';
+                        } elseif ('!=' == $comparisonType) {
+                            $condition = '"' . $prop . '" NOT IN (' . implode(', ', $orKeys) . ')';
+                        }
+
+                        $orSet[] = $condition;
+                    } elseif (is_string($value) || is_int($value)) {
+                        // standard way to handle things
+                        $condition = '"' . $prop . '" ' . $comparisonType . ' ' . ':value_' . $i;
+                        $param = $value;
+
+                        // special cases
+                        if ('~' == $comparisonType) {
+                            $condition = '"' . $prop . '" LIKE :value_' . $i;
+                            $param = '%' . $value . '%';
+                        }
+
+                        $orSet[] = $condition;
+                        $params[':value_' . $i] = $param;
+
+                        $i++;
                     }
-
-                    if ('=' == $comparisonType) {
-                        $condition = '"' . $prop . '" IN (' . implode(', ', $orKeys) . ')';
-                    } elseif ('!=' == $comparisonType) {
-                        $condition = '"' . $prop . '" NOT IN (' . implode(', ', $orKeys) . ')';
-                    }
-
-                    $orSet[] = $condition;
-                } elseif (is_string($value) || is_int($value)) {
-                    // standard way to handle things
-                    $condition = '"' . $prop . '" ' . $comparisonType . ' ' . ':value_' . $i;
-                    $param = $value;
-
-                    // special cases
-                    if ('~' == $comparisonType) {
-                        $condition = '"' . $prop . '" LIKE :value_' . $i;
-                        $param = '%' . $value . '%';
-                    }
-
-                    $orSet[] = $condition;
-                    $params[':value_' . $i] = $param;
-
-                    $i++;
                 }
             }
 
@@ -105,7 +113,7 @@ class Util_Sql
         }
 
         return array(
-            'sql' => implode(' AND ', array_merge($andSet, array('1 = 1'))),
+            'sql' => '(' . implode(') AND (', array_merge($andSet, array('1 = 1'))) . ')',
             'param' => $params,
         );
     }
