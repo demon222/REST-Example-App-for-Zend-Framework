@@ -103,8 +103,9 @@ class Default_Model_AclHandler_Entourage
 
             $entourageSetParam = isset($resourceParam['entourage']) ? $resourceParam['entourage'] : null;
 
-            // get the resource list
             unset($resourceParam['entourage']);
+
+            // get the resource list
             $resourceList = $resourceHandler->getList($resourceParam);
 
             if (null !== $entourageSetParam) {
@@ -256,7 +257,7 @@ class Default_Model_AclHandler_Entourage
 
             // if specified only return the first match for entourages that match, can make for a
             // cleaner api for some use cases
-            $singleOnly = isset($entourageParam['singleOnly']) && $entourageParam['singleOnly'] ? $entourageParam['singleOnly'] : false;
+            $singleOnly = isset($entourageParam['singleOnly']) && $entourageParam['singleOnly'] && $entourageParam['singleOnly'] !== 'false' ? $entourageParam['singleOnly'] : false;
             unset($entourageParam['singleOnly']); // wont be passed into entourage getList
 
             $entourageHandler = $this->_createAclHandler($entourageModel);
@@ -267,15 +268,42 @@ class Default_Model_AclHandler_Entourage
                 throw new Rest_Model_BadRequestException('entourage alias "' . $name . '" specifies an invalid resourceIdKey "' . $resourceIdKey . '"');
             }
 
-            $entourageParam['where'] = array_merge(isset($entourageParam['where']) ? $entourageParam['where'] : array(),
-                array(
-                    // because there could be duplicate ids: array_unique and reindex with array_values
-                    $entourageIdKey => array_values(array_unique($resourceJoinIdList))
-                )
-            );
+            // default, assume that the sub results will be more than the limit
+            $resultWillBeLessThanLimit = false;
+
+            if ($singleOnly && empty($entourageParam['groupBy'])) {
+                $entourageParam['groupBy'] = $entourageIdKey;
+                $resultWillBeLessThanLimit = true;
+            }
+
+            // TODO: figure out nature of sort versus condenseOn and if
+            // condenseOn should be presented to user, either way some
+            // checks and better implementation of condenseOn is needed
+            if ($singleOnly && isset($entourageParam['sort']) && $entourageParam['sort']) {
+                $entourageParam['condenseOn'] = $entourageParam['sort'];
+            }
+
+            if (empty($entourageParam['where'])) {
+                $entourageParam['where'] = array();
+            }
 
             // load the entourage items
-            $entourageList = $entourageHandler->getList($entourageParam);
+            if ($resultWillBeLessThanLimit) {
+                $entourageParam['where'] = array_merge($entourageParam['where'],
+                    array(
+                        // because there could be duplicate ids: array_unique and reindex with array_values
+                        $entourageIdKey => array_values(array_unique($resourceJoinIdList))
+                    )
+                );
+
+                $entourageList = $entourageHandler->getList($entourageParam);
+            } else {
+                $entourageList = array();
+                foreach (array_values(array_unique($resourceJoinIdList)) as $resourceId) {
+                    $entourageParam['where'][$entourageIdKey] = $resourceId;
+                    $entourageList = array_merge($entourageList, $entourageHandler->getList($entourageParam));
+                }
+            }
 
             // attach the entourage items to the resource
             $entourageJoinIdList = Util_Array::arrayFromKeyValuesOfSet($entourageIdKey, $entourageList);

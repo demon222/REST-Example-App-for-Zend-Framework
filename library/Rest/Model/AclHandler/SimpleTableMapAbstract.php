@@ -79,6 +79,18 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
             $params['limit'] = (integer) $params['limit'];
         }
 
+        {
+            if (!isset($params['groupBy']) || !in_array($params['groupBy'], $this->getPropertyKeys())) {
+                $params['groupBy'] = null;
+            }
+        }
+
+        {
+            if (!isset($params['condenseOn']) || !in_array($params['condenseOn'], $this->getPropertyKeys())) {
+                $params['condenseOn'] = null;
+            }
+        }
+
         // properties is expected to be an array of string property keys or a
         // string of space separated property keys
         //
@@ -99,8 +111,8 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
         }
 
         // this is an optimization. Imposes a slight overhead performance hit,
-        // but for queries where their is very restrictive dependency and a
-        // large resource being looked at, this optimization is very significant
+        // but for queries where there is very restrictive dependency and a
+        // large resource set being scanned, this optimization is very important
         if (0 < count($this->_permissionDependency)) {
             // go through all the dependies and make sure there are WHERE
             // clauses for them
@@ -140,8 +152,13 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
         $cumulativeRowSet = array();
         $offset = 0;
         do {
+            $sql = '';
+            // do sub select in order to handle sub ordering in group and get
+            // the row we want
+            $sql .= (($params['groupBy'] && $params['condenseOn']) ? ' SELECT * FROM (' : '');
+
             // RESOURCE
-            $sql = $this->_getListResourceSqlFragment();
+            $sql .= $this->_getListResourceSqlFragment();
 
             $sql .= ''
                 // ACL
@@ -152,12 +169,14 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
 
                 // RESOURCE
                 . ' AND ' . $whereSqlAndParam['sql']
+                // TODO: HACK: using sortList in place of condenseOn until that is implemented fully
+                . ($params['groupBy'] ? (($params['condenseOn'] ? (' ORDER BY ' . implode(', ', $sortList) . ')') : '') . ' GROUP BY ' . $params['groupBy']) : '')
+//                . ($params['groupBy'] ? (($params['condenseOn'] ? (' ORDER BY ' . $params['condenseOn'] . ')') : '') . ' GROUP BY ' . $params['groupBy']) : '')
                 . ' ORDER BY ' . implode(', ', $sortList)
                 . ' LIMIT ' . $dbLimit
                 . ' OFFSET ' . $offset
 
                 . '';
-
             $query = $this->_getDbHandler()->prepare($sql);
             $query->execute(array_merge($this->_getGenericAclListParams(), $whereSqlAndParam['param']));
             $rowSet = $query->fetchAll(PDO::FETCH_ASSOC);

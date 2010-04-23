@@ -192,6 +192,7 @@ function loadDiscussions(param) {
                 'entourageIdKey': 'discussion_id',
                 'resourceIdKey': 'id',
                 'singleOnly': true,
+                'sort': 'modified',
                 'properties': 'id discussion_id modified creator_user_id',
                 'entourage': 'Creator'
             }
