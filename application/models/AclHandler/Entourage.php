@@ -279,8 +279,8 @@ class Default_Model_AclHandler_Entourage
             // TODO: figure out nature of sort versus condenseOn and if
             // condenseOn should be presented to user, either way some
             // checks and better implementation of condenseOn is needed
-            if ($singleOnly && isset($entourageParam['sort']) && $entourageParam['sort']) {
-                $entourageParam['condenseOn'] = $entourageParam['sort'];
+            if ($singleOnly && isset($entourageParam['condenseOn']) && $entourageParam['condenseOn']) {
+                $entourageParam['condenseOn'] = $entourageParam['condenseOn'];
             }
 
             if (empty($entourageParam['where'])) {
@@ -289,12 +289,10 @@ class Default_Model_AclHandler_Entourage
 
             // load the entourage items
             if ($resultWillBeLessThanLimit) {
-                $entourageParam['where'] = array_merge($entourageParam['where'],
-                    array(
-                        // because there could be duplicate ids: array_unique and reindex with array_values
-                        $entourageIdKey => array_values(array_unique($resourceJoinIdList))
-                    )
-                );
+                $entourageParam['where'] = array_merge($entourageParam['where'], array(
+                    // because there could be duplicate ids: array_unique and reindex with array_values
+                    $entourageIdKey => array_values(array_unique($resourceJoinIdList))
+                ));
 
                 $entourageList = $entourageHandler->getList($entourageParam);
             } else {

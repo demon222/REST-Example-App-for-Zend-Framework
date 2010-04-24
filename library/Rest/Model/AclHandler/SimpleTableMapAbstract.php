@@ -67,29 +67,28 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
             $params['where'] = array();
         }
 
-        if (!isset($params['sort']) || !is_array($params['sort'])) {
+        if (!isset($params['sort']) || (!is_string($params['sort']) && !is_array($params['sort']))) {
             $params['sort'] = $this->_defaultListSort;
         }
+        $params['sort'] = Util_Sql::generateSqlOrderBy($params['sort'], $this->getPropertyKeys());
 
         // expected that: 0 < limit <= _listMaxLength
-        {
-            if (!isset($params['limit']) || 0 >= $params['limit'] || $this->_listMaxLength < $params['limit']) {
-                $params['limit'] = $this->_listMaxLength;
-            }
-            $params['limit'] = (integer) $params['limit'];
+        if (!isset($params['limit']) || 0 >= $params['limit'] || $this->_listMaxLength < $params['limit']) {
+            $params['limit'] = $this->_listMaxLength;
+        }
+        $params['limit'] = (integer) $params['limit'];
+
+        // group by
+        if (!isset($params['groupBy']) || !in_array($params['groupBy'], $this->getPropertyKeys())) {
+            $params['groupBy'] = null;
         }
 
-        {
-            if (!isset($params['groupBy']) || !in_array($params['groupBy'], $this->getPropertyKeys())) {
-                $params['groupBy'] = null;
-            }
+        // order of elements before group by, determines which row gets used
+        // by group by from within the group, the last in the group wins
+        if (!isset($params['condenseOn']) || (!is_string($params['condenseOn']) && !is_array($params['condenseOn']))) {
+            $params['condenseOn'] = $this->_defaultListSort;
         }
-
-        {
-            if (!isset($params['condenseOn']) || !in_array($params['condenseOn'], $this->getPropertyKeys())) {
-                $params['condenseOn'] = null;
-            }
-        }
+        $params['condenseOn'] = Util_Sql::generateSqlOrderBy($params['condenseOn'], $this->getPropertyKeys());
 
         // properties is expected to be an array of string property keys or a
         // string of space separated property keys
@@ -144,7 +143,6 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
         }
 
         $whereSqlAndParam = Util_Sql::generateSqlWheresAndParams($params['where'], $this->getPropertyKeys());
-        $sortList = Util_Sql::generateSqlSort($params['sort'], $this->getPropertyKeys());
 
         $limit = $params['limit'];
         $dbLimit = floor($limit * $this->_listPermissionFilteredRate);
@@ -169,10 +167,8 @@ abstract class Rest_Model_AclHandler_SimpleTableMapAbstract
 
                 // RESOURCE
                 . ' AND ' . $whereSqlAndParam['sql']
-                // TODO: HACK: using sortList in place of condenseOn until that is implemented fully
-                . ($params['groupBy'] ? (($params['condenseOn'] ? (' ORDER BY ' . implode(', ', $sortList) . ')') : '') . ' GROUP BY ' . $params['groupBy']) : '')
-//                . ($params['groupBy'] ? (($params['condenseOn'] ? (' ORDER BY ' . $params['condenseOn'] . ')') : '') . ' GROUP BY ' . $params['groupBy']) : '')
-                . ' ORDER BY ' . implode(', ', $sortList)
+                . ($params['groupBy'] ? (($params['condenseOn'] ? (' ORDER BY ' . implode(', ', $params['condenseOn']) . ')') : '') . ' GROUP BY ' . $params['groupBy']) : '')
+                . ' ORDER BY ' . implode(', ', $params['sort'])
                 . ' LIMIT ' . $dbLimit
                 . ' OFFSET ' . $offset
 
