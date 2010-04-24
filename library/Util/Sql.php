@@ -128,26 +128,29 @@ class Util_Sql
         );
     }
 
-    public static function generateSqlSort($sortList, $validPropertyKeys)
+    public static function generateSqlOrderBy($list, $validPropertyKeys, $defaultDirection = 'ASC')
     {
+        if (is_string($list)) {
+            $list = array($list);
+        }
         // this just basically validates that the specified properties are
         // valid and that the direction is specified correctly
         $resultList = array();
-        foreach ($sortList as $sortTerm) {
-            list($prop, $direction) = explode(' ', $sortTerm . ' ');
+        foreach ($list as $term) {
+            list($prop, $direction) = explode(' ', $term . ' ');
 
             if (!in_array($prop, $validPropertyKeys)) {
                 throw new Rest_Model_BadRequestException($prop . ' is not a valid sort property [' . implode(', ', $validPropertyKeys) . ']');
             }
-            if ($direction != '' && strtoupper($direction != 'ASC') && strtoupper($direction != 'DESC')) {
+            $direction = strtoupper($direction);
+            if ($direction != '' && $direction != 'ASC' && $direction != 'DESC') {
                 throw new Rest_Model_BadRequestException($direction . ' is not a valid sort direction [ASC, DESC]');
             }
             if ($direction === null) {
-                $direction = 'ASC';
+                $direction = $defaultDirection;
             }
-            $resultList[] = '"' . $prop . '" ' . strtoupper($direction);
+            $resultList[] = '"' . $prop . '" ' . $direction;
         }
         return $resultList;
     }
-
 }
